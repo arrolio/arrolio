@@ -1,0 +1,95 @@
+= Arrolio
+
+FOP-like paged layout engine for Ruby. Renders to PDF via the sibling
+https://github.com/claricle/pdfrb[pdfrb] gem.
+
+== What this is
+
+Arrolio is the middle layer of a three-library stack:
+
+[cols="1,4,3"]
+|===
+| Library | Owns | Depends on
+
+| `pdfrb`
+| Pure-Ruby PDF library (bytes ↔ model; streams, fonts, xref, encryption)
+| —
+
+| `arrolio` (this gem)
+| FOP-like paged layout: page templates, threaded flows, Knuth-Plass
+  line/page breaking, tables, lists, SVG, page-model selection,
+  running headers/footers
+| `pdfrb`
+
+| `loom` (separate gem, not yet built)
+| Multi-target layout compiler. Compiles a higher-level DSL to
+  Arrolio's IR, plus CSS, XSL-FO, and IDML.
+| `arrolio` (for the PDF target only)
+|===
+
+Arrolio's job: take a content tree plus a layout spec, produce a
+sequence of laid-out pages, render those to PDF (or, in future, to
+other paged formats).
+
+== Two-direction contract
+
+* *Content + LayoutSpec → Arrolio::Engine::Paged → Output::Page[]*
+  (the layout pass).
+* *Output::Page[] → Arrolio::Renderer::Pdf → bytes*
+  (the render pass; uses Pdfrb internally).
+
+== Quick start
+
+[source,ruby]
+----
+require "arrolio"
+
+content = Arrolio::Content::Document.new
+content.add_section("Introduction", level: 1) do |section|
+  section.add_paragraph("Hello, World!")
+end
+
+layout = Arrolio::LayoutSpec.new
+layout.add_page_template(:body, page_size: :A4, margins: 25)
+layout.add_style(:body, font: "Times-Roman", size: 11)
+
+engine   = Arrolio::Engine::Paged.new(layout)
+pages    = engine.layout(content)
+renderer = Arrolio::Renderer::Pdf.new
+
+File.binwrite("out.pdf", renderer.render(pages))
+----
+
+Higher-level convenience API:
+
+[source,ruby]
+----
+Arrolio.compose("out.pdf") do |doc|
+  doc.page_size = :A4
+  doc.margins   = 25
+  doc.heading "Introduction"
+  doc.text   "Hello, World!"
+end
+----
+
+== Where Arrolio's responsibilities end
+
+Arrolio deliberately does *not* own:
+
+* *PDF byte format* — that's Pdfrb's job.
+* *DSL authoring* (YAML, FO XML, etc.) — that's Loom's job.
+* *Multi-target compilation* (CSS / XSL-FO / IDML) — Loom.
+* *The semantic content model* — that's
+  https://github.com/metanorma/metanorma-document[metanorma-document]
+  (or any conforming source). Arrolio defines a *contract*, not an
+  implementation.
+
+== Status
+
+Pre-1.0. The skeleton lands first; modules port incrementally from
+`Pdfrb::Layout::*` (which will eventually be removed from Pdfrb once
+Arrolio is stable).
+
+== License
+
+BSD-2-Clause. See link:LICENSE[].
