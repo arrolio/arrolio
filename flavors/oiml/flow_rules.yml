@@ -1,0 +1,288 @@
+# Generated from oiml.xsl by scripts/xsl_to_config.rb.
+# DO NOT EDIT BY HAND — edit the XSL and rerun the generator.
+
+generated_from: oiml.xsl
+profile: standoc.yml
+stylesheet: oiml.xsl
+xsl_variables:
+  marginLeftRight1: '25.5'
+  marginLeftRight2: '25.5'
+  marginTop: '26.5'
+  marginBottom: '26.5'
+  layoutVersion: '2024'
+  edition: "edition\n\t\t\t\t\n\t\t\t\t "
+  i18n_edition: edition
+  ratio: '0.82'
+  "y": '30'
+  border_title: 1pt solid black
+  i18n_locality_part: locality.part
+  oiml_fr_part1: Organisation Internationale
+  oiml_fr_part2: de Métrologie Légale
+  docidentifier_full: " "
+  example_body: fo:block
+  ul_labels_: "■\n\t\t●"
+xsl_templates:
+- name: layout-master-set
+  attributes: []
+  output_elements:
+  - layout-master-set
+  - simple-page-master
+  - region-body
+  - page-sequence-master
+  - repeatable-page-master-alternatives
+  - conditional-page-master-reference
+- name: cover-page
+  attributes:
+  - name: height
+    value: '70'
+    test: "$title_complementary != ''"
+  - name: margin-top
+    value: 11mm
+    test: position() = 1
+  - name: space-before
+    value: 12pt
+    test: position() != 1
+  - name: space-before
+    value: 8pt
+    test: position() != 1
+  output_elements:
+  - page-sequence
+  - flow
+  - table
+  - table-column
+  - table-body
+  - table-row
+  - table-cell
+  - block
+  - instream-foreign-object
+  - block-container
+  - inline
+- name: insert_oiml_title
+  attributes: []
+  output_elements:
+  - instream-foreign-object
+- name: capitalize_oiml
+  match: text()
+  mode: capitalize
+  attributes:
+  - name: font-size
+    value: pt
+    test: string-length($str) > 0
+  output_elements: []
+- name: get_docidentifier
+  attributes: []
+  output_elements: []
+- name: get_title_complementary
+  attributes: []
+  output_elements: []
+- name: get_edition
+  attributes: []
+  output_elements: []
+- name: inner-cover-page
+  attributes: []
+  output_elements: []
+- name: back-page
+  attributes: []
+  output_elements: []
+- name: insertHeaderFirst
+  attributes: []
+  output_elements: []
+- name: insertHeaderEven
+  attributes:
+  - name: text-align
+    value: center
+    test: normalize-space($title_complementary) != ''
+  output_elements:
+  - static-content
+  - block
+- name: insertHeaderOdd
+  attributes: []
+  output_elements: []
+- name: insertFooterEven
+  attributes: []
+  output_elements:
+  - static-content
+  - block
+  - page-number
+- name: insertFooterOdd
+  attributes: []
+  output_elements: []
+- name: refine_page-sequence-preface
+  attributes:
+  - name: format
+    value: '1'
+  output_elements: []
+- name: refine_page-sequence-main
+  attributes:
+  - name: initial-page-number
+    value: auto
+  output_elements: []
+- name: refine_toc-leader-style
+  attributes:
+  - name: font-weight
+    value: bold
+    test: "@level = 1"
+  output_elements: []
+- name: refine_clause_style
+  attributes:
+  - name: text-align
+    value: justify
+  output_elements: []
+- name: refine_title-style
+  attributes:
+  - name: font-size
+    value: 14pt
+    test: "$level = 1"
+  - name: text-align
+    value: center
+    test: "$level = 1"
+  - name: margin-bottom
+    value: 30pt
+    test: "$level = 1"
+  - name: space-after
+    value: 12pt
+    test: "$level = 2"
+  - name: font-size
+    value: 11pt
+    test: "$level >= 2"
+  output_elements: []
+- name: refine_p-style
+  attributes:
+  - name: margin-bottom
+    value: 6pt
+    test: parent::mn:li/following-sibling::*
+  - name: margin-bottom
+    value: 4pt
+    test: parent::mn:li/following-sibling::*
+  - name: margin-bottom
+    value: 3pt
+    test: parent::mn:dd
+  output_elements: []
+- name: note
+  match: mn:note
+  attributes:
+  - name: provisional-distance-between-starts
+    value: 14.5mm
+  output_elements:
+  - block
+  - list-block
+  - list-item
+  - list-item-label
+  - list-item-body
+- name: example
+  match: mn:example
+  attributes: []
+  output_elements:
+  - block-container
+  - block
+- name: refine_list-style
+  attributes:
+  - name: margin-left
+    value: 6.5mm
+    test: self::mn:ul
+  - name: margin-left
+    value: 15mm
+    test: self::mn:ul
+  - name: space-after
+    value: 6pt
+  - name: margin-top
+    value: 6pt
+    test: ancestor::mn:term
+  output_elements: []
+- name: refine_term-style
+  attributes:
+  - name: margin-bottom
+    value: 6pt
+    test: mn:termnote
+  output_elements: []
+- name: refine_dt-block-style
+  attributes:
+  - name: margin-bottom
+    value: 3pt
+  output_elements: []
+- name: refine_footnote-separator-block-style
+  attributes:
+  - name: margin-bottom
+    value: 16mm
+  output_elements: []
+- name: insertMainSectionsPageSequences
+  attributes: []
+  output_elements: []
+page_sequences:
+- role: cover
+  header:
+  footer:
+  build_content: cover_content
+- role: back_of_cover
+  header:
+  footer:
+  page_break_after: true
+- role: preface
+  header: "{{docidentifier}}: {{edition}}"
+  footer: "%d"
+  header_align: right
+- role: body
+  header: "{{docidentifier}}: {{edition}}"
+  footer: "%d"
+  header_align: right
+- role: bibliography
+  header: "{{docidentifier}}: {{edition}}"
+  footer: "%d"
+  header_align: right
+cover_content:
+- type: spacer
+  size: 30
+- type: text
+  source: "{{docidentifier}}"
+  style: cover_docidentifier
+- type: spacer
+  size: 20
+- type: text
+  source: "{{title_intro}}"
+  style: cover_title_other
+  when: title_intro_present
+- type: text
+  source: "{{title_main}}"
+  style: cover_title
+- type: text
+  source: "{{title_part}}"
+  style: cover_title_part
+  when: title_part_present
+- type: text
+  source: "{{title_complementary}}"
+  style: cover_title_other
+  when: title_complementary_present
+- type: spacer
+  size: 30
+- type: text
+  source: Organisation Internationale de Métrologie Légale
+  style: cover_org
+- type: text
+  source: International Organization of Legal Metrology
+  style: cover_org
+- type: spacer
+  size: 20
+- type: text
+  source: "{{docidentifier}} {{edition}}"
+  style: cover_label
+section:
+  heading_style: "{{title_style_id}}"
+  body_style: "{{style_id}}"
+  insert_page_break_before: true
+  insert_page_break_after_section: true
+content_to_flowable:
+  Paragraph: text_paragraph
+  Table: table
+  List: list
+  Image: image
+  Preformatted: preformatted
+  PageBreak: page_break
+style_resolution:
+  paragraph: resolve_from_style_id
+  heading: resolve_from_title_style_id
+  table_cell: resolve_from_table_cell_style
+  list_item: resolve_from_list_style
+toc:
+  styles:
+    entry: toc_entry
+    sub: toc_entry_sub

@@ -1,0 +1,165 @@
+default_page_template: body
+
+page_templates:
+  body:
+    page_size: A4
+    margins:
+      top: 25mm
+      bottom: 25mm
+      left: 30mm
+      right: 30mm
+    region_extents:
+      before: 18mm
+      after: 18mm
+
+styles:
+  body:
+    font_name: Helvetica
+    font_size: 11.0
+    line_spacing: 1.2
+    align: left
+    margin_bottom: 6
+  heading_1:
+    parent: body
+    font_name: Helvetica-Bold
+    font_size: 16.0
+    keep_together: true
+  heading_2:
+    parent: body
+    font_name: Helvetica-Bold
+    font_size: 13.0
+    keep_together: true
+  heading_3:
+    parent: body
+    font_name: Helvetica-Bold
+    font_size: 11.0
+    keep_together: true
+  heading_4:
+    parent: body
+    font_name: Helvetica-Bold
+    font_size: 11.0
+  heading_5:
+    parent: body
+    font_name: Helvetica-Bold
+    font_size: 11.0
+  heading_6:
+    parent: body
+    font_name: Helvetica-Bold
+    font_size: 11.0
+  inline:
+    parent: body
+  strong:
+    parent: body
+    font_name: Helvetica-Bold
+  em:
+    parent: body
+    font_name: Helvetica-Oblique
+  monospace:
+    parent: body
+    font_name: Courier
+  preformatted:
+    parent: body
+    font_name: Courier
+    font_size: 9
+    align: left
+    line_spacing: 1.0
+  caption_label:
+    parent: body
+  note:
+    parent: body
+    font_size: 10.0
+    margin_left: 12
+    margin_bottom: 6
+  note_label:
+    parent: body
+    font_name: Helvetica-Bold
+  example:
+    parent: body
+  example_label:
+    parent: body
+    font_name: Helvetica-Bold
+  xref:
+    parent: body
+    font_name: Helvetica-Oblique
+  link:
+    parent: body
+    font_name: Helvetica-Oblique
+  identifier:
+    parent: body
+    font_name: Helvetica-Oblique
+  term:
+    parent: body
+    font_name: Helvetica-Bold
+  list_bullet:
+    parent: body
+  list_ordered:
+    parent: body
+  list_marker:
+    parent: body
+    font_name: Helvetica-Bold
+  table:
+    parent: body
+    font_size: 10
+  table_cell:
+    parent: table
+    margin_top: 2
+    margin_bottom: 2
+  table_header_cell:
+    parent: table_cell
+    font_name: Helvetica-Bold
+  figure_caption:
+    parent: body
+    font_size: 10
+    align: center
+  bibitem:
+    parent: body
+    margin_top: 4
+    margin_bottom: 4
+  toc_title:
+    parent: body
+    font_size: 14
+    align: center
+    margin_bottom: 26
+  toc_entry:
+    parent: body
+    font_size: 11
+  toc_entry_sub:
+    parent: toc_entry
+    margin_left: 12
+  cover_docidentifier:
+    parent: body
+    font_name: Helvetica-Bold
+    font_size: 24
+    align: center
+  cover_title:
+    parent: body
+    font_name: Helvetica-Bold
+    font_size: 18
+    align: center
+  cover_org:
+    parent: body
+    font_name: Helvetica-Bold
+    font_size: 12
+    align: center
+  section_body_1:
+    parent: body
+  section_body_2:
+    parent: body
+    margin_left: 12
+  section_body_3:
+    parent: body
+    margin_left: 24
+  section_body_4:
+    parent: body
+    margin_left: 36
+  section_body_5:
+    parent: body
+    margin_left: 48
+  section_body_6:
+    parent: body
+    margin_left: 60
+
+flows:
+  main:
+    region: body
+    default_style_id: body

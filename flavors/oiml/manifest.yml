@@ -1,0 +1,20 @@
+name: oiml
+version: 1.0.0
+description: OIML International Recommendation (R-series)
+upstream:
+  xsl: oiml.xsl
+  source: https://github.com/metanorma/metanorma-taste
+doctypes:
+  - recommendation
+  - document
+fonts:
+  required:
+    - Times New Roman
+    - Jost
+  optional:
+    - Cambria Math
+    - Arial
+config_files:
+  layout_spec: layout_spec.yml
+  adapter_rules: adapter_rules.yml
+  flow_rules: flow_rules.yml

@@ -1,0 +1,343 @@
+plugins:
+  - rubocop-performance
+  - rubocop-rake
+  - rubocop-rspec
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.0
+  SuggestExtensions: false
+
+Style/StringLiterals:
+  EnforcedStyle: single_quotes
+
+Style/SymbolArray:
+  EnforcedStyle: brackets
+
+Style/WordArray:
+  EnforcedStyle: brackets
+
+Layout/LineLength:
+  Max: 120
+
+Metrics/AbcSize:
+  Max: 80
+
+Metrics/MethodLength:
+  Max: 60
+
+Metrics/ClassLength:
+  Max: 500
+
+Metrics/ModuleLength:
+  Max: 500
+
+Metrics/CyclomaticComplexity:
+  Max: 30
+
+Metrics/PerceivedComplexity:
+  Max: 30
+
+Metrics/BlockLength:
+  Max: 100
+
+Metrics/ParameterLists:
+  Max: 10
+
+RSpec/ExampleLength:
+  Max: 15
+
+RSpec/MultipleExpectations:
+  Max: 8
+
+RSpec/DescribeClass:
+  Enabled: false
+
+RSpec/LeakyLocalVariable:
+  Enabled: false
+
+RSpec/ExampleLength:
+  Max: 30
+
+RSpec/InstanceVariable:
+  Enabled: false
+
+RSpec/HookArgument:
+  Enabled: false
+
+RSpec/ContextWording:
+  Enabled: false
+
+RSpec/BeEq:
+  Enabled: false
+
+RSpec/StubbedMock:
+  Enabled: false
+
+RSpec/AnyInstance:
+  Enabled: false
+
+RSpec/SpecFilePathFormat:
+  Enabled: false
+
+RSpec/MultipleDescribes:
+  Enabled: false
+
+RSpec/NestedGroups:
+  Max: 5
+
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+
+Style/HashSyntax:
+  EnforcedShorthandSyntax: either
+
+Style/MapToHash:
+  Enabled: false
+
+Style/HashTransformKeys:
+  Enabled: false
+
+Style/RedundantCondition:
+  Enabled: false
+
+Style/ReturnNilInPredicateMethodDefinition:
+  Enabled: false
+
+Style/SafeNavigationChain:
+  Enabled: false
+
+Style/GuardClause:
+  Enabled: false
+
+Style/MutableConstant:
+  Enabled: false
+
+Style/ParallelAssignment:
+  Enabled: false
+
+Style/SoleNestedConditional:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/Next:
+  Enabled: false
+
+Style/EmptyElse:
+  Enabled: false
+
+Style/MultipleComparison:
+  Enabled: false
+
+Style/RedundantReturn:
+  Enabled: false
+
+Style/NestedTernaryOperator:
+  Enabled: false
+
+Style/RedundantParentheses:
+  Enabled: false
+
+Style/RedundantSelf:
+  Enabled: false
+
+Naming/MethodParameterName:
+  Enabled: false
+
+Style/IdenticalConditionalBranches:
+  Enabled: false
+
+Style/RedundantCondition:
+  Enabled: false
+
+Layout/IndentationWidth:
+  Enabled: false
+
+Lint/BinaryOperatorWithIdenticalOperands:
+  Enabled: false
+
+Lint/DuplicateBranch:
+  Enabled: false
+
+Lint/DuplicateCaseCondition:
+  Enabled: false
+
+Performance/CollectionLiteralInLoop:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  EnforcedStyle: nested
+  Enabled: false
+
+Layout/RescueEnsureAlignment:
+  Enabled: false
+
+Style/SymbolArray:
+  Enabled: false
+
+Style/ArrayFirstLast:
+  Enabled: false
+
+RSpec/RepeatedExample:
+  Enabled: false
+
+RSpec/RepeatedDescription:
+  Enabled: false
+
+Style/ArgumentsForwarding:
+  Enabled: false
+
+Style/HashEachMethods:
+  Enabled: false
+
+Style/SymbolProc:
+  Enabled: false
+
+Style/PerlBackrefs:
+  Enabled: false
+
+Style/GlobalStdStream:
+  Enabled: false
+
+Style/StringConcatenation:
+  Enabled: false
+
+Style/RescueModifier:
+  Enabled: false
+
+Layout/MultilineMethodCallIndentation:
+  Enabled: false
+
+Layout/MultilineOperationIndentation:
+  Enabled: false
+
+Layout/ElseAlignment:
+  Enabled: false
+
+Layout/FirstHashElementIndentation:
+  Enabled: false
+
+Layout/FirstArrayElementIndentation:
+  Enabled: false
+
+Layout/FirstArgumentIndentation:
+  Enabled: false
+
+Layout/EndAlignment:
+  Enabled: false
+
+Layout/BeginEndAlignment:
+  Enabled: false
+
+Layout/CaseIndentation:
+  Enabled: false
+
+Layout/ClosingParenthesisIndentation:
+  Enabled: false
+
+Layout/SpaceAroundOperators:
+  Enabled: false
+
+Layout/ExtraSpacing:
+  Enabled: false
+
+Layout/SpaceBeforeBlockBraces:
+  Enabled: false
+
+Layout/SpaceInsideBlockBraces:
+  Enabled: false
+
+Layout/SpaceInsideHashLiteralBraces:
+  Enabled: false
+
+Layout/EmptyLineAfterGuardClause:
+  Enabled: false
+
+Layout/EmptyLinesAroundAttributeAccessor:
+  Enabled: false
+
+Layout/EmptyLinesAroundClassBody:
+  Enabled: false
+
+Layout/EmptyLinesAroundModuleBody:
+  Enabled: false
+
+Layout/EmptyLinesAroundMethodBody:
+  Enabled: false
+
+Layout/LeadingEmptyLines:
+  Enabled: false
+
+Layout/EmptyLines:
+  Enabled: false
+
+Layout/SpaceAroundKeyword:
+  Enabled: false
+
+Layout/SpaceAfterColon:
+  Enabled: false
+
+Layout/SpaceAfterComma:
+  Enabled: false
+
+Lint/SuppressedException:
+  Enabled: false
+
+Lint/UselessAccessModifier:
+  Enabled: false
+
+Lint/ConstantDefinitionInBlock:
+  Enabled: false
+
+Lint/EmptyBlock:
+  Enabled: false
+
+Lint/ShadowingOuterLocalVariable:
+  Enabled: false
+
+Lint/NonLocalExitFromIterator:
+  Enabled: false
+
+Naming/VariableNumber:
+  Enabled: false
+
+Naming/AccessorMethodName:
+  Enabled: false
+
+Naming/PredicateName:
+  Enabled: false
+
+Naming/MemoizedInstanceVariableName:
+  Enabled: false
+
+Performance/MapMethodChain:
+  Enabled: false
+
+Performance/FlatMap:
+  Enabled: false
+
+Performance/UnfreezeString:
+  Enabled: false
+
+Performance/StringInclude:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/DocumentationMethod:
+  Enabled: false
+
+Style/CommentedKeyword:
+  Enabled: false
+
+Style/AsciiComments:
+  Enabled: false
+
+Style/FormatStringToken:
+  Enabled: false
+
+Lint/MissingSuper:
+  Enabled: false

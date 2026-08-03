@@ -1,0 +1,59 @@
+page_sequences:
+  - role: cover
+    header: null
+    footer: null
+    build_content: cover_content
+  - role: body
+    header: "{{docidentifier}}"
+    footer: "%d"
+    header_align: right
+
+cover_content:
+  - type: spacer
+    size: 40
+  - type: text
+    source: "{{docidentifier}}"
+    style: cover_docidentifier
+  - type: spacer
+    size: 20
+  - type: text
+    source: "{{title}}"
+    style: cover_title
+  - type: spacer
+    size: 30
+  - type: text
+    source: Altvocab Synthetic Publishing
+    style: cover_org
+
+section:
+  heading_style: "{{title_style_id}}"
+  body_style: "{{style_id}}"
+  insert_page_break_before: false
+
+content_to_flowable:
+  Paragraph: text_paragraph
+  Table: table
+  List: list
+  Image: image
+  Preformatted: preformatted
+  PageBreak: page_break
+
+style_resolution:
+  paragraph: resolve_from_style_id
+  heading: resolve_from_title_style_id
+
+list:
+  defaults:
+    ordered_marker: "%d)"
+    bullet_marker: "*"
+
+image:
+  default_natural_width: 300
+  default_natural_height: 200
+  max_display_width: 120
+
+toc:
+  styles:
+    entry: toc_entry
+    sub: toc_entry_sub
+  top_offset: 40

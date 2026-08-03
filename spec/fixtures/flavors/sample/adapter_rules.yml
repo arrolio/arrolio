@@ -1,0 +1,162 @@
+# Synthetic sample flavor adapter rules for specs.
+
+metadata:
+  root: bibdata
+  fields:
+    docidentifier: docidentifier
+    docnumber: docnumber
+    edition: edition
+    title: "title[@type='main']"
+    title_main: "title[@type='title-main']"
+    title_part: "title[@type='title-part']"
+    title_part_prefix: "title[@type='title-part-prefix']"
+    doctype: doctype
+    language: language
+
+cover:
+  fields:
+    - docidentifier
+    - edition
+    - title_main
+    - title_part
+
+sections:
+  container: sections
+
+element_mapping:
+  clause:
+    content_type: section
+  terms:
+    content_type: section
+  definitions:
+    content_type: section
+  p:
+    content_type: paragraph
+  table:
+    content_type: table
+  figure:
+    content_type: figure
+  ul:
+    content_type: list
+    kind: bullet
+  ol:
+    content_type: list
+    kind: ordered
+  dl:
+    content_type: list
+    kind: bullet
+  term:
+    content_type: term
+  note:
+    content_type: note
+  termnote:
+    content_type: note
+  example:
+    content_type: note
+  pre:
+    content_type: preformatted
+  sourcecode:
+    content_type: preformatted
+  pagebreak:
+    content_type: pagebreak
+
+paragraph_styles:
+  zzSTDTitle1: doc_title
+
+inline_styles:
+  strong: strong
+  em: em
+  tt: monospace
+  sub: subscript
+  sup: superscript
+  link: link
+  xref: xref
+  fmt-xref: xref
+  eref: xref
+  fmt-identifier: identifier
+  identifier: identifier
+  fmt-preferred: term
+  preferred: term
+  fmt-name: term
+  renderterm: term
+  refterm: term
+  term: term
+
+span_class_styles:
+  boldtitle: strong
+  bold: strong
+  fmt-caption-label: caption_label
+  fmt-element-name: caption_label
+  citetbl: xref
+  citetable: xref
+  citesection: xref
+
+block_level_elements:
+  - note
+  - termnote
+  - example
+  - figure
+  - table
+  - clause
+  - ul
+  - ol
+  - dl
+  - formula
+  - fmt-xref-label
+  - fmt-fn-body
+  - fmt-footnote-container
+
+skip_metadata_elements:
+  - asciimath
+  - latexmath
+  - image
+  - localityStack
+  - locality
+  - referenceFrom
+  - referenceTo
+  - origin
+  - source
+
+skip_elements:
+  - title
+  - fmt-title
+  - fmt-xref-label
+  - fmt-name
+  - fmt-fn-body
+  - fmt-footnote-container
+
+tab_replacements:
+  biblio-tag: " "
+
+heading:
+  source: fmt-title
+
+selectors:
+  heading: fmt-title
+  heading_depth_attribute: depth
+  list_item: li
+  list_item_label: fmt-name
+  paragraph: p
+  term_number: fmt-name
+  term_preferred: fmt-preferred
+  term_definition: fmt-definition
+  term_source: fmt-termsource
+  note_label: fmt-name
+  figure_image: image
+  figure_caption: fmt-name
+  figure_caption_fallback: name
+  table_row: tr
+  table_cell:
+    - td
+    - th
+  table_header: thead
+  table_body: tbody
+  biblio_tag: biblio-tag
+  biblio_formattedref: formattedref
+  image_src_attribute: src
+  image_alt_attribute: alt
+  id_attribute: id
+  autonum_class: fmt-autonum-delim
+  stem: stem
+  stem_formatted: fmt-stem
+  math: math
