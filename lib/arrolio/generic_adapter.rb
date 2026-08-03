@@ -282,60 +282,67 @@ module Arrolio
     end
 
     def convert_figure(elem)
-      result = []
       image_name = selector('figure_image')
       src_attr = selector('image_src_attribute')
       alt_attr = selector('image_alt_attribute')
       image_elem = find_direct_child(elem, image_name)
+      image = nil
       if image_elem
         src = image_elem.attribute(src_attr)&.value
         if src && !src.empty?
-          result << Content::Image.new(src,
-                                       alt: image_elem.attribute(alt_attr)&.value,
-                                       id: image_elem.attribute(selector('id_attribute'))&.value)
+          image = Content::Image.new(src,
+                                     alt: image_elem.attribute(alt_attr)&.value,
+                                     id: image_elem.attribute(selector('id_attribute'))&.value)
         end
       end
       name = find_first(elem, selector('figure_caption')) ||
              find_first(elem, selector('figure_caption_fallback'))
-      return result unless name
+      caption = nil
+      if name
+        runs = collect_inline_runs(name)
+        caption = Content::Paragraph.new(runs, style_id: :figure_caption) unless runs.empty?
+      end
+      return [] if image.nil? && caption.nil?
 
-      runs = collect_inline_runs(name)
-      result << Content::Paragraph.new(runs, style_id: :figure_caption) unless runs.empty?
-      result
+      [Content::FigureGroup.new(image: image, caption: caption, id: elem.attribute(selector('id_attribute'))&.value)]
     end
 
     def convert_term(elem)
-      result = []
+      number = nil
       number_elem = find_first(elem, selector('term_number'))
-      if number_elem
-        number = text_of(number_elem).strip
-        unless number.empty?
-          result << Content::Paragraph.new(
-            [Content::InlineRun.new(number, style_id: :term)],
-            style_id: :term
-          )
-        end
+      number = text_of(number_elem).strip if number_elem
+      number = nil if number && number.empty?
+
+      preferred = nil
+      preferred_elem = find_first(elem, selector('term_preferred'))
+      if preferred_elem
+        runs = collect_inline_runs(preferred_elem, default_style: :term)
+        preferred = Content::Paragraph.new(runs, style_id: :term) unless runs.empty?
       end
-      preferred = find_first(elem, selector('term_preferred'))
-      if preferred
-        runs = collect_inline_runs(preferred, default_style: :term)
-        result << Content::Paragraph.new(runs, style_id: :term) unless runs.empty?
-      end
-      definition = find_first(elem, selector('term_definition'))
-      if definition
+
+      definition = []
+      definition_elem = find_first(elem, selector('term_definition'))
+      if definition_elem
         para_name = selector('paragraph')
-        REXML::XPath.each(definition, ".//#{para_name}") do |p|
+        REXML::XPath.each(definition_elem, ".//#{para_name}") do |p|
           next unless p.is_a?(REXML::Element)
 
-          result << convert_paragraph(p)
+          definition << convert_paragraph(p)
         end
       end
-      source = find_first(elem, selector('term_source'))
-      return result unless source
 
-      runs = collect_inline_runs(source, default_style: :bibitem)
-      result << Content::Paragraph.new(runs, style_id: :bibitem) unless runs.empty?
-      result
+      source = nil
+      source_elem = find_first(elem, selector('term_source'))
+      if source_elem
+        runs = collect_inline_runs(source_elem, default_style: :bibitem)
+        source = Content::Paragraph.new(runs, style_id: :bibitem) unless runs.empty?
+      end
+
+      return [] if number.nil? && preferred.nil? && definition.empty? && source.nil?
+
+      [Content::TermEntry.new(number: number, preferred: preferred,
+                              definition: definition, source: source,
+                              id: elem.attribute(selector('id_attribute'))&.value)]
     end
 
     def convert_note(elem)
@@ -355,18 +362,25 @@ module Arrolio
     end
 
     def convert_bibitem(bi)
-      runs = []
       tag_name = selector('biblio_tag')
       tag = find_first(bi, tag_name)
+      tag_text = nil
       if tag
         tag_runs = collect_inline_runs(tag, default_style: :bibitem)
         replacement = (@rules['tab_replacements'] || {})[tag.name] || "\t"
         tag_runs.map! { |r| r.text == "\t" ? Content::InlineRun.new(replacement, style_id: r.style_id) : r }
-        runs.concat(tag_runs)
+        tag_text = tag_runs.map(&:text).join.strip
       end
       formattedref = find_first(bi, selector('biblio_formattedref'))
-      runs.concat(collect_inline_runs(formattedref)) if formattedref
-      Content::Paragraph.new(runs, style_id: :bibitem)
+      ref_paragraph = nil
+      if formattedref
+        runs = collect_inline_runs(formattedref)
+        ref_paragraph = Content::Paragraph.new(runs, style_id: :bibitem) unless runs.empty?
+      end
+      return [] if tag_text.nil? && ref_paragraph.nil?
+
+      [Content::BibliographyItem.new(tag: tag_text, formattedref: ref_paragraph,
+                                     id: bi.attribute(selector('id_attribute'))&.value)]
     end
 
     # ---- Inline run collection (driven by rules) ----
