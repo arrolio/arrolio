@@ -119,6 +119,12 @@ module Arrolio
         out << paragraph_flowable(child)
       when Content::Note
         out << note_flowable(child)
+      when Content::FigureGroup
+        figure_group_flowable(child, out)
+      when Content::TermEntry
+        term_entry_flowable(child, out)
+      when Content::BibliographyItem
+        bibliography_item_flowable(child, out)
       when Content::Section
         build_section(child, out)
       when Content::Table
@@ -140,6 +146,42 @@ module Arrolio
         note.label,
         body,
         style: resolve(note.style_id)
+      )
+    end
+
+    def figure_group_flowable(group, out)
+      out << image_flowable(group.image) if group.image
+      return unless group.caption
+
+      caption_style = resolve(:figure_caption)
+      runs = group.caption.inline_runs.map do |run|
+        InlineRun.new(run.text, style: caption_style)
+      end
+      out << Flowables::TextFlowable.new(runs, style: caption_style)
+    end
+
+    def term_entry_flowable(entry, out)
+      if entry.number
+        out << Flowables::TextFlowable.new(
+          [InlineRun.new(entry.number, style: resolve(:term))],
+          style: resolve(:term)
+        )
+      end
+      out << paragraph_flowable(entry.preferred) if entry.preferred
+      entry.definition.each { |paragraph| out << paragraph_flowable(paragraph) }
+      return unless entry.source
+
+      out << paragraph_flowable(entry.source)
+    end
+
+    def bibliography_item_flowable(item, out)
+      marker_text = item.tag.to_s
+      body = item.formattedref ? [paragraph_flowable(item.formattedref)] : []
+      out << Flowables::NoteFlowable.new(
+        marker_text,
+        body,
+        style: resolve(item.style_id),
+        marker_width: 36.0
       )
     end
 
