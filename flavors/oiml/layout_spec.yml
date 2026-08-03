@@ -1,0 +1,268 @@
+# Generated from oiml.xsl by scripts/xsl_to_config.rb.
+# DO NOT EDIT BY HAND — edit the XSL and rerun the generator.
+
+generated_from: oiml.xsl
+profile: standoc.yml
+stylesheet: oiml.xsl
+xsl_variables:
+  marginLeftRight1: '25.5'
+  marginLeftRight2: '25.5'
+  marginTop: '26.5'
+  marginBottom: '26.5'
+  layoutVersion: '2024'
+  edition: "edition\n\t\t\t\t\n\t\t\t\t "
+  i18n_edition: edition
+  ratio: '0.82'
+  "y": '30'
+  border_title: 1pt solid black
+  i18n_locality_part: locality.part
+  oiml_fr_part1: Organisation Internationale
+  oiml_fr_part2: de Métrologie Légale
+  docidentifier_full: " "
+  example_body: fo:block
+  ul_labels_: "■\n\t\t●"
+xsl_attribute_sets:
+  root-style:
+    font-family: Times New Roman, Cambria Math,
+    font-size: 11pt
+    color: black
+    font-selection-strategy: character-by-character
+  toc-title-style:
+    font-size: 14pt
+    text-align: center
+    space-after: 26pt
+  p-style:
+    line-height: '1.2'
+  note-style:
+    font-size: 11pt
+    margin-bottom: 8pt
+  termnote-style:
+    font-size: 11pt
+    margin-bottom: 8pt
+  note-name-style:
+    font-style: italic
+  example-style:
+    font-size: 11pt
+    margin-bottom: 8pt
+  example-body-style:
+    margin-left: 12.5mm
+  example-p-style:
+    font-size: 11pt
+    margin-top: 2pt
+    margin-bottom: 2pt
+  termnote-name-style:
+    font-style: italic
+  figure-name-style:
+    font-weight: normal
+  table-name-style:
+    font-weight: normal
+  term-style:
+    margin-bottom: 12pt
+  term-definition-style:
+    space-before: 6pt
+  link-style: {}
+  xref-style: {}
+  table-row-style:
+    min-height: 8.3mm
+default_page_template: body
+page_templates:
+  body:
+    page_size: A4
+    margins:
+      top: 26.5mm
+      bottom: 26.5mm
+      left: 25.5mm
+      right: 25.5mm
+    region_extents:
+      before: 18mm
+      after: 18mm
+styles:
+  body:
+    font_name: Times New Roman
+    font_size: 11.0
+    fill_color: black
+    align: justify
+    margin_bottom: 8
+  heading_1:
+    font_size: 14.0
+    align: left
+    margin_bottom: 30pt
+    parent: body
+    font_name: Times New Roman Bold
+    keep_together: true
+  heading_2:
+    margin_bottom: 12pt
+    font_size: 11.0
+    parent: body
+    font_name: Times New Roman Bold
+    keep_together: true
+  heading_3:
+    font_size: 11.0
+    parent: body
+    font_name: Times New Roman Bold
+    keep_together: true
+  heading_4:
+    font_size: 11.0
+    parent: body
+    font_name: Times New Roman Bold
+    keep_together: true
+  heading_5:
+    font_size: 11.0
+    parent: body
+    font_name: Times New Roman Bold
+    keep_together: true
+  heading_6:
+    font_size: 11.0
+    parent: body
+    font_name: Times New Roman Bold
+    keep_together: true
+  note:
+    font_size: 11.0
+    margin_bottom: 8pt
+    parent: body
+  termnote:
+    font_size: 11.0
+    margin_bottom: 8pt
+    parent: body
+  note_label:
+    font_style: italic
+    parent: body
+    font_name: Times New Roman Italic
+  example:
+    font_size: 11.0
+    margin_bottom: 8pt
+    parent: body
+  caption_label:
+    parent: body
+  example_label:
+    parent: note_label
+  inline:
+    parent: body
+  strong:
+    parent: body
+    font_name: Times New Roman Bold
+  em:
+    parent: body
+    font_name: Times New Roman Italic
+  monospace:
+    parent: body
+    font_name: Courier
+  preformatted:
+    parent: body
+    font_name: Courier
+    font_size: 9
+    align: left
+    line_spacing: 1.0
+    margin_bottom: 6
+  identifier:
+    parent: body
+    font_name: Times New Roman Italic
+  term:
+    margin_bottom: 12pt
+    parent: body
+    font_name: Times New Roman Italic
+  xref:
+    parent: body
+  link:
+    parent: body
+    font_name: Times New Roman Italic
+  bibitem:
+    parent: body
+    margin_top: 4
+    margin_bottom: 4
+  footnote:
+    parent: body
+    font_size: 9
+    margin_top: 2
+    margin_bottom: 2
+  list_bullet: &1
+    margin_bottom: 6pt
+    parent: body
+  list_ordered: *1
+  list_marker:
+    parent: body
+    font_name: Times New Roman Bold
+  table:
+    parent: body
+    font_size: 10
+  table_cell:
+    parent: table
+    margin_top: 2
+    margin_bottom: 2
+  table_header_cell:
+    parent: table_cell
+    font_name: Times New Roman Bold
+  figure_caption:
+    font_weight: normal
+    parent: body
+    font_size: 10
+    align: center
+  toc_title:
+    font_size: 14.0
+    align: center
+    margin_bottom: 26pt
+    parent: body
+  toc_entry:
+    parent: body
+    font_size: 11
+  toc_entry_sub:
+    parent: toc_entry
+    margin_left: 12
+  cover_docidentifier:
+    parent: body
+    font_name: Jost SemiBold
+    font_size: 28
+    align: center
+    fill_color: "#221E1F"
+  cover_title:
+    parent: body
+    font_name: Jost
+    font_size: 16
+    align: center
+  cover_title_part:
+    parent: cover_title
+    font_size: 14
+  cover_title_other:
+    parent: body
+    font_name: Jost Light
+    font_size: 11
+    align: center
+  cover_org:
+    parent: body
+    font_name: Jost
+    font_size: 13
+    align: right
+  cover_label:
+    parent: body
+    font_name: Jost
+    font_size: 13
+    align: right
+    fill_color: "#221E1F"
+  doc_title:
+    parent: body
+    font_name: Times New Roman Bold
+    font_size: 18
+    align: center
+    margin_bottom: 36
+  section_body_1:
+    parent: body
+    margin_left: 0
+  section_body_2:
+    parent: body
+    margin_left: 12
+  section_body_3:
+    parent: body
+    margin_left: 24
+  section_body_4:
+    parent: body
+    margin_left: 36
+  section_body_5:
+    parent: body
+    margin_left: 48
+  section_body_6:
+    parent: body
+    margin_left: 60
+flows:
+  main:
+    region: body
+    default_style_id: body

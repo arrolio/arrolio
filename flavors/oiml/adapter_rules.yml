@@ -1,0 +1,254 @@
+# Generated from oiml.xsl by scripts/xsl_to_config.rb.
+# DO NOT EDIT BY HAND — edit the XSL and rerun the generator.
+
+generated_from: oiml.xsl
+profile: standoc.yml
+stylesheet: oiml.xsl
+metadata:
+  root: bibdata
+  fields:
+    docidentifier: docidentifier[@primary='true']
+    docnumber: docnumber
+    edition: edition
+    revision_date: version/revision-date
+    title: title[@type='main']
+    title_intro: title[@type='title-intro']
+    title_main: title[@type='title-main']
+    title_part: title[@type='title-part']
+    title_complementary: title[@type='title-complementary']
+    title_part_prefix: title[@type='title-part-prefix']
+    doctype: doctype
+    language: language
+cover:
+  fields:
+  - docidentifier
+  - edition
+  - title_intro
+  - title_main
+  - title_complementary
+  - title_part
+sections:
+  container: sections
+element_mapping:
+  clause:
+    content_type: section
+  terms:
+    content_type: section
+  definitions:
+    content_type: section
+  annex2:
+    content_type: section
+  p:
+    content_type: paragraph
+  table:
+    content_type: table
+  figure:
+    content_type: figure
+  ul:
+    content_type: list
+    kind: bullet
+  ol:
+    content_type: list
+    kind: ordered
+  dl:
+    content_type: list
+    kind: bullet
+  term:
+    content_type: term
+  note:
+    content_type: note
+  termnote:
+    content_type: note
+  example:
+    content_type: note
+  pre:
+    content_type: preformatted
+  sourcecode:
+    content_type: preformatted
+  pagebreak:
+    content_type: pagebreak
+paragraph_styles:
+  zzSTDTitle1: doc_title
+inline_styles:
+  strong: strong
+  em: em
+  tt: monospace
+  sub: subscript
+  sup: superscript
+  link: link
+  xref: xref
+  fmt-xref: xref
+  eref: xref
+  fmt-identifier: identifier
+  identifier: identifier
+  fmt-preferred: term
+  preferred: term
+  fmt-name: term
+  renderterm: term
+  refterm: term
+  term: term
+span_class_styles:
+  boldtitle: strong
+  bold: strong
+  fmt-caption-label: caption_label
+  fmt-element-name: caption_label
+  citetbl: xref
+  citetable: xref
+  citesection: xref
+block_level_elements:
+- note
+- termnote
+- example
+- figure
+- table
+- clause
+- ul
+- ol
+- dl
+- formula
+- fmt-xref-label
+- fmt-fn-body
+- fmt-footnote-container
+skip_metadata_elements:
+- asciimath
+- latexmath
+- image
+- localityStack
+- locality
+- referenceFrom
+- referenceTo
+- origin
+- source
+skip_elements:
+- title
+- fmt-title
+- fmt-xref-label
+- fmt-name
+- fmt-fn-body
+- fmt-footnote-container
+tab_replacements:
+  biblio-tag: " "
+heading:
+  source: fmt-title
+selectors:
+  heading: fmt-title
+  heading_depth_attribute: depth
+  list_item: li
+  list_item_label: fmt-name
+  paragraph: p
+  term_number: fmt-name
+  term_preferred: fmt-preferred
+  term_definition: fmt-definition
+  term_source: fmt-termsource
+  note_label: fmt-name
+  figure_image: image
+  figure_caption: fmt-name
+  figure_caption_fallback: name
+  table_row: tr
+  table_cell:
+  - td
+  - th
+  table_header: thead
+  table_body: tbody
+  biblio_tag: biblio-tag
+  biblio_formattedref: formattedref
+  image_src_attribute: src
+  image_alt_attribute: alt
+  id_attribute: id
+  autonum_class: fmt-autonum-delim
+  stem: stem
+  stem_formatted: fmt-stem
+  math: math
+  preface_container: preface
+  preface_children:
+  - clause
+  - foreword
+  bibliography_container: bibliography
+  bibliography_reference: references
+  bibliography_item: bibitem
+  fallback_title: title
+  span: span
+  tab_inline: tab
+  break_inline: br
+xsl_templates:
+- name: capitalize_oiml
+  match: text()
+  mode: capitalize
+  attributes:
+  - name: font-size
+    value: pt
+    test: string-length($str) > 0
+  output_elements: []
+- match: mn:span[@class = 'fmt-obligation']
+  mode: contents_item
+  priority: '3'
+  attributes:
+  - name: style
+    value: text-indent:4mm
+  output_elements: []
+- match: mn:preface//mn:clause[@type = 'toc']/mn:fmt-title
+  priority: '3'
+  attributes: []
+  output_elements:
+  - block
+- match: mn:sections[mn:p[@class = 'zzSTDTitle1'] and count(*) = 1]
+  mode: update_xml_step1
+  priority: '3'
+  attributes: []
+  output_elements: []
+- match: mn:sections//mn:p[@class = 'zzSTDTitle1']
+  priority: '4'
+  attributes: []
+  output_elements:
+  - block
+- name: note
+  match: mn:note
+  attributes:
+  - name: provisional-distance-between-starts
+    value: 14.5mm
+  output_elements:
+  - block
+  - list-block
+  - list-item
+  - list-item-label
+  - list-item-body
+- name: example
+  match: mn:example
+  attributes: []
+  output_elements:
+  - block-container
+  - block
+- match: mn:example/mn:fmt-name/text()
+  priority: '5'
+  attributes: []
+  output_elements: []
+- match: mn:ul/mn:li/mn:fmt-name[normalize-space() = '—']
+  mode: update_xml_step1
+  priority: '3'
+  attributes:
+  - name: label
+    value: "■"
+  - name: label
+    value: "●"
+    test: ancestor::mn:term
+  output_elements: []
+- match: mn:annex/mn:fmt-title//mn:span[@class = 'fmt-obligation']
+  mode: update_xml_step1
+  priority: '3'
+  attributes: []
+  output_elements: []
+- match: mn:annex/mn:fmt-title//mn:br[preceding-sibling::node()[1][self::mn:br]]
+  mode: update_xml_step1
+  priority: '3'
+  attributes: []
+  output_elements: []
+- match: mn:annex2[normalize-space() != '']
+  attributes:
+  - name: role
+    value: Sect
+  output_elements:
+  - block
+- match: mn:annex/mn:fmt-title//mn:br
+  attributes: []
+  output_elements:
+  - block

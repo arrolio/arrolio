@@ -1,0 +1,102 @@
+metadata:
+  root: meta
+  fields:
+    docidentifier: id
+    title: h1
+    language: lang
+
+cover:
+  fields:
+    - docidentifier
+    - title
+
+sections:
+  container: body
+
+element_mapping:
+  sec:
+    content_type: section
+  para:
+    content_type: paragraph
+  tbl:
+    content_type: table
+  fig:
+    content_type: figure
+  ulist:
+    content_type: list
+    kind: bullet
+  olist:
+    content_type: list
+    kind: ordered
+  note:
+    content_type: note
+  code:
+    content_type: preformatted
+
+selectors:
+  heading: h2
+  heading_depth_attribute: level
+  list_item: li
+  list_item_label: marker
+  paragraph: para
+  note_label: label
+  figure_image: img
+  figure_caption: caption
+  figure_caption_fallback: title
+  table_row: row
+  table_cell:
+    - cell
+    - header
+  table_header: thead
+  table_body: tbody
+  biblio_tag: citekey
+  biblio_formattedref: formatted
+  image_src_attribute: src
+  image_alt_attribute: alt
+  id_attribute: id
+  autonum_class: autonum
+  stem: math
+  stem_formatted: mathfmt
+  math: mathraw
+  preface_container: front
+  preface_children:
+    - sec
+  bibliography_container: refs
+  bibliography_reference: list
+  bibliography_item: entry
+  fallback_title: h1
+  span: emphasis
+  tab_inline: tab
+  break_inline: br
+
+paragraph_styles:
+  lead: doc_title
+
+inline_styles:
+  b: strong
+  i: em
+  code: monospace
+  link: link
+  ref: xref
+
+span_class_styles:
+  bold: strong
+  italic: em
+
+block_level_elements:
+  - note
+  - fig
+  - tbl
+  - sec
+  - ulist
+  - olist
+
+skip_metadata_elements:
+  - meta
+
+skip_elements:
+  - h1
+  - h2
+
+heading:
+  source: h2

@@ -1,0 +1,28 @@
+# frozen_string_literal: true
+
+require 'arrolio'
+
+input = ARGV[0]
+output = ARGV[1] || 'out.pdf'
+flavor_dir = ARGV[2] || ENV.fetch('ARROLIO_FLAVOR_DIR', nil)
+
+unless input && File.exist?(input)
+  warn 'usage: arrolio2pdf <input.xml> [output.pdf] [flavor_dir]'
+  warn '       (or set ARROLIO_FLAVOR_DIR env var)'
+  exit 2
+end
+
+unless flavor_dir && Dir.exist?(flavor_dir)
+  warn "error: flavor directory not found: #{flavor_dir.inspect}"
+  warn '       pass it as the 3rd argument or set ARROLIO_FLAVOR_DIR'
+  exit 2
+end
+
+xml = File.read(input)
+Arrolio::ConfigDrivenPipeline.render(
+  xml,
+  io: output,
+  flavor_dir: File.expand_path(flavor_dir),
+  input_path: File.expand_path(input)
+)
+puts "wrote #{output} (#{File.size(output)} bytes)"

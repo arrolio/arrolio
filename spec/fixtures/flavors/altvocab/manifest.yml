@@ -1,0 +1,13 @@
+name: altvocab
+version: 0.1.0
+description: Synthetic second flavor for arrolio specs (non-Metanorma vocabulary) — proves the generic design works across vocabularies
+upstream: {}
+doctypes:
+  - article
+fonts:
+  required: []
+  optional: []
+config_files:
+  layout_spec: layout_spec.yml
+  adapter_rules: adapter_rules.yml
+  flow_rules: flow_rules.yml
