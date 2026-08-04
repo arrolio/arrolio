@@ -3,10 +3,9 @@
 require 'pdfrb'
 
 # Arrolio -- a flavor-agnostic paged-media layout engine.
-# Core knows NOTHING about specific document formats (OIML,
-# ISO, IEC, BSI). Flavors are loaded on demand:
-#   require 'arroolio'
-#   require 'arrolio/oiml'  # Load the OIML flavor
+# Core knows NOTHING about specific document formats. Each flavor
+# lives in its own directory (XSL + 3 generated YAML files) outside
+# the gem and is rendered via Arrolio::ConfigDrivenPipeline.
 module Arrolio
   autoload :VERSION, 'arrolio/version'
   autoload :Error, 'arrolio/error'

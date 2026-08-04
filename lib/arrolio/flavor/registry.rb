@@ -11,7 +11,7 @@ module Arrolio
     #   .render(xml, io:, **opts) — render XML to PDF bytes
     #
     # Example:
-    #   Arrolio::Flavor::Registry.register(:my_flavor, Arrolio::Oiml::Pipeline)
+    #   Arrolio::Flavor::Registry.register(:my_flavor, Arrolio::MyFlavorPipeline)
     #   Arrolio::Flavor::Registry.for(:my_flavor).render(xml, io: io)
     class Registry
       @flavors = {}
