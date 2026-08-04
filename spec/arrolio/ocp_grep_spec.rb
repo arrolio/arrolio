@@ -2,36 +2,29 @@
 
 require 'spec_helper'
 
-RSpec.describe 'OCP: generic core has zero flavor-specific literals' do
+RSpec.describe 'OCP: entire lib/ has zero flavor-specific artifacts' do
   let(:gem_root) { File.expand_path('../..', __dir__) }
 
-  let(:generic_core_files) do
-    [
-      'lib/arrolio/generic_adapter.rb',
-      'lib/arrolio/generic_flow_builder.rb',
-      'lib/arrolio/config_driven_pipeline.rb',
-      'lib/arrolio/asset_resolver.rb',
-      'lib/arrolio/toc_builder.rb',
-      'exe/arrolio2pdf'
-    ]
+  let(:all_lib_files) do
+    Dir.glob(File.join(gem_root, 'lib', '**', '*.rb'))
   end
 
-  def core_source
-    generic_core_files.map { |path| File.read(File.join(gem_root, path)) }.join("\n")
+  def lib_source
+    all_lib_files.map { |path| File.read(path) }.join("\n")
   end
 
-  it 'has no flavor names (oiml/iso/iec/bsi)' do
-    expect(core_source).not_to match(/OIML|iso_|iec_|bsi_/i)
+  it 'has no flavor names (oiml/iso/iec/bsi) anywhere in lib/' do
+    expect(lib_source).not_to match(/\bOIML\b/i)
   end
 
-  it 'has no zzSTDTitle reference' do
-    expect(core_source).not_to include('zzSTDTitle')
+  it 'has no zzSTDTitle reference in lib/' do
+    expect(lib_source).not_to include('zzSTDTitle')
   end
 
-  it 'has no flavor-specific font names' do
-    expect(core_source).not_to match(/["']Arial["']/)
-    expect(core_source).not_to match(/["']Jost["']/)
-    expect(core_source).not_to match(/["']Times New Roman["']/)
+  it 'has no flavor-specific font names in lib/' do
+    expect(lib_source).not_to match(/["']Arial["']/)
+    expect(lib_source).not_to match(/["']Jost["']/)
+    expect(lib_source).not_to match(/["']Times New Roman["']/)
   end
 
   it 'references fmt-* only in DEFAULT_SELECTORS (clearly labelled convention)' do
@@ -45,6 +38,24 @@ RSpec.describe 'OCP: generic core has zero flavor-specific literals' do
     expect(outside_defaults).not_to include('fmt-definition')
     expect(outside_defaults).not_to include('fmt-termsource')
     expect(outside_defaults).not_to include('biblio-tag')
+  end
+
+  it 'scripts/xsl_to_config.rb has no OIML/Metanorma vocabulary literals' do
+    converter = File.read(File.join(gem_root, 'scripts/xsl_to_config.rb'))
+    expect(converter).not_to match(/\bOIML\b/)
+    expect(converter).not_to include('Times New Roman')
+    expect(converter).not_to include('Jost')
+    expect(converter).not_to include('Organisation Internationale')
+  end
+
+  it 'exe/arrolio2pdf has no flavor-specific references' do
+    cli = File.read(File.join(gem_root, 'exe/arrolio2pdf'))
+    expect(cli).not_to match(/\bOIML\b/i)
+  end
+
+  it 'the gemspec excludes flavors/ from packaged files' do
+    gemspec = File.read(File.join(gem_root, 'arrolio.gemspec'))
+    expect(gemspec).to include('flavors/')
   end
 end
 

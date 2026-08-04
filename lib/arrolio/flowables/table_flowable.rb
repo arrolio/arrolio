@@ -135,10 +135,9 @@ module Arrolio
                            body: body.map { |r| r.cells.map(&:text) })
       end
 
-      # Use the parent table's style (which inherits from body →
-      # Times New Roman) rather than hard-coding Times-Roman.
-      # Falls back to Times-Roman only if the table style has no
-      # font_name (shouldn't happen in practice).
+      # Use the parent table's style (which inherits from body) rather
+      # than hard-coding a font. Falls back to Times-Roman only if the
+      # table style has no font_name (shouldn't happen in practice).
       def cell_style(_cell_or_para)
         @style.font_name ? @style : Style::Definition.new(font_name: 'Times-Roman', font_size: 10)
       end

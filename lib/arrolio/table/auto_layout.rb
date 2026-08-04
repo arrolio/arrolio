@@ -84,7 +84,7 @@ module Arrolio
       end
 
       def default_measurer
-        GlyphMeasurer.new(font_name: 'Times New Roman')
+        GlyphMeasurer.new(font_name: 'Times-Roman')
       end
     end
   end
