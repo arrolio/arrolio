@@ -174,6 +174,8 @@ module Arrolio
         emit_footnote_markers_for(child, out)
       when Content::Note
         out << note_flowable(child)
+      when Content::Example
+        out << example_flowable(child)
       when Content::FigureGroup
         figure_group_flowable(child, out)
       when Content::TermEntry
@@ -201,6 +203,15 @@ module Arrolio
         note.label,
         body,
         style: resolve(note.style_id)
+      )
+    end
+
+    def example_flowable(example)
+      body = example.body.map { |paragraph| paragraph_flowable(paragraph) }
+      Flowables::NoteFlowable.new(
+        example.label,
+        body,
+        style: resolve(example.style_id)
       )
     end
 
