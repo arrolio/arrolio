@@ -245,6 +245,8 @@ module Arrolio
           children.concat(convert_term(child))
         when 'note'
           children.concat(convert_note(child))
+        when 'example'
+          children.concat(convert_example(child))
         when 'preformatted'
           children << Content::Preformatted.new(
             text_of(child).split("\n", -1),
@@ -410,6 +412,22 @@ module Arrolio
       return [] if body.empty?
 
       [Content::Note.new(label: label, body: body, id: elem.attribute(selector('id_attribute'))&.value)]
+    end
+
+    def convert_example(elem)
+      label_elem = find_first(elem, selector('note_label'))
+      label = label_elem ? text_of(label_elem).strip : ''
+
+      para_name = selector('paragraph')
+      body = []
+      each_element(elem) do |child|
+        next unless child.name == para_name
+
+        body << convert_paragraph(child)
+      end
+      return [] if body.empty?
+
+      [Content::Example.new(label: label, body: body, id: elem.attribute(selector('id_attribute'))&.value)]
     end
 
     def convert_bibitem(bi)
