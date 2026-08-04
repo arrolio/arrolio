@@ -22,8 +22,26 @@ module Arrolio
         build_sequence_content(document, source, sequence, flowables)
         flowables << Flowables::PageBreak.new if sequence['page_break_after']
       end
+      append_inline_footnote_markers(document, flowables)
       append_endnotes(document, flowables)
       flowables
+    end
+
+    # Emits a FootnoteMarkerFlowable for each Document#footnote when the
+    # flavor opts in via `flow_rules.page_bottom_footnotes: true`. The
+    # engine collects these onto the page where they appear (the last
+    # body page by default) and the renderer draws them at the bottom.
+    #
+    # This is a pragmatic bridge until the adapter can emit markers
+    # inline at `<fn>` reference sites (TODO 60). Opt-in keeps it
+    # disabled by default so existing flavors are unaffected.
+    def append_inline_footnote_markers(document, flowables)
+      return if document.footnotes.empty?
+      return unless @rules['page_bottom_footnotes']
+
+      document.footnotes.each do |footnote|
+        flowables << Flowables::FootnoteMarkerFlowable.new(footnote)
+      end
     end
 
     def append_endnotes(document, flowables)
