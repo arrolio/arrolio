@@ -3,11 +3,16 @@ priority: P1
 impact: high
 depends_on: [50, 63]
 layer: content
-status: pending
+status: in_progress
 est: 3d
 ---
 
-## Problem
+## Status
+
+- Phase 1 (content type classes) — **done** (PR #1)
+- Phase 2 (adapter emission + flow builder dispatch) — **done** (PR #2)
+- Phase 3 (footnote extraction + endnote rendering) — **done** (PR #3)
+- Phase 4 (page-bottom footnote rendering in Engine::Paged) — pending
 
 The generic adapter currently emits `Content::Paragraph[]` for every
 flowable-bearing element type: notes, examples, terms, bibliography
