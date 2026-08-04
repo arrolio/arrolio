@@ -15,6 +15,7 @@ module Arrolio
       def layout
         @pages = []
         @page_count_opened = 0
+        @footnote_page_map = {} # footnote.id / marker -> first page_number
         context = FlowContext.new(layout_spec: @layout_spec, page_number: 1)
         pending = @flowables.dup
         page_state = open_page(context)
@@ -41,6 +42,15 @@ module Arrolio
 
           if flowable.is_a?(Flowables::PageBreak)
             page_state = open_page(context)
+            next
+          end
+
+          # Footnote anchors: record on the current page without
+          # consuming frame space (the flowable has zero height).
+          if flowable.is_a?(Flowables::FootnoteMarkerFlowable)
+            key = flowable.footnote.id || flowable.footnote.marker
+            @footnote_page_map[key] ||= page_state.page_number
+            page_state.footnotes << flowable.footnote unless page_state.footnotes.include?(flowable.footnote)
             next
           end
 
@@ -128,7 +138,8 @@ module Arrolio
           header: @current_header,
           footer: @current_footer,
           header_align: @current_header_align || :right,
-          footer_align: @current_footer_align || :center
+          footer_align: @current_footer_align || :center,
+          footnotes: []
         )
         @pages << state
         state
@@ -153,7 +164,8 @@ module Arrolio
             header_text: format_text(state.header, state.page_number, total),
             footer_text: format_text(state.footer, state.page_number, total),
             header_align: state.header_align,
-            footer_align: state.footer_align
+            footer_align: state.footer_align,
+            footnotes: state.footnotes
           )
         end
         @pages.replace(built)
@@ -168,7 +180,7 @@ module Arrolio
 
     OpenPage = Struct.new(:template, :page_number, :frame, :body_boxes,
                           :fresh, :role, :header, :footer,
-                          :header_align, :footer_align,
+                          :header_align, :footer_align, :footnotes,
                           keyword_init: true)
   end
 end

@@ -5,12 +5,13 @@ module Arrolio
     class Page
       attr_reader :number, :template_name, :template_role, :page_size,
                   :regions, :static_regions, :header_text, :footer_text,
-                  :header_align, :footer_align
+                  :header_align, :footer_align, :footnotes
 
       def initialize(number:, template_name:, page_size:,
                      regions:, static_regions: {}, template_role: :body,
                      header_text: nil, footer_text: nil,
-                     header_align: :right, footer_align: :center)
+                     header_align: :right, footer_align: :center,
+                     footnotes: [])
         @number = number.to_i
         @template_name = template_name.to_sym
         @template_role = template_role.to_sym
@@ -21,6 +22,7 @@ module Arrolio
         @footer_text = footer_text
         @header_align = header_align.to_sym
         @footer_align = footer_align.to_sym
+        @footnotes = Array(footnotes).freeze
         freeze
       end
 
@@ -52,14 +54,15 @@ module Arrolio
           regions == other.regions &&
           static_regions == other.static_regions &&
           header_text == other.header_text &&
-          footer_text == other.footer_text
+          footer_text == other.footer_text &&
+          footnotes == other.footnotes
       end
 
       alias eql? ==
 
       def hash
         [self.class, number, template_name, template_role, page_size,
-         regions, static_regions, header_text, footer_text].hash
+         regions, static_regions, header_text, footer_text, footnotes].hash
       end
     end
   end

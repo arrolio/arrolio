@@ -14,5 +14,6 @@ module Arrolio
     autoload :TocLineFlowable, 'arrolio/flowables/toc_line_flowable'
     autoload :TwoColumnBlock, 'arrolio/flowables/two_column_block'
     autoload :TableFlowable, 'arrolio/flowables/table_flowable'
+    autoload :FootnoteMarkerFlowable, 'arrolio/flowables/footnote_marker_flowable'
   end
 end

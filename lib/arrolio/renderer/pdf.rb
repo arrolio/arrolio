@@ -241,10 +241,33 @@ module Arrolio
         canvas = pdfrb_page.canvas
         render_cover_logo(canvas, output_page) if output_page.template_role == :cover && @logo_ref
         render_header_footer(canvas, output_page) unless output_page.template_role == :cover
+        render_page_footnotes(canvas, output_page) unless output_page.template_role == :cover
         (output_page.static_regions.values + output_page.regions.values).each do |region|
           region.placed_boxes.each { |box| render_box(canvas, box) }
         end
         @link_annotator.flush(pdfrb_page)
+      end
+
+      def render_page_footnotes(canvas, page)
+        return unless page.footnotes && !page.footnotes.empty?
+
+        hf = header_footer_style
+        y = hf[:margin_bottom] + 20
+        page.footnotes.each do |footnote|
+          marker = footnote.marker.to_s
+          body_text = footnote.body.map do |node|
+            node.is_a?(Arrolio::Content::Paragraph) ? node.text : node.to_s
+          end.join(' ')
+          line = "#{marker} #{body_text}".strip
+          next if line.empty?
+
+          payload = encoded_or_text(hf[:font_name], line)
+          ref = embedded_or_standard(hf[:font_name])
+          canvas.text(payload, at: [hf[:margin_lr], y], font: ref, size: 7.0)
+          y -= 9.0
+        end
+      rescue StandardError => e
+        Arrolio::Logger.warn "footnote render failed: #{e.class}: #{e.message[0, 80]}"
       end
 
       def render_cover_logo(canvas, page)
