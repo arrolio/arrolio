@@ -75,7 +75,8 @@ module Arrolio
         sections: extract_sections(root),
         preface: extract_preface(root),
         bibliography: extract_bibliography(root),
-        cover: extract_cover(root)
+        cover: extract_cover(root),
+        footnotes: extract_footnotes(root)
       )
     end
 
@@ -140,6 +141,38 @@ module Arrolio
         result << convert_clause(child)
       end
       result
+    end
+
+    def extract_footnotes(root)
+      container_name = selector('footnote_container')
+      body_name = selector('footnote_body')
+      marker_name = selector('footnote_marker')
+      return [] unless container_name && body_name
+
+      footnotes = []
+      each_element(root) do |elem|
+        next unless elem.name == container_name
+
+        marker = elem.attribute('id')&.value || elem.attribute(marker_name)&.value || ''
+        body_elem = find_first(elem, body_name)
+        body = []
+        if body_elem
+          para_name = selector('paragraph')
+          each_element(body_elem) do |child|
+            next unless child.name == para_name
+
+            body << convert_paragraph(child)
+          end
+        end
+        next if body.empty?
+
+        footnotes << Content::Footnote.new(
+          marker: marker,
+          body: body,
+          id: elem.attribute(selector('id_attribute'))&.value
+        )
+      end
+      footnotes
     end
 
     def extract_bibliography(root)
