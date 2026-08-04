@@ -126,6 +126,9 @@ selectors:
   stem: stem
   stem_formatted: fmt-stem
   math: math
+  footnote_container: fmt-footnote-container
+  footnote_body: fmt-fn-body
+  footnote_marker: fn
   preface_container: preface
   preface_children:
     - clause

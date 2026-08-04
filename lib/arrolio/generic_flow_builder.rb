@@ -22,7 +22,29 @@ module Arrolio
         build_sequence_content(document, source, sequence, flowables)
         flowables << Flowables::PageBreak.new if sequence['page_break_after']
       end
+      append_endnotes(document, flowables)
       flowables
+    end
+
+    def append_endnotes(document, flowables)
+      return if document.footnotes.empty?
+      return unless @rules['endnotes']
+
+      flowables << Flowables::PageSequenceStart.new(
+        role: :endnotes,
+        header_template: nil,
+        footer_template: nil
+      )
+      document.footnotes.each do |footnote|
+        marker_text = footnote.marker.to_s
+        body = footnote.body.map { |paragraph| paragraph_flowable(paragraph) }
+        flowables << Flowables::NoteFlowable.new(
+          marker_text,
+          body,
+          style: resolve(footnote.style_id),
+          marker_width: 22.0
+        )
+      end
     end
 
     private
