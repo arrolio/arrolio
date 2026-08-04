@@ -3,7 +3,7 @@ priority: P1
 impact: high
 depends_on: [50, 63]
 layer: content
-status: in_progress
+status: done
 est: 3d
 ---
 
@@ -12,7 +12,34 @@ est: 3d
 - Phase 1 (content type classes) — **done** (PR #1)
 - Phase 2 (adapter emission + flow builder dispatch) — **done** (PR #2)
 - Phase 3 (footnote extraction + endnote rendering) — **done** (PR #3)
-- Phase 4 (page-bottom footnote rendering in Engine::Paged) — pending
+- Phase 4 (page-bottom footnote rendering in Engine::Paged) — **done** (PR #5)
+
+The architectural pipeline for semantic content types and footnotes
+is complete end-to-end:
+
+1. Adapter extracts `Content::Footnote` from `<fmt-footnote-container>`
+2. Adapter emits `Content::Note`, `Content::FigureGroup`,
+   `Content::TermEntry`, `Content::BibliographyItem` for grouped elements
+3. Flow builder dispatches on the new types via `is_a?` and emits
+   `NoteFlowable`, `ImageFlowable + TextFlowable`, etc. with proper
+   grouping and hanging indents
+4. Flow builder can render endnotes (opt-in via `flow_rules.endnotes`)
+5. Engine collects `FootnoteMarkerFlowable` references per page
+6. Renderer draws collected footnotes at the bottom of each page
+
+## What remains for full TODO 60 closure
+
+TODO 60 (footnote inline-reference fidelity) is now architecturally
+unblocked but still needs:
+
+- Adapter inline walker to emit `FootnoteMarkerFlowable` at `<fn>`
+  references in body text (currently the flow builder would have to
+  emit them manually from `Document#footnotes`).
+- A real fixture with `<fn>` inline references + `<fmt-footnote-container>`
+  blocks to validate the full path.
+
+Both are focused follow-ups, not architectural work. The TODO 66
+design is closed.
 
 The generic adapter currently emits `Content::Paragraph[]` for every
 flowable-bearing element type: notes, examples, terms, bibliography
