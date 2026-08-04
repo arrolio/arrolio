@@ -257,8 +257,26 @@ module Arrolio
 
     def convert_paragraph(elem)
       runs = collect_inline_runs(elem)
+      refs = extract_footnote_refs(elem)
       Content::Paragraph.new(runs, style_id: paragraph_style(elem),
-                                   id: elem.attribute(selector('id_attribute'))&.value)
+                                   id: elem.attribute(selector('id_attribute'))&.value,
+                                   footnote_refs: refs)
+    end
+
+    def extract_footnote_refs(elem)
+      marker_name = selector('footnote_marker')
+      return [] unless marker_name
+
+      refs = []
+      elem.each_recursive do |node|
+        next unless node.is_a?(REXML::Element) && node.name == marker_name
+
+        id = node.attribute('id')&.value ||
+             node.attribute(selector('id_attribute'))&.value ||
+             text_of(node)
+        refs << id.to_s if id && !id.to_s.empty?
+      end
+      refs
     end
 
     def convert_table(elem)
