@@ -13,6 +13,7 @@ module Arrolio
     end
 
     def build(document)
+      @document = document
       flowables = []
       page_sequences.each do |sequence|
         source = content_for(document, sequence['role'])
@@ -148,15 +149,29 @@ module Arrolio
       updated = Content::Paragraph.new(
         [prefix] + first.inline_runs,
         style_id: first.style_id,
-        id: first.id
+        id: first.id,
+        footnote_refs: first.footnote_refs
       )
       [updated] + children.drop(1)
+    end
+
+    def emit_footnote_markers_for(paragraph, out)
+      return if paragraph.footnote_refs.empty?
+      return unless @document
+
+      paragraph.footnote_refs.each do |ref_id|
+        footnote = @document.footnotes.find { |fn| fn.id == ref_id || fn.marker == ref_id }
+        next unless footnote
+
+        out << Flowables::FootnoteMarkerFlowable.new(footnote)
+      end
     end
 
     def append_child(child, out)
       case child
       when Content::Paragraph
         out << paragraph_flowable(child)
+        emit_footnote_markers_for(child, out)
       when Content::Note
         out << note_flowable(child)
       when Content::FigureGroup

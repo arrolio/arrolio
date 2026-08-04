@@ -12,9 +12,4 @@ gem 'rubocop-performance', '~> 1.23'
 gem 'rubocop-rake', '~> 0.7'
 gem 'rubocop-rspec', '~> 3.5'
 
-# Local-path dependencies (siblings not yet on RubyGems).
-gem 'pdfrb', path: '/Users/mulgogi/src/claricle/pdfrb'
-# Local font subsetting (sibling gem).
-gem 'fontisan', path: '/Users/mulgogi/src/fontist/fontisan'
-
 gem 'rexml'
