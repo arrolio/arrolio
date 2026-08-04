@@ -82,7 +82,8 @@ styles:
     font_size: 11.0
     fill_color: black
     align: justify
-    margin_bottom: 8
+    margin_bottom: 0
+    line_break: knuth_plass
   heading_1:
     font_size: 14.0
     align: left

@@ -76,8 +76,11 @@ module XslConfigGenerator
 
     def text_styles
       o = @profile['style_overrides'] || {}
+      body_style = style_from('root-style', 'clause_style')
+      body_style['margin_bottom'] = o['body_margin_bottom'] || 8
+      body_style['line_break'] = o['body_line_break'] if o['body_line_break']
       {
-        'body' => style_from('root-style', 'clause_style').merge('margin_bottom' => o['body_margin_bottom'] || 8),
+        'body' => body_style,
         **heading_styles,
         'note' => style_from('note-style').merge('parent' => 'body'),
         'termnote' => style_from('termnote-style').merge('parent' => 'body'),

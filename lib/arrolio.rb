@@ -37,5 +37,6 @@ module Arrolio
   autoload :GenericFlowBuilder, 'arrolio/generic_flow_builder'
   autoload :ConfigDrivenPipeline, 'arrolio/config_driven_pipeline'
   autoload :TocBuilder, 'arrolio/toc_builder'
+  autoload :FontScanner, 'arrolio/font_scanner'
   autoload :Composer, 'arrolio/composer'
 end

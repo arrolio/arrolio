@@ -90,6 +90,38 @@ module Arrolio
 
     def register_fonts
       FontMetrics::Registry.register_ttf_all(@layout_spec.font_paths, strict: @strict)
+      resolve_fonts_via_fontist
+    end
+
+    def resolve_fonts_via_fontist
+      scanner = ::Arrolio::FontScanner.new
+      referenced = collect_referenced_font_names
+      referenced.each do |name|
+        next if FontMetrics::Registry.ttf_paths.key?(name)
+
+        path = scanner.resolve(name)
+        FontMetrics::Registry.register_ttf(name, path) if path
+      end
+    end
+
+    def collect_referenced_font_names
+      names = []
+      @layout_spec.styles.names.each do |style_name|
+        style = @layout_spec.resolve_style(style_name)
+        names << style.font_name if style.font_name && !style.font_name.empty?
+      end
+      names.uniq
+    end
+
+    def find_font_path(font_name)
+      result = Fontist::Font.find(font_name)
+      return nil unless result
+
+      font = result.is_a?(Array) ? result.first : result
+      path = font.respond_to?(:path) ? font.path : font.to_s
+      path && File.exist?(path) ? path : nil
+    rescue StandardError
+      nil
     end
 
     def populate_toc(pages, context)

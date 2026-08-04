@@ -50,6 +50,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'fontisan', '>= 0.4.45', '< 1.0'
+  spec.add_dependency 'fontist', '~> 1.0'
   spec.add_dependency 'nokogiri'
   spec.add_dependency 'pdfrb', '~> 0.3.0'
   spec.add_dependency 'rexml'
