@@ -103,10 +103,11 @@ module Arrolio
         def try_break(node, break_pos)
           item = @items[break_pos]
           width = line_width_for(node.line)
-          line_w = compute_line_width(node.position + 1, break_pos)
+          line_start = node.position + 1
+          line_w = compute_line_width(line_start, break_pos)
 
           is_forced = item.penalty? && item.forced_break?
-          ratio = adjustment_ratio(line_w, width, break_pos)
+          ratio = adjustment_ratio(line_w, width, line_start, break_pos)
 
           # Forced breaks are always accepted but still penalized
           # for bad ratios so the algorithm prefers shorter lines.
@@ -138,9 +139,9 @@ module Arrolio
 
         # Adjustment ratio: how stretched (positive) or shrunk
         # (negative) a line is. 0 = perfect fit.
-        def adjustment_ratio(natural_width, target_width, break_pos)
-          glue_stretch = total_stretch(break_pos)
-          glue_shrink = total_shrink(break_pos)
+        def adjustment_ratio(natural_width, target_width, line_start, line_end)
+          glue_stretch = line_stretch(line_start, line_end)
+          glue_shrink = line_shrink(line_start, line_end)
 
           if natural_width < target_width
             glue_stretch.positive? ? (target_width - natural_width) / glue_stretch : Infinity
@@ -206,15 +207,15 @@ module Arrolio
           idx
         end
 
-        def total_stretch(break_pos)
+        def line_stretch(line_start, line_end)
           sum = 0.0
-          @items[0..break_pos].each { |item| sum += item.stretch if item.glue? }
+          (line_start...line_end).each { |i| sum += @items[i].stretch if @items[i]&.glue? }
           sum
         end
 
-        def total_shrink(break_pos)
+        def line_shrink(line_start, line_end)
           sum = 0.0
-          @items[0..break_pos].each { |item| sum += item.shrink if item.glue? }
+          (line_start...line_end).each { |i| sum += @items[i].shrink if @items[i]&.glue? }
           sum
         end
 
@@ -237,20 +238,28 @@ module Arrolio
           x_offset = 0.0
           (start_item...stop_item).each do |i|
             item = @items[i]
-            next unless item&.box?
+            next unless item
 
-            run = @runs[item.run_index]
-            next unless run
+            if item.box?
+              run = @runs[item.run_index]
+              next unless run
 
-            slice = run.text[item.char_offset, item.char_length]
-            next if slice.nil? || slice.empty?
+              slice = run.text[item.char_offset, item.char_length]
+              next if slice.nil? || slice.empty?
 
-            sub = InlineRun.new(slice, style: run.style,
-                                       baseline_shift: run.baseline_shift,
-                                       font_size_scale: run.font_size_scale,
-                                       href: run.href)
-            placed << Line::PlacedRun.new(run: sub, x_offset: x_offset)
-            x_offset += item.width
+              sub = InlineRun.new(slice, style: run.style,
+                                         baseline_shift: run.baseline_shift,
+                                         font_size_scale: run.font_size_scale,
+                                         href: run.href)
+              placed << Line::PlacedRun.new(run: sub, x_offset: x_offset)
+              x_offset += item.width
+            elsif item.glue?
+              run = item.run_index ? @runs[item.run_index] : @runs.first
+              style = run ? run.style : Arroolio::Style::Definition.new
+              space = InlineRun.new(' ', style: style)
+              placed << Line::PlacedRun.new(run: space, x_offset: x_offset)
+              x_offset += item.width
+            end
           end
           placed
         end

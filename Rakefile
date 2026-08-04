@@ -19,3 +19,10 @@ namespace :flavor do
     sh "bundle exec ruby #{GENERATOR} #{File.expand_path(xsl)} #{File.expand_path(out)}"
   end
 end
+
+namespace :parity do
+  desc 'Render the OIML r060/1 fixture and diff against the reference PDF'
+  task :check do
+    sh 'bundle exec ruby -Ilib scripts/parity_check.rb'
+  end
+end

@@ -3,7 +3,7 @@ priority: P2
 impact: low
 depends_on: [70, 72]
 layer: text
-status: pending
+status: in_progress
 est: 3d
 ---
 
