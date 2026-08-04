@@ -16,19 +16,22 @@ module Arrolio
       end
 
       def height(width, _context = nil)
-        laid_out(width).length * line_height
+        (laid_out(width).length * line_height) + space_before + space_after
       end
 
       def emit(x, y, width, _context = nil)
         lines = laid_out(width)
-        return [[], 0.0] if lines.empty?
+        text_height = line_height * lines.length
+        total = text_height + space_before + space_after
+        return [[], total] if lines.empty?
 
+        text_y = y - space_before
         box = Output::PlacedBox.text(
-          x: x, y: y - (line_height * lines.length),
-          width: width, height: line_height * lines.length,
+          x: x, y: text_y - text_height,
+          width: width, height: text_height,
           lines: lines, line_height: line_height, style: @style
         )
-        [[box], box.height]
+        [[box], total]
       end
 
       def splittable?
@@ -38,7 +41,8 @@ module Arrolio
       def do_split(width, remaining_height, _context = nil)
         lines = laid_out(width)
         line_h = line_height
-        head_count = (remaining_height.to_f / line_h).floor
+        available = remaining_height - space_before
+        head_count = (available.to_f / line_h).floor
         head_count = [head_count, lines.length].min
         head_count = 1 if head_count < 1 && lines.any?
 
