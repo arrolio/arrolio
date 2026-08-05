@@ -2,15 +2,15 @@
 priority: P0
 impact: high
 depends_on: [70]
-layer: render
+layer: flowable
 status: pending
 est: 5d
 ---
 
 ## Problem
 
-Page 1 (cover) has 0.4% similarity. The reference cover uses a complex
-SVG-based layout:
+Page 1 (cover) sits at **48.0%** similarity. The reference cover
+uses a complex SVG-based layout:
 
 - Two-column `fo:table` with the doctype word in scaled SVG `<text>`
   (left column) and the docidentifier in scaled SVG `<text>`
@@ -24,24 +24,38 @@ SVG-based layout:
 - All text rendered via SVG `<text>` with `transform="scale(0.82,1)"`
   for a condensed effect
 
-Our cover is a simple vertical stack of plain text blocks in
-Helvetica. Every piece of cover text is wrong.
+Our cover is a vertical stack of plain text blocks (text content
+matches; layout doesn't). With fonts now embedded (TODO 70 done),
+the text side of the diff is mostly correct — the remaining gap is
+purely positional/scaled.
 
-## Approach
+## Approach (architectural)
 
-The cover layout is defined imperatively in `oiml.xsl` (lines 33–287).
-Since we cannot execute XSL, we must encode the cover structure as
-configuration:
+The cover layout is defined imperatively in `oiml.xsl` lines 33–287.
+Encoding it as configuration requires new flowable primitives:
 
-1. **Two-column block** for the header area (doctype left, docid right)
-2. **Absolute-positioned block** at specific y-coordinates for the
-   title border box
-3. **Two-column block** for the organisation footer
-4. **Rotated text** for the vertical docidentifier
-5. **Text scaling** via a `transform: scale(x, y)` option on
-   `TextFlowable`
+1. **`Flowables::PositionedBlock`** — absolute-positioned region
+   within the page. Carries `top`, `left`, `width`, `height` in
+   device units (mm/pt). The engine skips normal flow for these;
+   they emit at fixed coordinates.
 
-This requires adding to the flow_rules/config system:
+2. **`Flowables::TwoColumnBlock`** — pair of flowable sequences
+   rendered side-by-side. Existing `Flowables::TwoColumnBlock`
+   skeleton exists; needs proper width allocation and per-column
+   sub-frame.
+
+3. **`Style::Definition#text_transform`** — `scale(x, y)` field
+   applied by the renderer before drawing glyphs. Translates to
+   `canvas.text(..., transform: [sx, 0, 0, sy, x, y])` if the
+   renderer supports it.
+
+4. **`Flowables::RotatedText`** — text drawn with
+   `reference-orientation: 90` (or 270). The renderer emits
+   `Tm` with the rotation matrix.
+
+5. **`flow_rules.yml` cover_content extension** — replace the
+   current flat `cover_content` list with a positioned block
+   tree:
 
 ```yaml
 cover_layout:
@@ -49,43 +63,40 @@ cover_layout:
   blocks:
     - type: two_column
       top: 0
-      left_column:
-        - type: svg_text
-          source: "{{doctype}}"
-          font: "Jost"
-          font_size: 19
-          scale: [0.82, 1]
-      right_column:
-        - type: svg_text
-          source: "{{docidentifier}}"
-          font: "Jost SemiBold"
-          font_size: 28
-          scale: [0.82, 1]
+      columns:
+        - width: 50%
+          blocks:
+            - type: text
+              source: "{{doctype}}"
+              font: "Jost"
+              font_size: 19
+              scale: [0.82, 1]
+        - width: 50%
+          blocks:
+            - type: text
+              source: "{{docidentifier}}"
+              ...
     - type: bordered_block
       top: 65mm
-      width: 119mm
-      height: 80mm
-      border_top: 1pt solid black
-      border_bottom: 1pt solid black
-      content:
-        - type: text
-          source: "{{title_main}}"
-          font: "Times New Roman"
-          font_size: 16
-          align: center
-    # ... etc
+      ...
 ```
 
-## Expected improvement
-
-Fixes page 1 from 0.4% to ~70% (exact text match, layout
-approximately right).
+6. **`GenericFlowBuilder#build_cover_content`** parses the new
+   `cover_layout` schema and emits the corresponding flowable tree.
+   Falls back to the current flat-list behavior for flavors that
+   haven't migrated.
 
 ## Done-When
 
-- [ ] Cover renders with two-column header (doctype + docidentifier)
-- [ ] Title appears in a bordered box at the correct position
-- [ ] Organisation names appear at the bottom in two columns
-- [ ] Vertical docidentifier text renders on the left margin
-- [ ] Text scaling (condensed) is applied
+- [ ] `Flowables::PositionedBlock` exists with specs
+- [ ] `Flowables::TwoColumnBlock` does proper side-by-side layout
+- [ ] `Style::Definition` carries `text_transform: [sx, sy]`
+- [ ] Renderer applies the scale transform via Tm matrix
+- [ ] `Flowables::RotatedText` exists with specs
+- [ ] `flavors/oiml/flow_rules.yml` migrated to `cover_layout` schema
 - [ ] Page 1 similarity > 60%
+
+## Expected improvement
+
+Page 1 from 48% to ~75% (text already matches; layout needs the
+positioned blocks).
