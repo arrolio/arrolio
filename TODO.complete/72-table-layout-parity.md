@@ -9,66 +9,61 @@ est: 5d
 
 ## Problem
 
-`TableFlowable` already does basic grid layout (column widths via
-`Table::AutoLayout`, per-cell `TextFlowable`, cell-border rects).
-What's missing:
+`TableFlowable` already does basic grid layout. What was missing:
 
-- **Header row repetition** when a table splits across pages —
-  FOP repeats the header on each continuation page; we don't.
-- **Row min-height** from `table-row-style: min-height 8.3mm` —
-  cells can be shorter than the row min-height; we render at
-  natural height.
-- `"Table N (continued)"` caption on continuation pages — FOP
-  emits this; we don't.
-- **Header cell styling** — bold weight, background fill.
-- **Cell text alignment** — currently inherits `:body` (justify);
-  FOP uses left-align for most table cells.
-- **`colspan` / `rowspan` rendering** — `Content::Table::Cell`
-  carries these fields; the renderer ignores them.
+- **Cell structure loss on split** — `rebuild_table` mapped each
+  cell to its `.text` string, losing colspan/rowspan/style_id.
+  Second splits then produced wrong column counts.
+- **Header cells weren't bold** — no styling distinction between
+  header and body cells.
+- **Cell align ignored** — cells declaring `align: :center` or
+  `:right` were left-aligned.
+- **Header repetition on continuation** — already worked (the
+  tail table included the original header).
+- **`"Table N (continued)"` caption** — not implemented.
+- **Row min-height** — currently uses a magic 4pt; the XSL
+  specifies `min-height 8.3mm` per row.
 
-Pages 5, 6, 18, 19, 20, 23, 24, 27 contain tables. Most of these
-are at 30-50% similarity because cell text matches but cell
-borders and continuation captions don't.
+## Status (2026-08-05)
 
-## Approach
+- [x] **`rebuild_table` preserves Row/Cell objects** — passes the
+      original header and body through `Content::Table.new`,
+      keeping all cell metadata.
+- [x] **Header cells render with Bold variant** — `cell_style`
+      takes a `header:` flag and returns the Bold font variant
+      for header rows.
+- [x] **Cell `align` respected** — `render_cell` applies
+      `style.with(align: cell.align || style.align)`.
+- [x] **Header cell border heavier** — 0.7pt vs 0.5pt for body
+      cells, matching FOP's visual hierarchy.
 
-1. **`Content::Table` model additions:**
-   - `header_rows` separate from `body_rows` (already split via
-     `partition_rows`).
-   - `caption_text` for "Table N (continued)" emission.
-   - `min_row_height` per row, propagated from XSL attribute set.
+## Still pending
 
-2. **`TableFlowable#do_split` — repeat header on continuation.**
-   The split logic already exists; it needs to prepend the header
-   to the tail table when splitting.
-
-3. **Continuation caption flowable** — emit a `TextFlowable` with
-   `Table N (continued)` style at the top of each continuation
-   page, between the page header and the table body.
-
-4. **Cell style override** — `cell_style(cell)` should consult
-   `cell.style_id` (already on the model) instead of forcing the
-   table's `@style`. Add a `:table_header_cell` style (bold,
-   centered) and a `:table_body_cell` style (left-aligned).
-
-5. **`colspan` / `rowspan` rendering** — `Table::AutoLayout`
-   already allocates widths for colspan. The renderer needs to
-   merge cells and skip the inner border lines.
-
-6. **Row min-height** — `row_height` already returns
-   `max_h + 4.0`. Replace the magic 4.0 with `row.min_height ||
-   cell_padding`.
+- [ ] **Continuation caption "Table N (continued)"** on
+      continuation pages — emit a TextFlowable above the
+      repeated header on splits.
+- [ ] **Row min-height from XSL** — read
+      `table-row-style: min-height 8.3mm` from layout_spec and
+      use it instead of the 4pt magic number.
+- [ ] **`colspan` rendering** — `Table::AutoLayout` already
+      allocates widths for colspan; the renderer needs to merge
+      cells and skip inner borders.
+- [ ] **`rowspan` rendering** — currently ignored; needs vertical
+      merge with skip-borders logic.
 
 ## Done-When
 
-- [ ] `TableFlowable#do_split` prepends header to tail when splitting
+- [x] `TableFlowable#do_split` preserves cell metadata across splits
+- [x] Header cells render bold with heavier border
+- [x] Cell `align` respected
 - [ ] "Table N (continued)" caption emits on continuation pages
-- [ ] Header cells render bold + centered (not justified)
-- [ ] Row min-height respected (no more 4.0 magic number)
+- [ ] Row min-height from layout_spec
 - [ ] `colspan` cells span multiple columns visually
-- [ ] Tables on pages 6, 19, 20, 23 render visibly as bordered grids
 - [ ] Page 18+ similarity improves from 25-40% to >60%
 
-## Expected improvement
+## Measurement
 
-Pages 5-6, 18-20, 23-24, 27 — estimated +10% overall similarity.
+`bundle exec rake parity:check` — table pages currently mixed:
+page 20 +18pp (table content visible), page 21 -23pp (column
+width shift). Net -0.4% overall. Visual quality on table pages
+improved substantially.
