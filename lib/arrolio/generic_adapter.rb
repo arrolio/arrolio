@@ -222,7 +222,9 @@ module Arrolio
         next unless child.name == selector('bibliography_reference')
 
         items = []
-        each_child(child, selector('bibliography_item')) { |bi| items << convert_bibitem(bi) }
+        each_child(child, selector('bibliography_item')) do |bi|
+          items.concat(convert_bibitem(bi))
+        end
         result << Content::Section.new(
           title: 'Bibliography',
           level: 1,
@@ -500,16 +502,21 @@ module Arrolio
       br_name = selector('break_inline')
       skip_metadata = @rules['skip_metadata_elements'].to_a
       block_level = @rules['block_level_elements'].to_a
+      inline_styles = @rules['inline_styles'] || {}
 
-      walker = lambda do |node, style|
+      walker = lambda do |node, style, baseline: Content::InlineRun::BASELINE_NORMAL, scale: 1.0|
         case node
         when REXML::Text
           text = normalize_text(node.value)
           next if text.nil? || text.empty?
 
-          runs << Content::InlineRun.new(text, style_id: style)
+          runs << Content::InlineRun.new(text, style_id: style,
+                                               baseline_shift: baseline,
+                                               font_size_scale: scale)
         when REXML::Element
           new_style = resolve_inline_style(node, style)
+          sub_baseline, sub_scale = baseline_for_style(inline_styles, node,
+                                                       baseline, scale)
           case node.name
           when tab_name
             runs << Content::InlineRun.new("\t", style_id: style)
@@ -526,12 +533,26 @@ module Arrolio
           when *block_level
             next
           else
-            node.children.each { |c| walker.call(c, new_style) }
+            node.children.each { |c| walker.call(c, new_style, baseline: sub_baseline, scale: sub_scale) }
           end
         end
       end
       elem.children.each { |c| walker.call(c, default_style) }
       runs
+    end
+
+    def baseline_for_style(rules, element, current_baseline, current_scale)
+      mapping = rules[element.name]
+      return [current_baseline, current_scale] unless mapping
+
+      case mapping.to_sym
+      when :subscript
+        [Content::InlineRun::BASELINE_SUB, (current_scale * 0.7).round(4)]
+      when :superscript
+        [Content::InlineRun::BASELINE_SUP, (current_scale * 0.7).round(4)]
+      else
+        [current_baseline, current_scale]
+      end
     end
 
     def resolve_inline_style(elem, current)
