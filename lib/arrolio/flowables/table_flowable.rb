@@ -32,26 +32,35 @@ module Arrolio
           rh = row_height(row, cols, header: true)
           cursor -= rh
           consumed += rh
-          cell_x = x.to_f
-          row.cells.each_with_index do |cell, ci|
-            cw = cols[ci] || (width / [row.cells.length, 1].max)
-            render_cell(cell, cell_x, cursor, cw, rh, boxes, context, header: true)
-            cell_x += cw
-          end
+          render_row(row, x, cursor, cols, rh, boxes, context, header: true)
         end
         body_rows.each do |row|
           rh = row_height(row, cols, header: false)
           cursor -= rh
           consumed += rh
-          cell_x = x.to_f
-          row.cells.each_with_index do |cell, ci|
-            cw = cols[ci] || (width / [row.cells.length, 1].max)
-            render_cell(cell, cell_x, cursor, cw, rh, boxes, context, header: false)
-            cell_x += cw
-          end
+          render_row(row, x, cursor, cols, rh, boxes, context, header: false)
         end
 
         [boxes, consumed]
+      end
+
+      # Renders one row, advancing +cell_x+ by the natural cell width
+      # (or colspan * unit width for spanning cells).
+      def render_row(row, x, cursor, cols, rh, boxes, context, header:)
+        cell_x = x.to_f
+        ci = 0
+        row.cells.each do |cell|
+          span = [cell.colspan.to_i, 1].max
+          span = [span, cols.length - ci].min
+          cw = cols[ci, span].sum || (width_fallback(x, span))
+          render_cell(cell, cell_x, cursor, cw, rh, boxes, context, header: header)
+          cell_x += cw
+          ci += span
+        end
+      end
+
+      def width_fallback(_x, span)
+        50.0 * span
       end
 
       def splittable?
