@@ -351,6 +351,7 @@ module Arrolio
         lines = box.data[:lines]
         line_height = box.data[:line_height]
         style = box.data[:style]
+        hanging_indent = box.data[:hanging_indent] || 0.0
         measurer = GlyphMeasurer.new(font_name: style.font_name)
         ascender = measurer.ascender(font_size: style.font_size)
         x_origin = box.x
@@ -358,7 +359,8 @@ module Arrolio
 
         lines.each_with_index do |line, idx|
           baseline_y = y_top - (idx * line_height) - ascender
-          line_x = x_origin + line.x_offset
+          indent = idx.zero? ? 0 : hanging_indent
+          line_x = x_origin + indent + line.x_offset
           render_line_runs(canvas, line, line_x, baseline_y, style,
                            last_line: idx == lines.length - 1)
         end
