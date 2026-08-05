@@ -6,6 +6,7 @@ require 'fileutils'
 module ParityCheck
   REFERENCE = File.expand_path('~/src/mn/mn-samples-oiml/_site/documents/r060/1/document.pdf')
   FIXTURE = File.expand_path('~/src/mn/mn-samples-oiml/_site/documents/r060/1/document.presentation.xml')
+  SOURCE_DIR = File.expand_path('~/src/mn/mn-samples-oiml/sources/r060/1')
   FLAVOR_DIR = File.expand_path('../flavors/oiml', __dir__)
   OUTPUT = File.expand_path('../tmp/parity_check.pdf', __dir__)
 
@@ -19,7 +20,13 @@ module ParityCheck
 
     FileUtils.mkdir_p(File.dirname(OUTPUT))
     xml = File.read(FIXTURE)
-    Arrolio::ConfigDrivenPipeline.render(xml, io: OUTPUT, flavor_dir: FLAVOR_DIR, input_path: FIXTURE)
+    Arrolio::ConfigDrivenPipeline.render(
+      xml,
+      io: OUTPUT,
+      flavor_dir: FLAVOR_DIR,
+      input_path: FIXTURE,
+      extra_image_dirs: [SOURCE_DIR]
+    )
 
     require 'arrolio/harness'
     diff = Arrolio::Harness::PdfDiff.new(OUTPUT, REFERENCE)
