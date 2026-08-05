@@ -3,52 +3,72 @@ priority: P0
 impact: high
 depends_on: [70]
 layer: flowable
-status: pending
+status: in_progress
 est: 5d
 ---
 
 ## Problem
 
-Tables render as plain paragraphs. Multiple pages show table cell
-content flowing as sequential text lines (e.g., page 6: "Peripheral
-devices, Key(s) or Keyboard to operate" — these are separate table
-cells, not a paragraph). The reference renders proper tables with:
+`TableFlowable` already does basic grid layout (column widths via
+`Table::AutoLayout`, per-cell `TextFlowable`, cell-border rects).
+What's missing:
 
-- Column borders
-- Cell padding
-- Row min-height (`table-row-style: min-height 8.3mm`)
-- Header row in bold
-- Cell text alignment
+- **Header row repetition** when a table splits across pages —
+  FOP repeats the header on each continuation page; we don't.
+- **Row min-height** from `table-row-style: min-height 8.3mm` —
+  cells can be shorter than the row min-height; we render at
+  natural height.
+- `"Table N (continued)"` caption on continuation pages — FOP
+  emits this; we don't.
+- **Header cell styling** — bold weight, background fill.
+- **Cell text alignment** — currently inherits `:body` (justify);
+  FOP uses left-align for most table cells.
+- **`colspan` / `rowspan` rendering** — `Content::Table::Cell`
+  carries these fields; the renderer ignores them.
+
+Pages 5, 6, 18, 19, 20, 23, 24, 27 contain tables. Most of these
+are at 30-50% similarity because cell text matches but cell
+borders and continuation captions don't.
 
 ## Approach
 
-1. **`TableFlowable` must implement actual table layout**: compute
-   column widths via `Table::AutoLayout`, place each cell as a
-   sub-frame, render cell borders, and emit placed boxes that the
-   renderer can draw.
-2. **Cell rendering**: each cell is a mini-frame with its own text
-   layout. The cell's paragraphs are laid out within the cell width,
-   with padding (left/right/top/bottom).
-3. **Borders**: draw line operators around each cell / row / table.
-   The renderer needs `render_rect` or `render_line` support (already
-   partially exists).
-4. **Row splitting**: when a table row doesn't fit on the current
-   page, split it: some cells on this page, rest on next. Match FOP's
-   behavior of repeating the header row on continuation pages.
-5. **Spanned cells**: handle `colspan` and `rowspan` (already in the
-   Content::Table::Cell model, just not rendered).
+1. **`Content::Table` model additions:**
+   - `header_rows` separate from `body_rows` (already split via
+     `partition_rows`).
+   - `caption_text` for "Table N (continued)" emission.
+   - `min_row_height` per row, propagated from XSL attribute set.
 
-## Expected improvement
+2. **`TableFlowable#do_split` — repeat header on continuation.**
+   The split logic already exists; it needs to prepend the header
+   to the tail table when splitting.
 
-Fixes every page that contains a table (pages 6, 8, 20, 23, 24, 27).
-Estimated 10–15% overall similarity improvement.
+3. **Continuation caption flowable** — emit a `TextFlowable` with
+   `Table N (continued)` style at the top of each continuation
+   page, between the page header and the table body.
+
+4. **Cell style override** — `cell_style(cell)` should consult
+   `cell.style_id` (already on the model) instead of forcing the
+   table's `@style`. Add a `:table_header_cell` style (bold,
+   centered) and a `:table_body_cell` style (left-aligned).
+
+5. **`colspan` / `rowspan` rendering** — `Table::AutoLayout`
+   already allocates widths for colspan. The renderer needs to
+   merge cells and skip the inner border lines.
+
+6. **Row min-height** — `row_height` already returns
+   `max_h + 4.0`. Replace the magic 4.0 with `row.min_height ||
+   cell_padding`.
 
 ## Done-When
 
-- [ ] `TableFlowable#emit` places cells in a grid (not as sequential
-      paragraphs)
-- [ ] Column widths computed via `Table::AutoLayout`
-- [ ] Cell borders rendered
-- [ ] Row min-height respected
-- [ ] Header row repeated on table continuation pages
-- [ ] Tables on pages 6, 20, 23, 27 render visibly as tables
+- [ ] `TableFlowable#do_split` prepends header to tail when splitting
+- [ ] "Table N (continued)" caption emits on continuation pages
+- [ ] Header cells render bold + centered (not justified)
+- [ ] Row min-height respected (no more 4.0 magic number)
+- [ ] `colspan` cells span multiple columns visually
+- [ ] Tables on pages 6, 19, 20, 23 render visibly as bordered grids
+- [ ] Page 18+ similarity improves from 25-40% to >60%
+
+## Expected improvement
+
+Pages 5-6, 18-20, 23-24, 27 — estimated +10% overall similarity.
