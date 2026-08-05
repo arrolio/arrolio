@@ -571,6 +571,7 @@ module Arrolio
       parts = []
       number_parts = []
       title_parts = []
+      non_number_parts = []
       autonum_class = selector('autonum_class')
       autonum_delim_class = selector('autonum_delim_class') || 'fmt-autonum-delim'
       caption_label_class = selector('caption_label_class') || 'fmt-caption-label'
@@ -586,6 +587,9 @@ module Arrolio
           number_parts << text
         elsif element_attr == 'title'
           title_parts << text
+          non_number_parts << text
+        else
+          non_number_parts << text
         end
       end
 
@@ -597,8 +601,7 @@ module Arrolio
               elsif parts.include?("\t")
                 parts.join.split("\t", 2).last&.strip
               else
-                all_text = parts.join.strip
-                all_text.empty? ? nil : all_text
+                non_number_parts.join.strip
               end
       title = nil if title.nil? || title.empty?
       [title, number]
