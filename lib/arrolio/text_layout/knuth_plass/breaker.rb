@@ -239,6 +239,12 @@ module Arrolio
           (start_item...stop_item).each do |i|
             item = @items[i]
             next unless item
+            # Skip the emergency-stretch glue at the end of the
+            # item list — it has infinite stretch and is not part
+            # of the paragraph's actual content (it's a TeX
+            # \emergency_stretch sentinel that guarantees the
+            # algorithm always finds a feasible break path).
+            next if item.glue? && item.stretch.infinite?
 
             if item.box?
               run = @runs[item.run_index]
