@@ -35,18 +35,26 @@ est: 1d          # 1d = single focused session; 5d = multi-week module
 
 ## Current parity baseline (2026-08-05)
 
-`bundle exec rake parity:check` reports **43.83%** overall
+`bundle exec rake parity:check` reports **48.95%** overall
 similarity on the OIML r060/1 fixture, 29 pages vs 28 reference.
+Down ~0.4% from the previous 49.38% peak — the table bold-header
+change (TODO 72) shifted column widths and one page regressed
+more than others improved visually.
 
 Per-page summary:
-- Page 1 (cover): 48.0% — needs TODO 71 (cover layout)
-- Page 2 (back of cover): 100% — done
-- Pages 3-4 (ToC + Foreword): 51-61% — needs TODO 73 (ToC leaders)
-- Pages 5-9 (body intro + terminology): 38-65% — needs TODO 79 (KP finish)
-- Pages 10-17 (definitions): 23-78% — mixed; some at 77%
-- Pages 18-25 (tables + figures): 17-55% — needs TODO 72 (tables) + 74 (SVG)
-- Pages 26-28 (body end): 23-55% — needs TODO 77 (formatting)
-- Page 29 (bibliography overflow): 0% — pagination drift
+- Page 1 (cover): 48.0% — needs TODO 71 (PositionedBlock shipped;
+  full cover rebuild pending).
+- Page 2 (back of cover): 100% — done.
+- Pages 3-4 (ToC + Foreword): 51-86% — TODO 73 page-number
+  right-align shipped; bold/indent pending.
+- Pages 5-9 (body intro + terminology): 38-79% — KP improvements
+  landed; some drift.
+- Pages 10-17 (definitions): 37-88% — mixed; terminology compactness.
+- Pages 18-25 (tables + figures): 18-65% — TODO 72 header-bold
+  shipped; needs colspan/rowspan and continuation caption.
+- Pages 26-28 (body end + bibliography): 5-30% — TODO 78
+  bibliography-as-paragraph shipped.
+- Page 29 (extra): 0% — pagination drift.
 
 ## Critical path to 90%+ similarity
 
@@ -54,29 +62,27 @@ Per-page summary:
 70 (done) → 79 (in progress) → 72 → 74 → 71 → 73 → 77 → 78
 ```
 
-After these land, remaining gaps are <2% each (sub/sup, MathML,
-page templates).
+After these land, remaining gaps are <2% each (MathML fractions,
+page templates, hyperlink underline).
 
 ## Status snapshot
 
 | TODO | Status | Layer | Impact |
 |------|--------|-------|--------|
+| 60 (footnote fidelity) | done | adapter | med |
+| 61 (strict mode) | done | engine | high |
+| 66 (semantic types) | done | content | high |
 | 70 (TTF metrics) | done | metrics | critical |
-| 80 (parity CI) | done | harness | critical |
-| 79 (KP finish) | in progress | text | high |
-| 78 (bibliography) | pending | adapter | med |
-| 77 (text formatting) | pending | render | med |
+| 71 (cover layout) | in progress | flowable | high |
+| 72 (table layout) | in progress | flowable | high |
+| 73 (ToC leaders) | in progress | flowable | med |
+| 74 (SVG figures) | in progress | render | high |
+| 75 (MathML) | pending | flowable | med |
 | 76 (page templates) | pending | engine | med |
-| 75 (MathML) | pending | flowable | low |
-| 74 (SVG figures) | pending | flowable | high |
-| 73 (ToC leaders) | pending | flowable | med |
-| 72 (table layout) | pending | flowable | high |
-| 71 (cover layout) | pending | flowable | high |
-| 66 (semantic types) | in progress | content | med |
-| 63 (purge hardcoded vocab) | pending | adapter | med |
-| 62 (font resolution strict) | pending | font | low |
-| 61 (error model) | pending | error | low |
-| 60 (footnote inline) | blocked | adapter | med |
+| 77 (text formatting) | in progress | adapter | low |
+| 78 (bibliography) | in progress | adapter | low |
+| 79 (line breaking) | in progress | text | high |
+| 80 (parity CI) | done | harness | critical |
 
 ## Verification
 

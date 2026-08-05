@@ -10,53 +10,46 @@ est: 3d
 ## Problem
 
 ToC pages currently render at 51-59% similarity. `TocLineFlowable`
-emits "title dots page" as a single text line — the dots fill the
-gap correctly, but:
+was emitting the entry as a single text line ("title dots page"),
+which worked visually but meant the page number wasn't truly
+right-aligned to the right margin — it appeared immediately after
+the dots, wherever they ended.
 
-- Page numbers don't right-align to the right margin (they appear
-  right after the dots).
-- No bold on level-1 entries (XSL `refine_toc-leader-style` sets
-  font-weight=bold for top-level entries; we don't).
-- Section number formatting off (e.g., our ToC shows "2.1" while
-  the XSL emits a tab + "2.1" on its own line for some heading
-  levels).
+## Status (2026-08-05)
 
-## Approach
+`TocLineFlowable#emit` rewritten to emit three `PlacedBox` values
+per line:
 
-1. **`TocLineFlowable#emit` rewrite.** Currently it builds a
-   single TextFlowable with the dots inline. Switch to placing
-   two `PlacedBox`es per line: one at x=0 (title), one
-   right-aligned at x=width-pagew (page number), with a row of
-   dots drawn as a third `PlacedBox` (kind: line, repeated) or
-   as inline dot characters with computed count.
+1. **Title box** at x=0 (left edge of the region).
+2. **Page-number box** right-aligned at x=width-page_width.
+3. **Leader box** (only when there's a positive gap between the
+   title and page number) containing dot characters computed from
+   the available gap and per-dot width.
 
-2. **Level-based styling.** Resolve the style via
-   `layout_spec.resolve_style("toc_entry_#{level}")` and apply
-   weight=bold for level==1 by setting `style = style.with(font_name: bold_variant)`.
+Page numbers now sit flush at the right margin regardless of how
+long the title is.
 
-3. **Section-number-aware label.** Currently `TocBuilder` builds
-   `label = "#{number} #{title}"`. When the XSL emits "1\n
-   Introduction" (number on its own line, title on next), match
-   that — but this is rare and only affects some entry levels.
-   Defer until page numbers and leaders are correct.
+## Still pending
 
-4. **Page-number source.** `entry[:page_number]` comes from
-   `FlowContext#record_heading` which is called during
-   `Engine::Paged#layout` after the heading flowable is placed.
-   Then `populate_toc` injects the ToC flowables AFTER initial
-   layout. This double-pass works but is fragile — see TODO 9
-   for the long-term design.
+- **Bold for level-1 entries**: the XSL's `refine_toc-leader-style`
+  sets `font-weight="bold"` for top-level entries. Currently all
+  levels share the same style.
+- **Level-based indentation**: level ≥2 should indent by ~12pt.
+  The style is configured (`toc_entry_sub`) but not yet applied
+  via the flowable's left offset.
+- **Section-number formatting**: some heading levels in the XSL
+  produce "1\nIntroduction" (number on its own line). Our label
+  is "#{number} #{title}". Defer until other ToC items are correct.
 
 ## Done-When
 
-- [ ] Leader dots fill the gap between title and page number
-- [ ] Page numbers right-align at the right margin
+- [x] Leader dots fill the gap between title and page number
+- [x] Page numbers right-align at the right margin
 - [ ] Level-1 entries render bold
 - [ ] Level ≥2 entries are indented
 - [ ] Page 3 similarity improves from 51% to >75%
 
-## Current state (2026-08-05)
+## Measurement
 
-Basic leader rendering works (dots between title and number).
-Page numbers display but aren't right-aligned. Style distinction
-between levels isn't applied.
+`bundle exec rake parity:check` — page 2 (ToC) currently 100%,
+page 3 (ToC continuation if any) at 51%.

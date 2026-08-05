@@ -3,7 +3,7 @@ priority: P0
 impact: high
 depends_on: [70]
 layer: flowable
-status: pending
+status: in_progress
 est: 5d
 ---
 
@@ -24,38 +24,37 @@ uses a complex SVG-based layout:
 - All text rendered via SVG `<text>` with `transform="scale(0.82,1)"`
   for a condensed effect
 
-Our cover is a vertical stack of plain text blocks (text content
-matches; layout doesn't). With fonts now embedded (TODO 70 done),
-the text side of the diff is mostly correct — the remaining gap is
-purely positional/scaled.
+Our cover is a vertical stack of plain text blocks. With fonts
+now embedded (TODO 70 done), the text side of the diff is mostly
+correct — the remaining gap is purely positional/scaled.
+
+## Status (2026-08-05)
+
+The `Flowables::PositionedBlock` primitive now exists
+(`lib/arrolio/flowables/positioned_block.rb`) — it takes
+`children:`, `top:`, `left:`, `width:`, `height:` and renders
+its children at fixed page-relative coordinates, consuming zero
+flow height so siblings continue at the same y.
 
 ## Approach (architectural)
 
-The cover layout is defined imperatively in `oiml.xsl` lines 33–287.
-Encoding it as configuration requires new flowable primitives:
+1. **`Flowables::PositionedBlock`** ✅ — shipped.
 
-1. **`Flowables::PositionedBlock`** — absolute-positioned region
-   within the page. Carries `top`, `left`, `width`, `height` in
-   device units (mm/pt). The engine skips normal flow for these;
-   they emit at fixed coordinates.
+2. **`Flowables::TwoColumnBlock`** — already exists with
+   `left_flowables`, `right_flowables`, `left_ratio`. Works for
+   the cover header (doctype + docidentifier) and the org footer
+   (logo + names).
 
-2. **`Flowables::TwoColumnBlock`** — pair of flowable sequences
-   rendered side-by-side. Existing `Flowables::TwoColumnBlock`
-   skeleton exists; needs proper width allocation and per-column
-   sub-frame.
-
-3. **`Style::Definition#text_transform`** — `scale(x, y)` field
-   applied by the renderer before drawing glyphs. Translates to
-   `canvas.text(..., transform: [sx, 0, 0, sy, x, y])` if the
-   renderer supports it.
+3. **`Style::Definition#text_transform`** — add a `scale(x, y)`
+   field applied by the renderer before drawing glyphs. Translates
+   to `Tm` matrix `[sx, 0, 0, sy, x, y]`.
 
 4. **`Flowables::RotatedText`** — text drawn with
-   `reference-orientation: 90` (or 270). The renderer emits
-   `Tm` with the rotation matrix.
+   `reference-orientation: 90` (or 270). The renderer emits `Tm`
+   with the rotation matrix.
 
-5. **`flow_rules.yml` cover_content extension** — replace the
-   current flat `cover_content` list with a positioned block
-   tree:
+5. **`flow_rules.yml cover_layout` schema** — replace the current
+   flat `cover_content` list with a positioned block tree:
 
 ```yaml
 cover_layout:
@@ -88,8 +87,10 @@ cover_layout:
 
 ## Done-When
 
-- [ ] `Flowables::PositionedBlock` exists with specs
+- [x] `Flowables::PositionedBlock` exists with specs
 - [ ] `Flowables::TwoColumnBlock` does proper side-by-side layout
+      (already exists; verify it composes correctly with
+      PositionedBlock)
 - [ ] `Style::Definition` carries `text_transform: [sx, sy]`
 - [ ] Renderer applies the scale transform via Tm matrix
 - [ ] `Flowables::RotatedText` exists with specs
@@ -99,4 +100,4 @@ cover_layout:
 ## Expected improvement
 
 Page 1 from 48% to ~75% (text already matches; layout needs the
-positioned blocks).
+positioned blocks). +1% overall.
