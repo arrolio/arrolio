@@ -57,5 +57,25 @@ RSpec.describe Arrolio::Table::AutoLayout do
       widths = layout.compute
       expect(widths.sum).to be_within(1.0).of(100.0)
     end
+
+    it 'distributes colspan cell width across spanned slots' do
+      colspan_cell = Arrolio::Content::Table::Cell.new(
+        [Arrolio::Content::Paragraph.new(
+          [Arrolio::Content::InlineRun.new('Wide Header', style_id: :table_cell)]
+        )],
+        colspan: 4
+      )
+      header = [Arrolio::Content::Table::Row.new([colspan_cell])]
+      body = [
+        Arrolio::Content::Table::Row.new([
+          cell('A'), cell('B'), cell('C'), cell('D')
+        ])
+      ]
+      colspan_table = Arrolio::Content::Table.new(header: header, body: body)
+      layout = described_class.new(colspan_table, available_width: 400.0)
+      widths = layout.compute
+      expect(widths.length).to eq(4)
+      expect(widths.all? { |w| w >= described_class::MIN_COLUMN_WIDTH }).to be(true)
+    end
   end
 end
