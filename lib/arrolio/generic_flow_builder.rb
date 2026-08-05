@@ -256,7 +256,24 @@ module Arrolio
     end
 
     def bibliography_item_flowable(item, out)
-      out << paragraph_flowable(bibliography_paragraph(item))
+      para = bibliography_paragraph(item)
+      marker_w = marker_width_of(item.tag)
+      tf = paragraph_flowable(para)
+      out << if marker_w.positive? && tf.is_a?(Flowables::TextFlowable)
+        Flowables::TextFlowable.new(tf.runs, style: tf.style,
+                                             measurer: tf.measurer,
+                                             hanging_indent: marker_w)
+      else
+        tf
+             end
+    end
+
+    def marker_width_of(tag)
+      return 0.0 if tag.to_s.empty?
+
+      style = resolve(:bibitem_marker)
+      GlyphMeasurer.new(font_name: style.font_name)
+                   .width_of_string("#{tag} ", font_size: style.font_size)
     end
 
     def bibliography_paragraph(item)

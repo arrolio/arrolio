@@ -7,20 +7,24 @@ module Arrolio
     # :knuth_plass). Both strategies produce TextLayout::Line[]
     # with the same shape, so the rest of the pipeline is agnostic.
     class TextFlowable < Flowable
-      attr_reader :runs, :measurer
+      attr_reader :runs, :measurer, :hanging_indent
 
-      def initialize(runs, style: Style::Definition.new, measurer: nil)
+      def initialize(runs, style: Style::Definition.new, measurer: nil,
+                     hanging_indent: 0.0)
         super(style: style)
         @runs = Array(runs)
         @measurer = measurer || GlyphMeasurer.new(font_name: style.font_name)
+        @hanging_indent = hanging_indent.to_f
       end
 
       def height(width, _context = nil)
-        (laid_out(width).length * line_height) + space_before + space_after
+        effective_width = width - @hanging_indent
+        (laid_out(effective_width).length * line_height) + space_before + space_after
       end
 
       def emit(x, y, width, _context = nil)
-        lines = laid_out(width)
+        effective_width = width - @hanging_indent
+        lines = laid_out(effective_width)
         text_height = line_height * lines.length
         total = text_height + space_before + space_after
         return [[], total] if lines.empty?
@@ -29,7 +33,8 @@ module Arrolio
         box = Output::PlacedBox.text(
           x: x, y: text_y - text_height,
           width: width, height: text_height,
-          lines: lines, line_height: line_height, style: @style
+          lines: lines, line_height: line_height, style: @style,
+          hanging_indent: @hanging_indent
         )
         [[box], total]
       end
