@@ -359,12 +359,13 @@ module Arrolio
         lines.each_with_index do |line, idx|
           baseline_y = y_top - (idx * line_height) - ascender
           line_x = x_origin + line.x_offset
-          render_line_runs(canvas, line, line_x, baseline_y, style)
+          render_line_runs(canvas, line, line_x, baseline_y, style,
+                           last_line: idx == lines.length - 1)
         end
       end
 
-      def render_line_runs(canvas, line, line_x, baseline_y, _paragraph_style)
-        justify = line.justified? ? line.justify_stretch : 0.0
+      def render_line_runs(canvas, line, line_x, baseline_y, _paragraph_style, last_line: false)
+        justify = line.justified? && !last_line ? line.justify_stretch : 0.0
         extra_offset = 0.0
         line.placed_runs.each do |pr|
           run = pr.run
