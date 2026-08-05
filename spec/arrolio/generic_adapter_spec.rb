@@ -186,4 +186,62 @@ RSpec.describe Arrolio::GenericAdapter do
       expect(doc.metadata.key?(:edition_label)).to be(false)
     end
   end
+
+  describe 'sub/sup baseline shift' do
+    let(:rules) do
+      {
+        'metadata' => { 'root' => 'bibdata', 'fields' => {} },
+        'element_mapping' => {
+          'clause' => { 'content_type' => 'section' },
+          'p' => { 'content_type' => 'paragraph' }
+        },
+        'sections' => { 'container' => 'sections' },
+        'inline_styles' => { 'sub' => 'subscript', 'sup' => 'superscript' }
+      }
+    end
+
+    def paragraph_with(xml_inner)
+      adapter.convert(<<~XML).sections.first.children.first
+        <root>
+          <sections>
+            <clause>
+              <p>#{xml_inner}</p>
+            </clause>
+          </sections>
+          <bibdata/>
+        </root>
+      XML
+    end
+
+    it 'sets baseline_shift=:sub for runs inside <sub>' do
+      para = paragraph_with('H<sub>2</sub>O')
+      runs = para.inline_runs
+      sub_run = runs.find { |r| r.text == '2' }
+      expect(sub_run.baseline_shift).to eq(Arrolio::Content::InlineRun::BASELINE_SUB)
+      expect(sub_run.font_size_scale).to be < 1.0
+    end
+
+    it 'sets baseline_shift=:sup for runs inside <sup>' do
+      para = paragraph_with('x<sup>2</sup>')
+      runs = para.inline_runs
+      sup_run = runs.find { |r| r.text == '2' }
+      expect(sup_run.baseline_shift).to eq(Arrolio::Content::InlineRun::BASELINE_SUP)
+      expect(sup_run.font_size_scale).to be < 1.0
+    end
+
+    it 'preserves normal baseline for sibling runs outside sub/sup' do
+      para = paragraph_with('a<sub>b</sub>c')
+      runs = para.inline_runs
+      expect(runs.find { |r| r.text == 'a' }.baseline_shift).to be_nil
+      expect(runs.find { |r| r.text == 'c' }.baseline_shift).to be_nil
+    end
+
+    it 'composes nested scales (sub inside sub)' do
+      para = paragraph_with('x<sub><sub>y</sub></sub>z')
+      runs = para.inline_runs
+      nested = runs.find { |r| r.text == 'y' }
+      expect(nested.baseline_shift).to eq(Arrolio::Content::InlineRun::BASELINE_SUB)
+      expect(nested.font_size_scale).to be < 0.7 # 0.7 * 0.7
+    end
+  end
 end
