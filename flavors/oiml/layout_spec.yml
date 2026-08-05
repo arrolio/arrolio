@@ -167,6 +167,7 @@ styles:
   link:
     parent: body
     font_name: Times New Roman Italic
+    underline: true
   bibitem:
     parent: body
     margin_top: 4
@@ -205,9 +206,11 @@ styles:
     parent: body
   toc_entry:
     parent: body
+    font_name: Times New Roman Bold
     font_size: 11
   toc_entry_sub:
     parent: toc_entry
+    font_name: Times New Roman
     margin_left: 12
   cover_docidentifier:
     parent: body

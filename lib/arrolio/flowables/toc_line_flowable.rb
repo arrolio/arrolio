@@ -32,6 +32,11 @@ module Arrolio
       def emit(x, y, width, context = nil)
         measurer = GlyphMeasurer.new(font_name: @style.font_name)
         line_h = height(width, context)
+        # Apply the style's margin_left as an indent (ToC sub-entries
+        # use this to nest visually under their parent entry).
+        indent = @style.margin_left.to_f
+        x += indent
+        width -= indent
         page_str = @page_number.to_s
         title_w = measurer.width_of_string(@title, font_size: @style.font_size)
         page_w = measurer.width_of_string(page_str, font_size: @style.font_size)
