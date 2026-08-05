@@ -218,15 +218,15 @@ page_sequences:
   footer:
   page_break_after: true
 - role: preface
-  header: "{{docidentifier}}: {{edition}}"
+  header: "{{docidentifier}}: {{edition_label}}"
   footer: "%d"
   header_align: right
 - role: body
-  header: "{{docidentifier}}: {{edition}}"
+  header: "{{docidentifier}}: {{edition_label}}"
   footer: "%d"
   header_align: right
 - role: bibliography
-  header: "{{docidentifier}}: {{edition}}"
+  header: "{{docidentifier}}: {{edition_label}}"
   footer: "%d"
   header_align: right
 cover_content:

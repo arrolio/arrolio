@@ -100,7 +100,20 @@ module Arrolio
         value = text_of(find_first(bibdata, xpath))
         result[key.to_sym] = value if value && !value.empty?
       end
+      derive_metadata_fields(result)
       result
+    end
+
+    def derive_metadata_fields(result)
+      return unless result[:revision_date]
+
+      year = result[:revision_date][0, 4]
+      lang = result[:language].to_s
+      lang_initial = lang[0, 1].upcase
+      result[:revision_year] = year if year&.match?(/\A\d{4}\z/)
+      return if lang.empty?
+
+      result[:edition_label] = "#{year} (#{lang_initial})" if year&.match?(/\A\d{4}\z/)
     end
 
     def extract_cover(root)
