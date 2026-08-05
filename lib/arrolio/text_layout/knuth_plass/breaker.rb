@@ -20,8 +20,10 @@ module Arrolio
         # Tolerance for adjustment ratio — lines with |ratio| above
         # this are infeasible and rejected. Standard TeX default
         # (\tolerance=200) maps to ratio ≈ 1.26 because badness is
-        # 100*|r|^3. We allow ratio up to ~4 to handle wide spaces.
-        TOLERANCE = 4.0
+        # 100*|r|^3. We use a slightly looser limit (1.5) to allow
+        # reasonable stretch on tight paragraphs while rejecting
+        # the pathological overfills greedy avoids by construction.
+        TOLERANCE = 2.5
 
         # Extra penalty for consecutive flagged breaks (hyphens).
         FLAGGED_PENALTY = 3000.0
