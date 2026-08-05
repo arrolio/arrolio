@@ -14,6 +14,20 @@ module Arrolio
               kind: :note, style: style,
               marker_width: marker_width, body_indent: body_indent)
       end
+
+      # NoteFlowable wraps a single (marker, body) pair. Don't split
+      # it via ListFlowable#do_split — that path rebuilds via
+      # self.class.new(items, ...) which doesn't match NoteFlowable's
+      # constructor signature. Keep the note intact; if it doesn't
+      # fit, push the whole note to the next page.
+      def do_split(width, remaining_height, context = nil)
+        total = height(width, context)
+        if total <= remaining_height
+          [self, nil]
+        else
+          [nil, self]
+        end
+      end
     end
   end
 end
