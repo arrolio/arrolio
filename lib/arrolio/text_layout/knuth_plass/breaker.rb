@@ -234,16 +234,24 @@ module Arrolio
         end
 
         def build_placed_runs(start_item, stop_item, _width)
+          # Merge Box + Glue items into single placed_runs so the
+          # renderer emits one canvas.text call per group. Without
+          # merging, each Glue becomes its own Tj block; pdftotext
+          # reads Tj blocks as character sequences and may not see
+          # a single-space Tj as a word separator, producing
+          # "durabilityerror" instead of "durability error".
           placed = []
-          x_offset = 0.0
+          current_text = String.new
+          current_style = nil
+          current_x = 0.0
+          baseline_shift = nil
+          font_size_scale = 1.0
+          href = nil
+          started = false
+
           (start_item...stop_item).each do |i|
             item = @items[i]
             next unless item
-            # Skip the emergency-stretch glue at the end of the
-            # item list — it has infinite stretch and is not part
-            # of the paragraph's actual content (it's a TeX
-            # \emergency_stretch sentinel that guarantees the
-            # algorithm always finds a feasible break path).
             next if item.glue? && item.stretch.infinite?
 
             if item.box?
@@ -253,21 +261,41 @@ module Arrolio
               slice = run.text[item.char_offset, item.char_length]
               next if slice.nil? || slice.empty?
 
-              sub = InlineRun.new(slice, style: run.style,
-                                         baseline_shift: run.baseline_shift,
-                                         font_size_scale: run.font_size_scale,
-                                         href: run.href)
-              placed << Line::PlacedRun.new(run: sub, x_offset: x_offset)
-              x_offset += item.width
+              unless started
+                current_x = sum_item_widths(start_item, i)
+                current_style = run.style
+                baseline_shift = run.baseline_shift
+                font_size_scale = run.font_size_scale
+                href = run.href
+                started = true
+              end
+              current_text << slice
             elsif item.glue?
               run = item.run_index ? @runs[item.run_index] : @runs.first
-              style = run ? run.style : Arrolio::Style::Definition.new
-              space = InlineRun.new(' ', style: style)
-              placed << Line::PlacedRun.new(run: space, x_offset: x_offset)
-              x_offset += item.width
+              current_style ||= run ? run.style : Arrolio::Style::Definition.new
+              current_text << ' '
             end
           end
+
+          if started
+            flush_placed_group(placed, current_text, current_style, current_x,
+                               baseline_shift, font_size_scale, href)
+          end
           placed
+        end
+
+        def sum_item_widths(start_idx, end_idx)
+          (start_idx...end_idx).sum { |i| @items[i]&.width.to_f }
+        end
+
+        def flush_placed_group(placed, text, style, x, baseline_shift, font_size_scale, href)
+          return if text.nil? || text.empty?
+
+          run = InlineRun.new(text, style: style,
+                                    baseline_shift: baseline_shift,
+                                    font_size_scale: font_size_scale,
+                                    href: href)
+          placed << Line::PlacedRun.new(run: run, x_offset: x)
         end
 
         def finalize_node(position, line, fitness, total_demerits, previous)
