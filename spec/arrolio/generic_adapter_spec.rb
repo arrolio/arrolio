@@ -82,4 +82,108 @@ RSpec.describe Arrolio::GenericAdapter do
       expect(adapter.rules['element_mapping']).to be_a(Hash)
     end
   end
+
+  describe 'heading number delimiter extraction' do
+    let(:rules) do
+      {
+        'selectors' => { 'heading' => 'fmt-title' },
+        'metadata' => { 'root' => 'bibdata', 'fields' => {} },
+        'element_mapping' => { 'clause' => { 'content_type' => 'section' } },
+        'sections' => { 'container' => 'sections' }
+      }
+    end
+
+    it 'includes the autonum delimiter between number parts' do
+      xml = <<~XML
+        <root>
+          <sections>
+            <clause>
+              <fmt-title depth="2">
+                <span class="fmt-caption-label">
+                  <semx element="autonum">2</semx>
+                  <span class="fmt-autonum-delim">.</span>
+                  <semx element="autonum">1</semx>
+                </span>
+                <semx element="title">Scope</semx>
+              </fmt-title>
+              <p>body</p>
+            </clause>
+          </sections>
+          <bibdata/>
+        </root>
+      XML
+
+      doc = adapter.convert(xml)
+      section = doc.sections.first
+      expect(section.number).to eq('2.1')
+      expect(section.title).to eq('Scope')
+    end
+
+    it 'returns nil title when the heading has only autonum content' do
+      xml = <<~XML
+        <root>
+          <sections>
+            <clause>
+              <fmt-title depth="2">
+                <span class="fmt-caption-label">
+                  <semx element="autonum">2</semx>
+                  <span class="fmt-autonum-delim">.</span>
+                  <semx element="autonum">1</semx>
+                </span>
+              </fmt-title>
+              <p>body</p>
+            </clause>
+          </sections>
+          <bibdata/>
+        </root>
+      XML
+
+      doc = adapter.convert(xml)
+      section = doc.sections.first
+      expect(section.number).to eq('2.1')
+      expect(section.title).to be_nil
+      expect(section.heading?).to be(false)
+    end
+  end
+
+  describe 'derived metadata fields' do
+    let(:rules) do
+      {
+        'metadata' => {
+          'root' => 'bibdata',
+          'fields' => {
+            'revision_date' => 'version',
+            'language' => 'language'
+          }
+        }
+      }
+    end
+
+    it 'computes revision_year and edition_label from revision_date + language' do
+      xml = <<~XML
+        <root>
+          <bibdata>
+            <version>2021-10-01</version>
+            <language current="true">en</language>
+          </bibdata>
+        </root>
+      XML
+
+      doc = adapter.convert(xml)
+      expect(doc.metadata[:revision_year]).to eq('2021')
+      expect(doc.metadata[:edition_label]).to eq('2021 (E)')
+    end
+
+    it 'skips derived fields when revision_date is missing' do
+      xml = '<root><bibdata><language current="true">en</language></bibdata></root>'
+      doc = adapter.convert(xml)
+      expect(doc.metadata.key?(:edition_label)).to be(false)
+    end
+
+    it 'skips derived fields when revision_date is not a year prefix' do
+      xml = '<root><bibdata><version>n/a</version><language current="true">en</language></bibdata></root>'
+      doc = adapter.convert(xml)
+      expect(doc.metadata.key?(:edition_label)).to be(false)
+    end
+  end
 end

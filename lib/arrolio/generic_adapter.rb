@@ -606,7 +606,7 @@ module Arrolio
         end
       end
 
-      number = number_parts.join.strip
+      number = number_parts.map(&:strip).reject(&:empty?).join
       number = nil if number.empty?
 
       title = if title_parts.any?
