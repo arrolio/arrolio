@@ -17,9 +17,11 @@ module Arrolio
       class Breaker
         Infinity = Float::INFINITY
 
-        # Tolerance for adjustment ratio — lines with ratio above
-        # this are considered "underfull" and penalized.
-        TOLERANCE = 100.0
+        # Tolerance for adjustment ratio — lines with |ratio| above
+        # this are infeasible and rejected. Standard TeX default
+        # (\tolerance=200) maps to ratio ≈ 1.26 because badness is
+        # 100*|r|^3. We allow ratio up to ~4 to handle wide spaces.
+        TOLERANCE = 4.0
 
         # Extra penalty for consecutive flagged breaks (hyphens).
         FLAGGED_PENALTY = 3000.0
@@ -154,11 +156,7 @@ module Arrolio
 
         def demerits_for(ratio, break_pos)
           penalty = @items[break_pos].penalty? ? @items[break_pos].penalty : 0
-          badness = if ratio.negative?
-            (100 * ((-ratio) ** 3)).to_i
-          else
-            0
-                    end
+          badness = (100 * (ratio.abs ** 3)).clamp(0, 10_000).to_i
           # Standard Knuth-Plass demerits. Forced breaks (penalty =
           # -Infinity) use d = (1 + badness)^2 — the penalty term
           # drops out because there's no choice about breaking.
@@ -255,7 +253,7 @@ module Arrolio
               x_offset += item.width
             elsif item.glue?
               run = item.run_index ? @runs[item.run_index] : @runs.first
-              style = run ? run.style : Arroolio::Style::Definition.new
+              style = run ? run.style : Arrolio::Style::Definition.new
               space = InlineRun.new(' ', style: style)
               placed << Line::PlacedRun.new(run: space, x_offset: x_offset)
               x_offset += item.width

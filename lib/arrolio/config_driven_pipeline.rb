@@ -55,7 +55,7 @@ module Arrolio
         io: io,
         logo_path: @logo_path,
         metadata: document_metadata,
-        font_paths: @layout_spec.font_paths,
+        font_paths: resolved_font_paths_for_renderer,
         context: engine.context,
         layout_spec: @layout_spec
       )
@@ -91,6 +91,18 @@ module Arrolio
     def register_fonts
       FontMetrics::Registry.register_ttf_all(@layout_spec.font_paths, strict: @strict)
       resolve_fonts_via_fontist
+    end
+
+    def resolved_font_paths_for_renderer
+      merged = @layout_spec.font_paths.dup
+      scanner = ::Arrolio::FontScanner.new
+      collect_referenced_font_names.each do |name|
+        next if merged.key?(name)
+
+        path = scanner.resolve(name)
+        merged[name] = path if path
+      end
+      merged
     end
 
     def resolve_fonts_via_fontist

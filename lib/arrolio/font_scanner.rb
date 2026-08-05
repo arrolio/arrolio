@@ -64,14 +64,31 @@ module Arrolio
       storage = name_table.string_storage
       names = extract_names(name_table, storage)
       weight = extract_weight(font)
+      style_suffix = extract_style_suffix(font)
+      family = name_id(name_table, storage, 1)
 
       names.map { |n| @index[n] ||= path }
-
-      # Also register family + variant combos
-      family = names.find { |n| n == name_id(name_table, storage, 1) }
+      if family && style_suffix
+        @index["#{family} #{style_suffix}"] ||= path
+      end
+      @index[family] ||= path if family
       return nil unless family
 
       { names: names, family: family, weight: weight }
+    rescue StandardError
+      nil
+    end
+
+    def extract_style_suffix(font)
+      os2 = font.table('OS/2')
+      return nil unless os2
+
+      flags = os2.fs_selection.to_i
+      weight = os2.us_weight_class.to_i
+      parts = []
+      parts << 'Bold' if flags.anybits?(32) || weight >= 700
+      parts << 'Italic' if flags.anybits?(1)
+      parts.empty? ? nil : parts.join(' ')
     rescue StandardError
       nil
     end

@@ -76,7 +76,8 @@ module Arrolio
         preface: extract_preface(root),
         bibliography: extract_bibliography(root),
         cover: extract_cover(root),
-        footnotes: extract_footnotes(root)
+        footnotes: extract_footnotes(root),
+        title_block: extract_title_block(root)
       )
     end
 
@@ -127,6 +128,29 @@ module Arrolio
         children << convert_clause(child)
       end
       children
+    end
+
+    def extract_title_block(root)
+      sections_config = @rules['sections'] || {}
+      container = sections_config['container'] || 'sections'
+      sections_elem = find_first(root, container)
+      return nil unless sections_elem
+
+      para_name = selector('paragraph')
+      each_direct_child(sections_elem) do |child|
+        next unless child.name == para_name
+
+        cls = child.attribute('class')&.value
+        title_style = (@rules['paragraph_styles'] || {})[cls]
+        next unless title_style
+
+        return Content::Paragraph.new(
+          collect_inline_runs(child),
+          style_id: title_style.to_sym,
+          id: child.attribute(selector('id_attribute'))&.value
+        )
+      end
+      nil
     end
 
     def extract_preface(root)
@@ -548,11 +572,17 @@ module Arrolio
       number_parts = []
       title_parts = []
       autonum_class = selector('autonum_class')
+      autonum_delim_class = selector('autonum_delim_class') || 'fmt-autonum-delim'
+      caption_label_class = selector('caption_label_class') || 'fmt-caption-label'
 
       walk_heading_text(heading_elem) do |text, parent|
         parts << text
         element_attr = parent&.attribute('element')&.value
-        if element_attr == 'autonum' || autonum_class_parent?(parent, autonum_class)
+        parent_class = parent&.attribute('class')&.value
+        if element_attr == 'autonum' ||
+           parent_class == autonum_class ||
+           parent_class == autonum_delim_class ||
+           parent_class == caption_label_class
           number_parts << text
         elsif element_attr == 'title'
           title_parts << text
@@ -583,11 +613,6 @@ module Arrolio
           walk_heading_text(child, &block)
         end
       end
-    end
-
-    def autonum_class_parent?(node, autonum_class)
-      parent = node.parent
-      parent && parent.attribute('class')&.value == autonum_class
     end
 
     # ---- Text helpers ----
