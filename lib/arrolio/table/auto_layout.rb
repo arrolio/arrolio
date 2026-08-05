@@ -38,15 +38,26 @@ module Arrolio
         @table.column_count
       end
 
-      # Natural width of each column = max cell natural width across rows.
+      # Natural width of each column = max cell natural width across
+      # rows. Cells with colspan distribute their natural width
+      # equally across the spanned slots so a wide header doesn't
+      # accidentally collapse.
       def natural_widths
         widths = Array.new(column_count, MIN_COLUMN_WIDTH)
         @table.rows.each do |row|
-          row.cells.each_with_index do |cell, ci|
-            next if ci >= widths.length
-
+          ci = 0
+          row.cells.each do |cell|
+            span = [cell.colspan.to_i, 1].max
+            span = [span, column_count - ci].min
             w = cell_natural_width(cell)
-            widths[ci] = w if w > widths[ci]
+            share = w / span.to_f
+            span.times do |offset|
+              idx = ci + offset
+              break if idx >= widths.length
+
+              widths[idx] = [widths[idx], share].max
+            end
+            ci += span
           end
         end
         widths
