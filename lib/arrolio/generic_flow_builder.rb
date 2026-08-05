@@ -207,10 +207,18 @@ module Arrolio
     def note_flowable(note)
       body = note.body.map { |paragraph| paragraph_flowable(paragraph) }
       Flowables::NoteFlowable.new(
-        note.label,
+        formatted_note_label(note.label),
         body,
         style: resolve(note.style_id)
       )
+    end
+
+    def formatted_note_label(label)
+      return '' if label.nil? || label.empty?
+
+      suffix = @rules.dig('note', 'label_suffix') || '—'
+      stripped = label.strip
+      stripped.empty? ? '' : "#{stripped} #{suffix}"
     end
 
     def example_flowable(example)
@@ -248,14 +256,21 @@ module Arrolio
     end
 
     def bibliography_item_flowable(item, out)
-      marker_text = item.tag.to_s
-      body = item.formattedref ? [paragraph_flowable(item.formattedref)] : []
-      out << Flowables::NoteFlowable.new(
-        marker_text,
-        body,
-        style: resolve(item.style_id),
-        marker_width: 36.0
-      )
+      out << paragraph_flowable(bibliography_paragraph(item))
+    end
+
+    def bibliography_paragraph(item)
+      runs = []
+      if item.tag.is_a?(String) && !item.tag.empty?
+        runs << Content::InlineRun.new("#{item.tag} ", style_id: :bibitem_marker)
+      end
+      if item.formattedref
+        runs.concat(item.formattedref.inline_runs.map do |r|
+          Content::InlineRun.new(r.text, style_id: r.style_id)
+        end)
+      end
+      Content::Paragraph.new(runs, style_id: item.style_id || :bibitem,
+                                   id: item.id)
     end
 
     def paragraph_flowable(paragraph)
