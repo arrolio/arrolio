@@ -383,8 +383,23 @@ module Arrolio
           end
           record_link_if_needed(run, x, y, opts[:size])
           canvas.text(payload, **opts)
+          draw_underline(canvas, run, x, y, size) if run.style.underline
           extra_offset += (run.text.count(' ') * justify) if justify.positive?
         end
+      end
+
+      # Draws a thin horizontal rule below a run's baseline when the
+      # style's `underline` flag is set. Matches FOP/HTML convention:
+      # the rule sits ~1pt below baseline, thickness ~5% of font size.
+      def draw_underline(canvas, run, x, baseline_y, size)
+        weight = [size * 0.05, 0.5].max
+        underline_y = baseline_y - (size * 0.18)
+        width = run.text.length * size * 0.45
+        canvas.line(x, underline_y, x + width, underline_y)
+        canvas.line_width = weight
+        canvas.stroke
+      rescue StandardError => e
+        Arroolio::Logger.warn "draw_underline failed: #{e.message[0, 60]}"
       end
 
       # Returns [y, font_size] for a run, applying baseline shift and
