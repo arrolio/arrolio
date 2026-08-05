@@ -10,7 +10,7 @@ metadata:
     docidentifier: docidentifier[@primary='true']
     docnumber: docnumber
     edition: edition
-    revision_date: version/revision-date
+    revision_date: version
     title: title[@type='main']
     title_intro: title[@type='title-intro']
     title_main: title[@type='title-main']
