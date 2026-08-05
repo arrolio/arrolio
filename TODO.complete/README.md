@@ -35,23 +35,20 @@ est: 1d          # 1d = single focused session; 5d = multi-week module
 
 ## Current parity baseline (2026-08-05)
 
-`bundle exec rake parity:check` reports **48.95%** overall
+`bundle exec rake parity:check` reports **48.12%** overall
 similarity on the OIML r060/1 fixture, 29 pages vs 28 reference.
-Down ~0.4% from the previous 49.38% peak — the table bold-header
-change (TODO 72) shifted column widths and one page regressed
-more than others improved visually.
 
 Per-page summary:
 - Page 1 (cover): 48.0% — needs TODO 71 (PositionedBlock shipped;
   full cover rebuild pending).
 - Page 2 (back of cover): 100% — done.
 - Pages 3-4 (ToC + Foreword): 51-86% — TODO 73 page-number
-  right-align shipped; bold/indent pending.
+  right-align shipped; bold + indent shipped.
 - Pages 5-9 (body intro + terminology): 38-79% — KP improvements
   landed; some drift.
 - Pages 10-17 (definitions): 37-88% — mixed; terminology compactness.
-- Pages 18-25 (tables + figures): 18-65% — TODO 72 header-bold
-  shipped; needs colspan/rowspan and continuation caption.
+- Pages 18-25 (tables + figures): 18-65% — TODO 72 header-bold +
+  colspan shipped; needs continuation caption and rowspan.
 - Pages 26-28 (body end + bibliography): 5-30% — TODO 78
   bibliography-as-paragraph shipped.
 - Page 29 (extra): 0% — pagination drift.
@@ -75,12 +72,12 @@ page templates, hyperlink underline).
 | 70 (TTF metrics) | done | metrics | critical |
 | 71 (cover layout) | in progress | flowable | high |
 | 72 (table layout) | in progress | flowable | high |
-| 73 (ToC leaders) | in progress | flowable | med |
+| 73 (ToC leaders) | done | flowable | med |
 | 74 (SVG figures) | in progress | render | high |
-| 75 (MathML) | pending | flowable | med |
-| 76 (page templates) | pending | engine | med |
-| 77 (text formatting) | in progress | adapter | low |
-| 78 (bibliography) | in progress | adapter | low |
+| 75 (MathML) | in progress | flowable | med |
+| 76 (page templates) | in progress (header align) | engine | med |
+| 77 (text formatting) | done | adapter | low |
+| 78 (bibliography) | in progress (text shown, hanging indent pending) | adapter | low |
 | 79 (line breaking) | in progress | text | high |
 | 80 (parity CI) | done | harness | critical |
 
