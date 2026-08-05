@@ -13,3 +13,5 @@ gem 'rubocop-rake', '~> 0.7'
 gem 'rubocop-rspec', '~> 3.5'
 
 gem 'rexml'
+
+gem 'pdfrb', path: '/Users/mulgogi/src/claricle/pdfrb'

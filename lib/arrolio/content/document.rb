@@ -6,14 +6,15 @@ module Arrolio
   module Content
     class Document
       attr_reader :metadata, :sections, :preface, :bibliography, :cover,
-                  :style_id, :footnotes
+                  :style_id, :footnotes, :title_block
 
       def self.build(metadata: {}, **opts, &block)
         Builder.build(metadata: metadata, **opts, &block)
       end
 
       def initialize(metadata: {}, sections: [], preface: [], bibliography: [],
-                     cover: nil, style_id: :document, footnotes: [])
+                     cover: nil, style_id: :document, footnotes: [],
+                     title_block: nil)
         @metadata = metadata.to_h.freeze
         @sections = validate_sections(Array(sections), field: :sections).freeze
         @preface = validate_sections(Array(preface), field: :preface).freeze
@@ -21,6 +22,7 @@ module Arrolio
         @cover = cover
         @style_id = style_id.to_sym
         @footnotes = Array(footnotes).freeze
+        @title_block = title_block
         freeze
       end
 

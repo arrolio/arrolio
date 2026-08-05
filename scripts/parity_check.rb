@@ -25,18 +25,21 @@ module ParityCheck
     diff = Arrolio::Harness::PdfDiff.new(OUTPUT, REFERENCE)
     result = diff.call
 
-    puts "Overall similarity: #{result.overall_similarity.round(2)}%"
+    puts "Overall similarity: #{(result.overall_similarity * 100).round(2)}%"
     puts "Our pages: #{result.ours_pages}, Reference pages: #{result.theirs_pages}"
     puts ''
     result.per_page.each do |page|
-      status = if page.similarity > 50 then 'OK'
-               elsif page.similarity > 10 then 'PARTIAL'
+      pct = (page.similarity * 100).round(1)
+      status = if page.similarity > 0.5 then 'OK'
+               elsif page.similarity > 0.1 then 'PARTIAL'
                else 'LOW'
                end
-      puts "  Page #{page.number}: #{page.similarity.round(1)}% [#{status}]"
+      puts "  Page #{page.number}: #{pct}% [#{status}]"
     end
     puts ''
     puts 'Target: > 50% overall similarity'
     result.overall_similarity
   end
 end
+
+ParityCheck.run

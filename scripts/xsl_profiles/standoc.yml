@@ -145,7 +145,7 @@ metadata_fields:
   docidentifier: "docidentifier[@primary='true']"
   docnumber: docnumber
   edition: edition
-  revision_date: version/revision-date
+  revision_date: version
   title: "title[@type='main']"
   title_intro: "title[@type='title-intro']"
   title_main: "title[@type='title-main']"
@@ -215,4 +215,4 @@ cover_content:
     source: "{{docidentifier}} {{edition}}"
     style: cover_label
 
-header_template: "{{docidentifier}}: {{edition}}"
+header_template: "{{docidentifier}}: {{revision_date}}"
