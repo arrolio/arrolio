@@ -574,17 +574,107 @@ module Arrolio
       walk_math(target, style, runs) if target
     end
 
+    # Walks a MathML tree (or fallback container) emitting InlineRuns
+    # with appropriate baseline_shift + font_size_scale.
+    #
+    # Recognised MathML elements:
+    #   <msub> base subscript       → subscript run
+    #   <msup> base superscript     → superscript run
+    #   <msubsup> base sub sup      → both
+    #   <mrow> group                → recurse
+    #   <mstyle> style group        → recurse
+    #   <mi> identifier             → italic math run
+    #   <mn> number                 → regular run
+    #   <mo> operator               → regular run
+    #   <mtext> literal text        → regular run
+    #
+    # Anything else is treated as a transparent container and
+    # recursed into. Text nodes become regular runs.
     def walk_math(elem, style, runs)
       return unless elem
 
-      elem.each_recursive do |child|
-        next unless child.is_a?(REXML::Text)
+      math_elem = find_descendant_element(elem, 'math')
+      target = math_elem || elem
+      walk_mathml_children(target, style, runs, baseline: nil, scale: 1.0)
+    end
 
-        text = normalize_text(child.value)
-        next if text.nil? || text.empty?
+    # Find the first descendant element with the given local name
+    # (matches across namespaces — `<mml:math>` and `<math>` both
+    # match `find_descendant_element(parent, 'math')`).
+    def find_descendant_element(parent, name)
+      return nil unless parent
 
-        runs << Content::InlineRun.new(text, style_id: style)
+      parent.each_recursive do |child|
+        return child if local_name(child) == name
       end
+      nil
+    end
+
+    def walk_mathml_children(elem, style, runs, baseline:, scale:)
+      elem.children.each do |child|
+        case child
+        when REXML::Text
+          text = normalize_text(child.value)
+          next if text.nil? || text.empty?
+
+          runs << Content::InlineRun.new(text,
+                                         style_id: style,
+                                         baseline_shift: baseline,
+                                         font_size_scale: scale)
+        when REXML::Element
+          walk_mathml_element(child, style, runs, baseline: baseline, scale: scale)
+        end
+      end
+    end
+
+    def walk_mathml_element(elem, style, runs, baseline:, scale:)
+      case local_name(elem)
+      when 'msub'
+        walk_mathml_sub_or_sup(elem, style, runs, baseline, scale, Content::InlineRun::BASELINE_SUB)
+      when 'msup'
+        walk_mathml_sub_or_sup(elem, style, runs, baseline, scale, Content::InlineRun::BASELINE_SUP)
+      when 'msubsup'
+        walk_mathml_subsup(elem, style, runs, baseline, scale)
+      when 'mi'
+        walk_mathml_children(elem, :math_identifier, runs, baseline: baseline, scale: scale)
+      when 'mn', 'mo', 'mtext'
+        walk_mathml_children(elem, style, runs, baseline: baseline, scale: scale)
+      when 'mrow', 'mstyle', 'math', 'mfrac', 'msqrt', 'mroot'
+        walk_mathml_children(elem, style, runs, baseline: baseline, scale: scale)
+      else
+        walk_mathml_children(elem, style, runs, baseline: baseline, scale: scale)
+      end
+    end
+
+    def walk_mathml_sub_or_sup(elem, style, runs, baseline, scale, child_shift)
+      children = element_children(elem).to_a
+      base = children.first
+      sub_or_sup = children.drop(1).first
+      walk_mathml_children(base, style, runs, baseline: baseline, scale: scale) if base
+      return unless sub_or_sup
+
+      new_scale = (scale * 0.7).round(4)
+      walk_mathml_children(sub_or_sup, style, runs, baseline: child_shift, scale: new_scale)
+    end
+
+    def walk_mathml_subsup(elem, style, runs, baseline, scale)
+      children = element_children(elem).to_a
+      base = children.first
+      sub = children[1]
+      sup = children[2]
+      walk_mathml_children(base, style, runs, baseline: baseline, scale: scale) if base
+      new_scale = (scale * 0.7).round(4)
+      walk_mathml_children(sub, style, runs, baseline: Content::InlineRun::BASELINE_SUB, scale: new_scale) if sub
+      walk_mathml_children(sup, style, runs, baseline: Content::InlineRun::BASELINE_SUP, scale: new_scale) if sup
+    end
+
+    def element_children(elem)
+      elem.children.grep(REXML::Element)
+    end
+
+    def local_name(elem)
+      # Strip MathML namespace prefix if present (e.g. 'mml:msub' → 'msub')
+      elem.name.sub(/\A.*:/, '')
     end
 
     # ---- Heading extraction ----
