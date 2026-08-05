@@ -22,6 +22,12 @@ module Arrolio
           @runs.each_with_index do |run, run_idx|
             build_items_for_run(run, run_idx, items)
           end
+          # Emergency stretch: zero-width glue with infinite stretch
+          # before the FINISHED penalty. This matches TeX's
+          # \emergency_stretch — guarantees the breaker always finds
+          # a path even when intermediate breaks are infeasible
+          # under the chosen TOLERANCE.
+          items << Glue.new(width: 0, stretch: Float::INFINITY, shrink: 0)
           items << FINISHED
           items
         end

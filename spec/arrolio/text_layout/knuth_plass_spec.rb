@@ -52,7 +52,7 @@ RSpec.describe Arrolio::TextLayout::KnuthPlass do
       boxes = items.count(&:box?)
       glues = items.count(&:glue?)
       expect(boxes).to eq(3) # three words
-      expect(glues).to eq(2) # two spaces
+      expect(glues).to eq(3) # two spaces + one emergency-stretch glue
     end
 
     it 'appends FINISHED at the end' do
