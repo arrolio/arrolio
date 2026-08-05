@@ -56,6 +56,22 @@ module Arrolio
       'break_inline' => 'br'
     }.freeze
 
+    # Maps content_type (declared in rules.element_mapping) to a
+    # builder method. Adding a new content type = adding one entry
+    # here plus a builder method below — convert_children itself
+    # never needs to change (Open/Closed Principle).
+    CONVERTER_REGISTRY = {
+      'section' => :convert_section,
+      'paragraph' => :convert_paragraph,
+      'table' => :convert_table,
+      'figure' => :convert_figure,
+      'list' => :convert_list,
+      'term' => :convert_term,
+      'note' => :convert_note,
+      'example' => :convert_example,
+      'preformatted' => :convert_preformatted
+    }.freeze
+
     attr_reader :rules, :layout_spec, :selectors
 
     def initialize(rules:, layout_spec: nil)
@@ -258,6 +274,12 @@ module Arrolio
       [depth, 1].max
     end
 
+    # Maps content_type (declared in rules.element_mapping) to a
+    # Each builder accepts a child element and returns one or more
+    # Content nodes. The dispatch_converter helper wraps single
+    # returns in an Array so the caller can always concat.
+    private
+
     def convert_children(parent)
       children = []
       mapping = @rules['element_mapping'] || {}
@@ -269,31 +291,37 @@ module Arrolio
         type = mapping[child.name]&.dig('content_type')
         next if type.nil?
 
-        case type
-        when 'section'
-          children << convert_clause(child)
-        when 'paragraph'
-          children << convert_paragraph(child)
-        when 'table'
-          children << convert_table(child)
-        when 'figure'
-          children.concat(convert_figure(child))
-        when 'list'
-          children << convert_list(child, kind: mapping[child.name]['kind']&.to_sym || :bullet)
-        when 'term'
-          children.concat(convert_term(child))
-        when 'note'
-          children.concat(convert_note(child))
-        when 'example'
-          children.concat(convert_example(child))
-        when 'preformatted'
-          children << Content::Preformatted.new(
-            text_of(child).split("\n", -1),
-            style_id: :preformatted
-          )
-        end
+        converter = CONVERTER_REGISTRY[type]
+        next unless converter
+
+        children.concat(dispatch_converter(converter, child, mapping[child.name]))
       end
       children
+    end
+
+    # Routes to a converter. 'list' needs the kind argument pulled
+    # from the mapping entry; all others take just the child.
+    def dispatch_converter(converter, child, mapping_entry)
+      if converter == :convert_list
+        result = send(converter, child, kind: mapping_entry['kind']&.to_sym || :bullet)
+        result.is_a?(Array) ? result : [result]
+      elsif converter == :convert_preformatted
+        [send(converter, child)]
+      else
+        result = send(converter, child)
+        result.is_a?(Array) ? result : [result]
+      end
+    end
+
+    def convert_preformatted(child)
+      Content::Preformatted.new(
+        text_of(child).split("\n", -1),
+        style_id: :preformatted
+      )
+    end
+
+    def convert_section(child)
+      convert_clause(child)
     end
 
     def convert_paragraph(elem)
