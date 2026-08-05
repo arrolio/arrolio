@@ -137,12 +137,24 @@ module Arrolio
           role: @current_role || :body,
           header: @current_header,
           footer: @current_footer,
-          header_align: @current_header_align || :right,
+          header_align: header_align_for(page_number),
           footer_align: @current_footer_align || :center,
           footnotes: []
         )
         @pages << state
         state
+      end
+
+      # Pick header alignment based on page parity. Even pages
+      # have left-aligned headers; odd pages have right-aligned
+      # headers (matches the XSL-FO convention used by every
+      # flavor: insertHeaderEven left, insertHeaderOdd right).
+      def header_align_for(page_number)
+        explicit = @current_header_align
+        return explicit if explicit
+        return :left if page_number.even?
+
+        :right
       end
 
       def finalize_pages
