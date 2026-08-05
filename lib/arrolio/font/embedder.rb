@@ -87,16 +87,35 @@ module Arrolio
           sf = Fontisan::FontLoader.load(path)
           cm = sf.table('cmap').unicode_mappings
           @subset_cp_to_gid = cm.transform_keys(&:to_i)
-          @subset_gid_to_cp = @subset_cp_to_gid.invert
+          @subset_gid_to_cp = invert_prefer_ascii(@subset_cp_to_gid)
         end
       rescue StandardError => e
         Arrolio::Logger.warn "subset cmap extract failed: #{e.message[0,80]}"
         @subset_cp_to_gid = @unicode_to_gid
-        @subset_gid_to_cp = @unicode_to_gid.invert
+        @subset_gid_to_cp = invert_prefer_ascii(@unicode_to_gid)
+      end
+
+      # Build GID -> codepoint map, preferring ASCII codepoints when
+      # multiple codepoints share the same GID. Fonts commonly have
+      # both U+0020 (SPACE) and U+00A0 (NO-BREAK SPACE) mapped to
+      # the same glyph; without preference, Hash#invert would keep
+      # U+00A0, breaking text extraction (pdftotext reads no-break
+      # spaces as solid characters, not word separators).
+      def invert_prefer_ascii(cp_to_gid)
+        result = {}
+        cp_to_gid.each do |cp, gid|
+          existing = result[gid]
+          if existing.nil?
+            result[gid] = cp
+          elsif cp < 0x80 && existing >= 0x80
+            result[gid] = cp
+          end
+        end
+        result
       end
 
       def build_tounicode_stream
-        gid_to_cp = @subset_gid_to_cp || @unicode_to_gid.invert
+        gid_to_cp = @subset_gid_to_cp || invert_prefer_ascii(@unicode_to_gid)
         lines = []
         lines << '/CIDInit /ProcSet findresource begin'
         lines << '12 dict begin'
