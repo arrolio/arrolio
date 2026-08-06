@@ -16,5 +16,6 @@ module Arrolio
     autoload :TableFlowable, 'arrolio/flowables/table_flowable'
     autoload :FootnoteMarkerFlowable, 'arrolio/flowables/footnote_marker_flowable'
     autoload :PositionedBlock, 'arrolio/flowables/positioned_block'
+    autoload :RotatedText, 'arrolio/flowables/rotated_text'
   end
 end

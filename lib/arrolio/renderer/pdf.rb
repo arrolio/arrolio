@@ -344,7 +344,29 @@ module Arrolio
         when :rect then render_rect(canvas, box)
         when :line then render_line(canvas, box)
         when :image then render_image(canvas, box)
+        when :rotated_text then render_rotated_text(canvas, box)
         end
+      end
+
+      def render_rotated_text(canvas, box)
+        text = box.data[:text]
+        style = box.data[:style]
+        angle = box.data[:angle].to_f
+        line_height = box.data[:line_height].to_f
+        font_name = style.font_name
+        ref = embedded_or_standard(font_name)
+        payload = encoded_or_text(font_name, text)
+        rad = angle * Math::PI / 180.0
+        cos = Math.cos(rad)
+        sin = Math.sin(rad)
+        baseline_y = box.y + line_height - GlyphMeasurer.new(font_name: font_name)
+                                                          .ascender(font_size: style.font_size)
+        # PDF text matrix is [a b c d e f] where (a,d) scale, (b,c) rotate,
+        # (e,f) translate. We rotate around the baseline starting point.
+        canvas.text(payload, at: [box.x, baseline_y], font: ref, size: style.font_size,
+                             tm: [cos, sin, -sin, cos, box.x, baseline_y])
+      rescue StandardError => e
+        Arroolio::Logger.warn "render_rotated_text failed: #{e.message[0, 80]}"
       end
 
       def render_text(canvas, box)
