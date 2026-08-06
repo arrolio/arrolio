@@ -38,8 +38,8 @@ module Arrolio
         'Mml::V3::Mo' => [:value, :mo_value, :text],
         'Mml::V3::Mtext' => [:value, :mtext_value, :text],
         'Mml::V3::Ms' => [:value, :ms_value, :text],
-        'Mml::V3::Mrow' => [nil, :mrow_value, :transparent],
-        'Mml::V3::Mstyle' => [nil, :mstyle_value, :transparent],
+        'Mml::V3::Mrow' => [nil, nil, :transparent_all],
+        'Mml::V3::Mstyle' => [nil, nil, :transparent_all],
         'Mml::V3::Msub' => [nil, :msub_value, :subscript_container],
         'Mml::V3::Msup' => [nil, :msup_value, :superscript_container],
         'Mml::V3::Msubsup' => [nil, :msubsup_value, :subsup_container],
@@ -52,7 +52,7 @@ module Arrolio
         'Mml::V3::Mpadded' => [nil, :mpadded_value, :transparent],
         'Mml::V3::Merror' => [nil, :merror_value, :transparent],
         'Mml::V3::Semantics' => [nil, :semantics_value, :transparent],
-        'Mml::V3::Math' => [nil, :math_value, :transparent]
+        'Mml::V3::Math' => [nil, nil, :transparent_all]
       }.freeze
 
       attr_reader :base_style
@@ -112,9 +112,10 @@ module Arrolio
 
       def dispatch_handler(node, handler, runs, baseline:, scale:, style_id:)
         _value_attr, child_attr, kind = handler
+        effective_style = kind == :identifier ? :math_identifier : style_id
         if handler.first
           emit_text_value(node, runs, baseline: baseline, scale: scale,
-                                      style_id: style_id)
+                                      style_id: effective_style)
         end
         case kind
         when :identifier
@@ -126,22 +127,25 @@ module Arrolio
         when :transparent
           walk_collection(node, child_attr, runs, baseline: baseline, scale: scale,
                                                   style_id: style_id)
+        when :transparent_all
+          walk_all_children(node, runs, baseline: baseline, scale: scale,
+                                        style_id: style_id)
         when :subscript_container
-          emit_script(node, child_attr, runs, baseline: baseline, scale: scale,
-                                              style_id: style_id,
-                                              script_baseline: sub_baseline,
-                                              script_position: 1)
+          process_script_container(node, runs, baseline: baseline, scale: scale,
+                                               style_id: style_id,
+                                               script_baseline: sub_baseline,
+                                               script_position: 1)
         when :superscript_container
-          emit_script(node, child_attr, runs, baseline: baseline, scale: scale,
-                                              style_id: style_id,
-                                              script_baseline: sup_baseline,
-                                              script_position: 1)
+          process_script_container(node, runs, baseline: baseline, scale: scale,
+                                               style_id: style_id,
+                                               script_baseline: sup_baseline,
+                                               script_position: 1)
         when :subsup_container
-          emit_subsup(node, child_attr, runs, baseline: baseline, scale: scale,
-                                              style_id: style_id)
+          process_subsup_container(node, runs, baseline: baseline, scale: scale,
+                                               style_id: style_id)
         when :fraction
-          emit_fraction(node, child_attr, runs, baseline: baseline, scale: scale,
-                                                style_id: style_id)
+          process_fraction_container(node, runs, baseline: baseline, scale: scale,
+                                                 style_id: style_id)
         end
       end
 
@@ -166,72 +170,61 @@ module Arrolio
         end
       end
 
-      # For <msub>/<msup>: the container's first child is the base
-      # (recurse with current baseline), the rest are the script
-      # (recurse with the script baseline + reduced scale).
-      def emit_script(node, attr, runs, baseline:, scale:, style_id:,
-                      script_baseline:, script_position:)
-        containers = safe_collection(node, attr)
-        containers.each do |container|
-          children = all_child_elements(container)
-          base = children.first
-          script = children[script_position]
-          if base
-            walk(base, runs, baseline: baseline, scale: scale,
-                             style_id: style_id)
-          end
-          next unless script
-
-          walk(script, runs, baseline: script_baseline,
-                             scale: reduce_scale(scale),
-                             style_id: style_id)
+      # For <msub>/<msup>: the node IS the container. Its children
+      # are the base (first) and the script (second).
+      def process_script_container(node, runs, baseline:, scale:, style_id:,
+                                   script_baseline:, script_position:)
+        children = all_child_elements(node)
+        base = children.first
+        script = children[script_position]
+        if base
+          walk(base, runs, baseline: baseline, scale: scale,
+                           style_id: style_id)
         end
+        return unless script
+
+        walk(script, runs, baseline: script_baseline,
+                           scale: reduce_scale(scale),
+                           style_id: style_id)
       end
 
       # For <msubsup>: base + sub + sup
-      def emit_subsup(node, attr, runs, baseline:, scale:, style_id:)
-        containers = safe_collection(node, attr)
-        containers.each do |container|
-          children = all_child_elements(container)
-          base = children[0]
-          sub = children[1]
-          sup = children[2]
-          if base
-            walk(base, runs, baseline: baseline, scale: scale,
-                             style_id: style_id)
-          end
-          if sub
-            walk(sub, runs, baseline: sub_baseline,
-                            scale: reduce_scale(scale), style_id: style_id)
-          end
-          next unless sup
-
-          walk(sup, runs, baseline: sup_baseline,
+      def process_subsup_container(node, runs, baseline:, scale:, style_id:)
+        children = all_child_elements(node)
+        base = children[0]
+        sub = children[1]
+        sup = children[2]
+        if base
+          walk(base, runs, baseline: baseline, scale: scale,
+                           style_id: style_id)
+        end
+        if sub
+          walk(sub, runs, baseline: sub_baseline,
                           scale: reduce_scale(scale), style_id: style_id)
         end
+        return unless sup
+
+        walk(sup, runs, baseline: sup_baseline,
+                        scale: reduce_scale(scale), style_id: style_id)
       end
 
       # For <mfrac>: numerator + '/' + denominator, all at reduced scale.
-      # True stacked fraction layout needs a future PlacedBox kind.
-      def emit_fraction(node, attr, runs, baseline:, scale:, style_id:)
-        fractions = safe_collection(node, attr)
-        fractions.each do |frac|
-          children = all_child_elements(frac)
-          numerator = children[0]
-          denominator = children[1]
-          child_scale = reduce_scale(scale)
-          if numerator
-            walk(numerator, runs, baseline: sup_baseline, scale: child_scale,
-                                  style_id: style_id)
-          end
-          runs << ::Arrolio::Content::InlineRun.new('/', style_id: style_id,
-                                                         baseline_shift: baseline,
-                                                         font_size_scale: scale)
-          next unless denominator
-
-          walk(denominator, runs, baseline: sub_baseline, scale: child_scale,
-                                  style_id: style_id)
+      def process_fraction_container(node, runs, baseline:, scale:, style_id:)
+        children = all_child_elements(node)
+        numerator = children[0]
+        denominator = children[1]
+        child_scale = reduce_scale(scale)
+        if numerator
+          walk(numerator, runs, baseline: sup_baseline, scale: child_scale,
+                                style_id: style_id)
         end
+        runs << ::Arrolio::Content::InlineRun.new('/', style_id: style_id,
+                                                       baseline_shift: baseline,
+                                                       font_size_scale: scale)
+        return unless denominator
+
+        walk(denominator, runs, baseline: sub_baseline, scale: child_scale,
+                                style_id: style_id)
       end
 
       def walk_all_children(node, runs, baseline:, scale:, style_id:)
