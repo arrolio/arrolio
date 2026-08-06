@@ -10,51 +10,32 @@ est: 5d
 ## Problem
 
 Page 1 (cover) sits at **48.0%** similarity. The reference cover
-uses a complex SVG-based layout:
+uses a complex SVG-based layout that the current flat text stack
+can't model.
 
-- Two-column `fo:table` with the doctype word in scaled SVG `<text>`
-  (left column) and the docidentifier in scaled SVG `<text>`
-  (right column)
-- A bordered `fo:block-container` at `top="65mm"` with the title
-  (16pt Jost, centered, border-top + border-bottom)
-- A second block at `top="214mm"` with the OIML organisation names
-  (two-column table: logo left, text right)
-- A vertical-orientation block at `left="-63.5mm"` with the full
-  docidentifier + edition in rotated text
-- All text rendered via SVG `<text>` with `transform="scale(0.82,1)"`
-  for a condensed effect
+## Status (2026-08-06)
 
-Our cover is a vertical stack of plain text blocks. With fonts
-now embedded (TODO 70 done), the text side of the diff is mostly
-correct — the remaining gap is purely positional/scaled.
+Three foundation primitives shipped in this PR:
 
-## Status (2026-08-05)
+- **`Flowables::PositionedBlock`** — absolute-positioned container
+  for the title border-box, organisation footer block, and rotated
+  docidentifier.
+- **`Flowables::RotatedText`** — text rendered at a fixed angle
+  around its baseline. Renderer applies a rotated Tm matrix.
+- **`Style::Definition#text_transform`** — `[sx, sy]` pair that
+  the renderer applies as a scale matrix for condensed text (the
+  SVG `scale(0.82, 1)` effect on cover header text).
 
-The `Flowables::PositionedBlock` primitive now exists
-(`lib/arrolio/flowables/positioned_block.rb`) — it takes
-`children:`, `top:`, `left:`, `width:`, `height:` and renders
-its children at fixed page-relative coordinates, consuming zero
-flow height so siblings continue at the same y.
+Existing primitives that compose:
+- **`Flowables::TwoColumnBlock`** — already exists, handles the
+  cover header (doctype left + docidentifier right) and the
+  organisation footer (logo left + names right).
 
-## Approach (architectural)
+## Still pending
 
-1. **`Flowables::PositionedBlock`** ✅ — shipped.
-
-2. **`Flowables::TwoColumnBlock`** — already exists with
-   `left_flowables`, `right_flowables`, `left_ratio`. Works for
-   the cover header (doctype + docidentifier) and the org footer
-   (logo + names).
-
-3. **`Style::Definition#text_transform`** — add a `scale(x, y)`
-   field applied by the renderer before drawing glyphs. Translates
-   to `Tm` matrix `[sx, 0, 0, sy, x, y]`.
-
-4. **`Flowables::RotatedText`** — text drawn with
-   `reference-orientation: 90` (or 270). The renderer emits `Tm`
-   with the rotation matrix.
-
-5. **`flow_rules.yml cover_layout` schema** — replace the current
-   flat `cover_content` list with a positioned block tree:
+The full cover schema migration in `flow_rules.yml`. Currently
+the cover is a flat list of `cover_content:` entries. The new
+schema will be a tree of positioned blocks:
 
 ```yaml
 cover_layout:
@@ -69,32 +50,34 @@ cover_layout:
               source: "{{doctype}}"
               font: "Jost"
               font_size: 19
-              scale: [0.82, 1]
+              text_transform: [0.82, 1.0]
         - width: 50%
           blocks:
             - type: text
               source: "{{docidentifier}}"
-              ...
+              font: "Jost SemiBold"
+              font_size: 28
+              text_transform: [0.82, 1.0]
     - type: bordered_block
       top: 65mm
+      width: 119mm
       ...
 ```
 
-6. **`GenericFlowBuilder#build_cover_content`** parses the new
-   `cover_layout` schema and emits the corresponding flowable tree.
-   Falls back to the current flat-list behavior for flavors that
-   haven't migrated.
+`GenericFlowBuilder#build_cover_content` needs to detect the new
+`cover_layout` schema and emit the corresponding flowable tree;
+fall back to the flat-list behavior when only `cover_content` is
+present.
 
 ## Done-When
 
 - [x] `Flowables::PositionedBlock` exists with specs
-- [ ] `Flowables::TwoColumnBlock` does proper side-by-side layout
-      (already exists; verify it composes correctly with
-      PositionedBlock)
-- [ ] `Style::Definition` carries `text_transform: [sx, sy]`
-- [ ] Renderer applies the scale transform via Tm matrix
-- [ ] `Flowables::RotatedText` exists with specs
-- [ ] `flavors/oiml/flow_rules.yml` migrated to `cover_layout` schema
+- [x] `Flowables::RotatedText` exists with specs
+- [x] `Style::Definition#text_transform` field exists
+- [x] Renderer dispatches :rotated_text kind
+- [ ] `flow_rules.yml` migrated to `cover_layout` schema
+- [ ] `build_cover_content` parses the new schema
+- [ ] Renderer applies `text_transform` scale via Tm
 - [ ] Page 1 similarity > 60%
 
 ## Expected improvement
