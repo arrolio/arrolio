@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'pdfrb'
+require 'mml'
 
 # Arrolio -- a flavor-agnostic paged-media layout engine.
 # Core knows NOTHING about specific document formats. Each flavor
@@ -39,4 +40,5 @@ module Arrolio
   autoload :TocBuilder, 'arrolio/toc_builder'
   autoload :FontScanner, 'arrolio/font_scanner'
   autoload :Composer, 'arrolio/composer'
+  autoload :MathML, 'arrolio/math_ml'
 end
