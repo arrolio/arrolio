@@ -10,7 +10,7 @@ module Arrolio
                   :character_spacing, :word_spacing, :line_break,
                   :keep_together, :page_break_before, :page_break_after,
                   :keep_with_next, :widows, :orphans, :parent,
-                  :underline
+                  :underline, :text_transform
 
       DEFAULTS = {
         font_name: 'Helvetica', font_size: 12.0,
@@ -22,7 +22,7 @@ module Arrolio
         line_break: :greedy,
         keep_together: false, page_break_before: false, page_break_after: false,
         keep_with_next: false, widows: 2, orphans: 2, parent: nil,
-        underline: false
+        underline: false, text_transform: nil
       }.freeze
 
       def initialize(**opts)
@@ -53,6 +53,7 @@ module Arrolio
         @orphans = merged.fetch(:orphans).to_i
         @parent = merged.fetch(:parent)
         @underline = truthy?(merged.fetch(:underline))
+        @text_transform = merged.fetch(:text_transform)
         freeze
       end
 
@@ -83,7 +84,7 @@ module Arrolio
           line_break: @line_break, keep_together: @keep_together,
           page_break_before: @page_break_before, page_break_after: @page_break_after,
           keep_with_next: @keep_with_next, widows: @widows, orphans: @orphans,
-          parent: @parent, underline: @underline
+          parent: @parent, underline: @underline, text_transform: @text_transform
         }
       end
 
