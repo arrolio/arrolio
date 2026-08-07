@@ -3,13 +3,17 @@
 module Arrolio
   module Flowables
     # Real table layout: equal-width columns by default (TODO 04
-    # adds auto/fixed), borders per cell, header row repeat.
+    # adds auto/fixed), borders per cell, header row repeat,
+    # continuation caption on split.
     class TableFlowable < Flowable
-      attr_reader :table, :column_widths
+      attr_reader :table, :column_widths, :continued, :caption_text
 
-      def initialize(table, style: Style::Definition.new)
+      def initialize(table, style: Style::Definition.new,
+                     continued: false, caption_text: nil)
         super(style: style)
         @table = table
+        @continued = continued
+        @caption_text = caption_text
       end
 
       def height(width, _context = nil)
@@ -26,6 +30,13 @@ module Arrolio
         boxes = []
         consumed = 0.0
         cursor = y
+
+        if @continued && @caption_text
+          caption_h = emit_continuation_caption(x, cursor, width, boxes, context)
+          cursor -= caption_h
+          consumed += caption_h
+        end
+
         header_rows, body_rows = partition_rows
 
         header_rows.each do |row|
@@ -86,13 +97,17 @@ module Arrolio
 
         if head_rows.any?
           head_table = rebuild_table(header, head_rows)
-          head = self.class.new(head_table, style: @style)
+          head = self.class.new(head_table, style: @style,
+                                            continued: @continued,
+                                            caption_text: @caption_text)
         else
           head = nil
         end
 
         tail_table = rebuild_table(header, tail_rows)
-        tail = self.class.new(tail_table, style: @style)
+        tail = self.class.new(tail_table, style: @style,
+                                          continued: true,
+                                          caption_text: @caption_text)
         [head, tail]
       end
 
@@ -154,6 +169,18 @@ module Arrolio
         Content::Table.new(header: header, body: body,
                            column_widths: @table.column_widths,
                            style_id: @table.style_id, id: @table.id)
+      end
+
+      def emit_continuation_caption(x, y, width, boxes, _context)
+        caption_style = @style.with(align: :left, font_size: @style.font_size)
+        tf = TextFlowable.new(
+          [InlineRun.new("#{@caption_text} (continued)", style: caption_style)],
+          style: caption_style
+        )
+        line_h = tf.height(width)
+        tboxes, = tf.emit(x, y, width, nil)
+        boxes.concat(tboxes)
+        line_h
       end
 
       # Resolve a cell's effective style. Header cells get the bold
