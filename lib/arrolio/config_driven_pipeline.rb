@@ -130,7 +130,7 @@ module Arrolio
       return nil unless result
 
       font = result.is_a?(Array) ? result.first : result
-      path = font.respond_to?(:path) ? font.path : font.to_s
+      path = font.is_a?(String) ? font : font.path
       path && File.exist?(path) ? path : nil
     rescue StandardError
       nil
