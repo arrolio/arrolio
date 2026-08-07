@@ -53,10 +53,11 @@ module Arrolio
     class Table::Row
       include Enumerable
 
-      attr_reader :cells
+      attr_reader :cells, :min_height
 
-      def initialize(cells)
+      def initialize(cells, min_height: 0.0)
         @cells = Array(cells).freeze
+        @min_height = min_height.to_f.freeze
         freeze
       end
 
@@ -69,13 +70,14 @@ module Arrolio
       end
 
       def ==(other)
-        other.is_a?(self.class) && cells == other.cells
+        other.is_a?(self.class) && cells == other.cells &&
+          min_height == other.min_height
       end
 
       alias eql? ==
 
       def hash
-        [self.class, cells].hash
+        [self.class, cells, min_height].hash
       end
     end
 

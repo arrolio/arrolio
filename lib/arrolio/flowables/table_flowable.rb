@@ -136,7 +136,8 @@ module Arrolio
           end
           max_h = [max_h, content_h].max
         end
-        max_h + 4.0
+        natural = max_h + 4.0
+        [natural, row.min_height].max
       end
 
       def paragraph_height(paragraph, width, _cell = nil, header: false)
