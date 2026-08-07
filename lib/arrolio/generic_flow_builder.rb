@@ -192,7 +192,9 @@ module Arrolio
       when Content::Section
         build_section(child, out)
       when Content::Table
-        out << Flowables::TableFlowable.new(child, style: resolve(child.style_id))
+        out << Flowables::TableFlowable.new(child,
+                                            style: resolve(child.style_id),
+                                            caption_text: table_caption_for(child))
       when Content::List
         out << list_flowable(child)
       when Content::Image
@@ -274,6 +276,12 @@ module Arrolio
       style = resolve(:bibitem_marker)
       GlyphMeasurer.new(font_name: style.font_name)
                    .width_of_string("#{tag} ", font_size: style.font_size)
+    end
+
+    def table_caption_for(table)
+      return nil unless table.id
+
+      "Table #{table.id}"
     end
 
     def bibliography_paragraph(item)
