@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'arrolio/error'
 
 module Arrolio
   module Content
