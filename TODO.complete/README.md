@@ -29,9 +29,16 @@ on the OIML r060/1 fixture, 26 pages vs 28 reference.
 | 79 | in progress | text | high | KP badness, emergency stretch, Glue merge, TOLERANCE |
 | 80 | done | harness | critical | rake parity:check CI task |
 | 81 | in progress | adapter | high | Conditional XSL style refinements (heading margins, term spacing) |
-| 82 | in progress | adapter | high | Semantic/presentation element deduplication (xref, eref, identifier) |
+| 82 | done | adapter | high | Semantic/presentation element deduplication (xref, eref, identifier) |
 | 83 | done | adapter | high | Nested list support (adapter + flow builder) |
 | 84 | pending | render | critical | Figure SVG rendering (biggest pagination drift source) |
+| 85 | pending | adapter | medium | Locality reference formatting (clause=X → clause X) |
+| 86 | pending | text | high | List item text overflow (measurement vs render width mismatch) |
+| 87 | pending | engine | medium | Odd/even page template variants |
+| 88 | pending | text | medium | Hyphenation support for long words |
+| 89 | in progress | flowable | high | Table rowspan support |
+| 90 | pending | flowable | medium | MathML stacked layout (mfrac, msqrt) |
+| 91 | in progress | harness | high | Parity diff diagnostics (per-element, visual overlay) |
 
 ## Architectural quality (audited 2026-08-08)
 
