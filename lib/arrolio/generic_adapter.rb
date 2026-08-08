@@ -121,15 +121,15 @@ module Arrolio
     end
 
     def derive_metadata_fields(result)
-      return unless result[:revision_date]
-
-      year = result[:revision_date][0, 4]
       lang = result[:language].to_s
-      lang_initial = lang[0, 1].upcase
+      version_date = result[:revision_date]
+      year = version_date&.[](0, 4)
       result[:revision_year] = year if year&.match?(/\A\d{4}\z/)
-      return if lang.empty?
+      return if lang.empty? && version_date.nil?
 
-      result[:edition_label] = "#{year} (#{lang_initial})" if year&.match?(/\A\d{4}\z/)
+      lang_initial = lang[0, 1].upcase
+      year_part = year&.match?(/\A\d{4}\z/) ? "#{year} " : ''
+      result[:edition_label] = "#{year_part}(#{lang_initial})"
     end
 
     def extract_cover(root)
@@ -174,12 +174,28 @@ module Arrolio
         next unless title_style
 
         return Content::Paragraph.new(
-          collect_inline_runs(child),
+          title_block_runs(root),
           style_id: title_style.to_sym,
           id: child.attribute(selector('id_attribute'))&.value
         )
       end
       nil
+    end
+
+    def title_block_runs(root)
+      metadata = extract_metadata(root)
+      part = metadata[:part_number].to_s
+      title_part = metadata[:title_part].to_s
+      locality = @rules.dig('i18n', 'locality_part').to_s
+      locality = 'Part' if locality.empty?
+      text = if part.empty? && title_part.empty?
+               ''
+             elsif part.empty?
+               title_part
+             else
+               "#{locality} #{part} - #{title_part}".strip
+             end
+      [Content::InlineRun.new(text, style_id: :doc_title)]
     end
 
     def extract_preface(root)
@@ -384,18 +400,24 @@ module Arrolio
       item_name = selector('list_item')
       label_name = selector('list_item_label')
       para_name = selector('paragraph')
+      list_mapping = (@rules['element_mapping'] || {}).select { |_, v| v['content_type'] == 'list' }
       each_child(elem, item_name) do |li|
         marker = nil
         label_elem = find_first(li, label_name)
         marker = text_of(label_elem) if label_elem
 
-        paras = []
+        content = []
         each_element(li) do |child|
-          next unless child.name == para_name
+          next if child.parent && child.parent != li
 
-          paras << convert_paragraph(child)
+          if child.name == para_name
+            content << convert_paragraph(child)
+          elsif list_mapping.key?(child.name)
+            nested_kind = list_mapping[child.name]['kind']&.to_sym || :bullet
+            content << convert_list(child, kind: nested_kind)
+          end
         end
-        content = paras.empty? ? [Content::Paragraph.new(collect_inline_runs(li))] : paras
+        content = [Content::Paragraph.new(collect_inline_runs(li))] if content.empty?
         items << Content::List::Item.new(content, marker: marker)
       end
       Content::List.new(items, kind: kind, style_id: kind == :ordered ? :list_ordered : :list_bullet)

@@ -174,16 +174,18 @@ RSpec.describe Arrolio::GenericAdapter do
       expect(doc.metadata[:edition_label]).to eq('2021 (E)')
     end
 
-    it 'skips derived fields when revision_date is missing' do
+    it 'sets edition_label without year when revision_date is missing' do
       xml = '<root><bibdata><language current="true">en</language></bibdata></root>'
       doc = adapter.convert(xml)
-      expect(doc.metadata.key?(:edition_label)).to be(false)
+      expect(doc.metadata.key?(:revision_year)).to be(false)
+      expect(doc.metadata[:edition_label]).to eq('(E)')
     end
 
-    it 'skips derived fields when revision_date is not a year prefix' do
+    it 'sets edition_label without year when revision_date is not a year prefix' do
       xml = '<root><bibdata><version>n/a</version><language current="true">en</language></bibdata></root>'
       doc = adapter.convert(xml)
-      expect(doc.metadata.key?(:edition_label)).to be(false)
+      expect(doc.metadata.key?(:revision_year)).to be(false)
+      expect(doc.metadata[:edition_label]).to eq('(E)')
     end
   end
 

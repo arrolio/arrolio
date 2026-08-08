@@ -10,7 +10,9 @@ metadata:
     docidentifier: docidentifier[@primary='true']
     docnumber: docnumber
     edition: edition
-    revision_date: version
+    revision_date: version/revision-date
+    version_text: version
+    part_number: bibdata/ext/structuredidentifier/project-number/@part
     title: title[@type='main']
     title_intro: title[@type='title-intro']
     title_main: title[@type='title-main']
@@ -119,6 +121,9 @@ skip_metadata_elements:
 - referenceTo
 - origin
 - source
+- xref
+- eref
+- identifier
 skip_elements:
 - title
 - fmt-title
