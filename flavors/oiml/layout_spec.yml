@@ -87,7 +87,6 @@ styles:
   heading_1:
     font_size: 14.0
     align: left
-    margin_bottom: 30pt
     parent: body
     font_name: Times New Roman Bold
     keep_together: true

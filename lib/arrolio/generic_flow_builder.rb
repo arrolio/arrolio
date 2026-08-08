@@ -87,6 +87,7 @@ module Arrolio
       if sequence['build_content'] == 'cover_content'
         build_cover_content(document, out)
       elsif source.is_a?(Array)
+        append_title_block(document, out) if sequence['role'].to_s == 'body'
         build_sections(source, out)
       end
     end
@@ -100,8 +101,8 @@ module Arrolio
     def content_for(document, role)
       case role.to_s
       when 'preface' then document.preface
-      when 'body' then document.sections
-      when 'bibliography' then document.bibliography
+      when 'body' then document.sections + document.bibliography
+      when 'bibliography' then []
       else []
       end
     end
@@ -126,9 +127,14 @@ module Arrolio
       section_rules = @rules.fetch('section', {})
       break_between = section_rules.fetch('insert_page_break_before', false)
       sections.each_with_index do |section, index|
-        out << Flowables::PageBreak.new if break_between && index.positive?
+        needs_break = break_between && index.positive? && !bibliography_section?(section)
+        out << Flowables::PageBreak.new if needs_break
         build_section(section, out)
       end
+    end
+
+    def bibliography_section?(section)
+      section.children.any? { |child| child.is_a?(Content::BibliographyItem) }
     end
 
     def build_section(section, out)
@@ -257,16 +263,7 @@ module Arrolio
     end
 
     def bibliography_item_flowable(item, out)
-      para = bibliography_paragraph(item)
-      marker_w = marker_width_of(item.tag)
-      tf = paragraph_flowable(para)
-      out << if marker_w.positive? && tf.is_a?(Flowables::TextFlowable)
-        Flowables::TextFlowable.new(tf.runs, style: tf.style,
-                                             measurer: tf.measurer,
-                                             hanging_indent: marker_w)
-      else
-        tf
-             end
+      out << paragraph_flowable(bibliography_paragraph(item))
     end
 
     def marker_width_of(tag)
@@ -323,12 +320,20 @@ module Arrolio
     def list_flowable(list)
       items = list.items.each_with_index.map do |item, index|
         marker = item.marker.nil? ? default_marker(list, index) : item.marker
-        body = item.content.filter_map do |content|
-          paragraph_flowable(content) if content.is_a?(Content::Paragraph)
+        body = item.content.flat_map do |content|
+          flowable_for_list_content(content)
         end
         [marker, body]
       end
       Flowables::ListFlowable.new(items, kind: list.kind, style: resolve(list.style_id))
+    end
+
+    def flowable_for_list_content(content)
+      case content
+      when Content::Paragraph then [paragraph_flowable(content)]
+      when Content::List then [list_flowable(content)]
+      else []
+      end
     end
 
     def default_marker(list, index)
