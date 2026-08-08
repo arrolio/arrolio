@@ -162,6 +162,7 @@ cover_fields:
   - title_main
   - title_complementary
   - title_part
+  - title_part_prefix
 
 style_overrides:
   body_margin_bottom: 0
