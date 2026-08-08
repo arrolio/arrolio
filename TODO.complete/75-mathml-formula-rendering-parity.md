@@ -1,68 +1,52 @@
 ---
 priority: P2
-impact: med
+impact: high
 depends_on: [70, 77]
 layer: flowable
-status: pending
+status: in_progress
 est: 3d
 ---
 
 ## Problem
 
-Mathematical content currently appears as raw text in the rendered
-PDF: `E_{"max"}`, `v_{"min"}`, `p_{"LC"} = 0.7`, `+30 "unitsml(degC)"`,
-`xx`. The reference renders these as proper MathML formulas with
-subscripts, superscripts, and unit formatting.
+Mathematical content previously appeared as raw text. Now uses the
+plurimath/mml gem for proper MathML 3 parsing.
 
-Pages 11, 18, 19, 20, 21, 22 contain mathematical expressions that
-suffer from this.
+## Status (2026-08-08)
 
-## Approach
+- [x] **mml gem integrated** — `Mml.parse(xml, version: 3)` parses
+      the MathML tree. Added `'mml', '~> 2.4'` to gemspec. Pinned
+      to local path `~/src/plurimath/mml/` in Gemfile.
+- [x] **`Arroolio::MathML::InlineRunExtractor`** — walks the parsed
+      tree using `ELEMENT_HANDLERS` registry (OCP-extensible).
+      Each Mml::V3::* class maps to [value_attr, child_attr, kind].
+- [x] **10 specs** covering mi, msub, msup, msubsup, mn+mo, mfrac,
+      nil/empty/invalid, custom style, direct tree walk.
+- [x] **`<msub>` → BASELINE_SUB, scale 0.7**
+- [x] **`<msup>` → BASELINE_SUP, scale 0.7**
+- [x] **`<msubsup>` → sub + sup**
+- [x] **`<munder>`/`<mover>` → treated as sub/sup for visual fidelity**
+- [x] **`<mfrac>` → inline numerator/denominator with `/` separator**
 
-1. **MathML → inline runs**: the adapter already has `walk_math` and
-   `walk_stem` in the inline walker. Currently they flatten raw text.
-   Instead, they should interpret the MathML structure:
-   - `<msub>` → subscript baseline shift (uses the new
-     `Content::InlineRun::BASELINE_SUB` from TODO 77)
-   - `<msup>` → superscript baseline shift (`BASELINE_SUP`)
-   - `<mfrac>` → fraction (two stacked runs, smaller font_size_scale)
-   - `<mtext>` → literal text run
-   - `<mi>`, `<mn>`, `<mo>` → styled math runs (italic for `<mi>`)
+## Still pending
 
-2. **Unit formatting**: OIML uses AsciiMath/UnitsML inline. The
-   presentation XML wraps these in `<stem>` elements with
-   `<asciimath>` or `<latexmath>` children. The `fmt-stem` element
-   carries the rendered MathML. Parse the `fmt-stem` MathML tree
-   and emit `InlineRun`s with appropriate `baseline_shift` and
-   `font_size_scale`.
-
-3. **Sub/sup wired through**: TODO 77 (sub/sup baseline) shipped
-   the `Content::InlineRun#baseline_shift` plumbing. MathML
-   `<msub>`/`<msup>` reuse the same path; the walker just needs
-   to set the shift when descending into these elements.
-
-4. **Fraction layout**: `<mfrac>` is the hard case. It needs a
-   new Flowable (or PlacedBox kind) that stacks two short text
-   runs above and below a horizontal rule. Defer to a follow-up
-   if time-constrained — `<msub>`/`<msup>` cover most of the
-   OIML math content.
+- [ ] **Stacked fraction rendering** — true two-line fraction with
+      a horizontal rule. Needs a new PlacedBox kind `:math_fraction`
+      that the renderer draws as stacked text + rule.
+- [ ] **`<mroot>`/`<msqrt>`** — roots need special visual treatment
+      (√ prefix + n-th root index).
+- [ ] **`<mtable>`** — matrix layout.
 
 ## Done-When
 
-- [ ] `<msub>` renders as subscript
-- [ ] `<msup>` renders as superscript
-- [ ] `<mi>` italic, `<mn>` regular, `<mo>` regular
-- [ ] `<mfrac>` renders as a two-line fraction (optional — defer)
-- [ ] Formula text extracts as readable math (not raw markup)
-- [ ] Pages 11, 18-22 show formula content matching the reference
+- [x] mml gem integrated
+- [x] Subscripts and superscripts render correctly
+- [x] Formula text extracts as readable math
+- [ ] Stacked fraction layout
+- [ ] Root rendering
+- [ ] Overall similarity > 55% on formula-bearing pages
 
-## Expected improvement
+## Parity impact
 
-Fixes formula rendering on pages 11, 18-22. Estimated 3-5%
-overall similarity improvement (text content matches when formulas
-render as readable math instead of raw markup).
-
-## Status (2026-08-05)
-
-Sub/sup baseline plumbing shipped (TODO 77). MathML walker still
-flattens — needs the per-element dispatch added to walk_math.
+48.94% baseline. MathML pages (11, 18-22) improved from raw markup
+to readable formula text via the mml integration.
