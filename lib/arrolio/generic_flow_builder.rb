@@ -134,7 +134,7 @@ module Arrolio
     end
 
     def bibliography_section?(section)
-      section.children.any? { |child| child.is_a?(Content::BibliographyItem) }
+      section.children.any?(Content::BibliographyItem)
     end
 
     def build_section(section, out)
@@ -255,7 +255,7 @@ module Arrolio
       definitions = entry.definition
       last_definition_style = entry.source.nil? ? resolve(:term_entry_end) : resolve(:term_definition)
       definitions.each_with_index do |paragraph, idx|
-        style = (idx == definitions.length - 1) ? last_definition_style : resolve(:term_definition)
+        style = idx == definitions.length - 1 ? last_definition_style : resolve(:term_definition)
         out << term_paragraph_flowable(paragraph, style)
       end
       return unless entry.source
