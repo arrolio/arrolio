@@ -238,6 +238,19 @@ cover_content:
 - type: spacer
   size: 20
 - type: text
+  source: INTERNATIONAL
+  style: cover_title_other
+- type: text
+  source: RECOMMENDATION
+  style: cover_title_other
+- type: spacer
+  size: 10
+- type: text
+  source: "Edition (E)"
+  style: cover_title_other
+- type: spacer
+  size: 20
+- type: text
   source: "{{title_intro}}"
   style: cover_title_other
   when: title_intro_present
@@ -245,7 +258,7 @@ cover_content:
   source: "{{title_main}}"
   style: cover_title
 - type: text
-  source: "{{title_part}}"
+  source: "{{title_part_prefix}}: {{title_part}}"
   style: cover_title_part
   when: title_part_present
 - type: text
