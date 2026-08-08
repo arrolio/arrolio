@@ -1,9 +1,5 @@
 name: rake
 
-permissions:
-  contents: read
-  id-token: write
-
 on:
   push:
     branches: [ master, main ]
@@ -14,3 +10,5 @@ on:
 jobs:
   rake:
     uses: metanorma/ci/.github/workflows/generic-rake.yml@main
+    with:
+      cascade: false
