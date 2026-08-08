@@ -87,7 +87,6 @@ module Arrolio
       if sequence['build_content'] == 'cover_content'
         build_cover_content(document, out)
       elsif source.is_a?(Array)
-        append_title_block(document, out) if sequence['role'].to_s == 'body'
         build_sections(source, out)
       end
     end
