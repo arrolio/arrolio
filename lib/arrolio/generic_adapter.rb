@@ -550,16 +550,18 @@ module Arrolio
       math_name = selector('math')
       tab_name = selector('tab_inline')
       br_name = selector('break_inline')
+      xref_name = selector('biblio_formattedref') ? 'fmt-xref' : nil
       skip_metadata = @rules['skip_metadata_elements'].to_a
       block_level = @rules['block_level_elements'].to_a
       inline_styles = @rules['inline_styles'] || {}
 
-      walker = lambda do |node, style, baseline: Content::InlineRun::BASELINE_NORMAL, scale: 1.0|
+      walker = lambda do |node, style, baseline: Content::InlineRun::BASELINE_NORMAL, scale: 1.0, in_xref: false|
         case node
         when REXML::Text
-          text = normalize_text(node.value)
-          next if text.nil? || text.empty?
+          raw = normalize_text(node.value)
+          next if raw.nil? || raw.empty?
 
+          text = in_xref ? format_locality_text(raw) : raw
           runs << Content::InlineRun.new(text, style_id: style,
                                                baseline_shift: baseline,
                                                font_size_scale: scale)
@@ -567,6 +569,7 @@ module Arrolio
           new_style = resolve_inline_style(node, style)
           sub_baseline, sub_scale = baseline_for_style(inline_styles, node,
                                                        baseline, scale)
+          child_in_xref = in_xref || (xref_name && node.name == xref_name)
           case node.name
           when tab_name
             runs << Content::InlineRun.new("\t", style_id: style)
@@ -583,12 +586,18 @@ module Arrolio
           when *block_level
             next
           else
-            node.children.each { |c| walker.call(c, new_style, baseline: sub_baseline, scale: sub_scale) }
+            node.children.each do |c|
+ walker.call(c, new_style, baseline: sub_baseline, scale: sub_scale, in_xref: child_in_xref)
+            end
           end
         end
       end
       elem.children.each { |c| walker.call(c, default_style) }
       runs
+    end
+
+    def format_locality_text(text)
+      text.gsub(/([a-zA-Z]+)=/, '\\1 ')
     end
 
     def baseline_for_style(rules, element, current_baseline, current_scale)

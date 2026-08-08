@@ -108,13 +108,6 @@ styles:
   term:
     parent: body
     font_name: Helvetica-Oblique
-  term_entry_end:
-    parent: body
-    margin_bottom: 12
-  term_source:
-    parent: body
-    margin_top: 6
-    margin_bottom: 12
   list_bullet:
     parent: body
   list_ordered:

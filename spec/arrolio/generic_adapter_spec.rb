@@ -246,4 +246,27 @@ RSpec.describe Arrolio::GenericAdapter do
       expect(nested.font_size_scale).to be < 0.7 # 0.7 * 0.7
     end
   end
+
+  describe 'locality reference formatting' do
+    let(:rules) do
+      {
+        'metadata' => { 'root' => 'bibdata', 'fields' => { 'docidentifier' => 'docidentifier' } },
+        'element_mapping' => { 'clause' => { 'content_type' => 'section' }, 'p' => { 'content_type' => 'paragraph' } },
+        'inline_styles' => { 'fmt-xref' => 'xref' },
+        'selectors' => { 'paragraph' => 'p' }
+      }
+    end
+
+    it 'replaces = with space in locality references inside fmt-xref' do
+      xml = '<root><bibdata><docidentifier>X</docidentifier></bibdata>' \
+            '<sections><clause><p>See ' \
+            '<fmt-xref target="X">clause=5.1.1</fmt-xref> ' \
+            'for details.</p></clause></sections></root>'
+      doc = adapter.convert(xml)
+      para = doc.sections.first.children.first
+      text = para.inline_runs.map(&:text).join
+      expect(text).to include('clause 5.1.1')
+      expect(text).not_to include('clause=5.1.1')
+    end
+  end
 end
