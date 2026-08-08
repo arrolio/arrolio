@@ -53,6 +53,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'fontist', '~> 1.0'
   spec.add_dependency 'mml', '~> 2.4'
   spec.add_dependency 'nokogiri'
-  spec.add_dependency 'pdfrb', '~> 0.6'
+  spec.add_dependency 'pdfrb', '~> 0.7'
   spec.add_dependency 'rexml'
 end

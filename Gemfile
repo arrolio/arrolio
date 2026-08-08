@@ -13,6 +13,3 @@ gem 'rubocop-rake', '~> 0.7'
 gem 'rubocop-rspec', '~> 3.5'
 
 gem 'rexml'
-
-gem 'mml', path: '/Users/mulgogi/src/plurimath/mml'
-gem 'pdfrb', path: '/Users/mulgogi/src/claricle/pdfrb'
