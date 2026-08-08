@@ -28,6 +28,10 @@ on the OIML r060/1 fixture, 26 pages vs 28 reference.
 | 78 | done | adapter | low | Bibliography as paragraph, hanging indent |
 | 79 | in progress | text | high | KP badness, emergency stretch, Glue merge, TOLERANCE |
 | 80 | done | harness | critical | rake parity:check CI task |
+| 81 | in progress | adapter | high | Conditional XSL style refinements (heading margins, term spacing) |
+| 82 | in progress | adapter | high | Semantic/presentation element deduplication (xref, eref, identifier) |
+| 83 | done | adapter | high | Nested list support (adapter + flow builder) |
+| 84 | pending | render | critical | Figure SVG rendering (biggest pagination drift source) |
 
 ## Architectural quality (audited 2026-08-08)
 
