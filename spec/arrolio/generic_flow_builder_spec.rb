@@ -77,4 +77,74 @@ RSpec.describe Arrolio::GenericFlowBuilder do
     paragraphs = flowables.grep(Arrolio::Flowables::TextFlowable)
     expect(paragraphs.flat_map { |flowable| flowable.runs.map(&:text) }.join).to include('1.1')
   end
+
+  describe 'term entry rendering' do
+    def term_entry(number: nil, preferred: nil, definition: [], source: nil)
+      Arrolio::Content::TermEntry.new(
+        number: number, preferred: preferred,
+        definition: definition, source: source
+      )
+    end
+
+    def para(text)
+      Arrolio::Content::Paragraph.new(
+        [Arrolio::Content::InlineRun.new(text)],
+        style_id: :body
+      )
+    end
+
+    it 'emits number, preferred, definition, and source as separate flowables' do
+      entry = term_entry(
+        number: '3.1.9',
+        preferred: para('sealing'),
+        definition: [para('means intended to protect')],
+        source: para('[SOURCE: OIML V 1:2013, 2.20[1]]')
+      )
+      document = document_with(
+        sections: [section(children: [entry])],
+        cover: {}, metadata: { docidentifier: 'X' }
+      )
+      flowables = builder.build(document)
+      texts = flowables.grep(Arrolio::Flowables::TextFlowable)
+      joined = texts.map { |f| f.runs.map(&:text).join }
+      expect(joined).to include('3.1.9')
+      expect(joined).to include('sealing')
+      expect(joined.any? { |t| t.include?('means intended') }).to be(true)
+      expect(joined.any? { |t| t.include?('[SOURCE:') }).to be(true)
+    end
+
+    it 'applies entry-level spacing on last definition when source is absent' do
+      entry = term_entry(
+        number: '3.2.1.1',
+        preferred: para('compression loading'),
+        definition: [para('applying a compressive force')]
+      )
+      document = document_with(
+        sections: [section(children: [entry])],
+        cover: {}, metadata: { docidentifier: 'X' }
+      )
+      flowables = builder.build(document)
+      texts = flowables.grep(Arrolio::Flowables::TextFlowable)
+      last_def = texts.find { |f| f.runs.any? { |r| r.text.include?('compressive') } }
+      expect(last_def.style.margin_bottom).to eq(12.0)
+    end
+
+    it 'applies term_source margin on the source paragraph' do
+      entry = term_entry(
+        number: '3.1.9',
+        preferred: para('sealing'),
+        definition: [para('means intended')],
+        source: para('[SOURCE: OIML V 1:2013]')
+      )
+      document = document_with(
+        sections: [section(children: [entry])],
+        cover: {}, metadata: { docidentifier: 'X' }
+      )
+      flowables = builder.build(document)
+      texts = flowables.grep(Arrolio::Flowables::TextFlowable)
+      source_f = texts.find { |f| f.runs.any? { |r| r.text.include?('[SOURCE:') } }
+      expect(source_f.style.margin_bottom).to eq(12.0)
+      expect(source_f.style.margin_top).to eq(6.0)
+    end
+  end
 end

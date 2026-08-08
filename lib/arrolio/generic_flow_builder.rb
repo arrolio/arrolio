@@ -249,17 +249,43 @@ module Arrolio
     end
 
     def term_entry_flowable(entry, out)
-      if entry.number
-        out << Flowables::TextFlowable.new(
-          [InlineRun.new(entry.number, style: resolve(:term))],
-          style: resolve(:term)
-        )
+      out << term_number_flowable(entry.number) if entry.number
+      out << term_preferred_flowable(entry.preferred) if entry.preferred
+
+      definitions = entry.definition
+      last_definition_style = entry.source.nil? ? resolve(:term_entry_end) : resolve(:term_definition)
+      definitions.each_with_index do |paragraph, idx|
+        style = (idx == definitions.length - 1) ? last_definition_style : resolve(:term_definition)
+        out << term_paragraph_flowable(paragraph, style)
       end
-      out << paragraph_flowable(entry.preferred) if entry.preferred
-      entry.definition.each { |paragraph| out << paragraph_flowable(paragraph) }
       return unless entry.source
 
-      out << paragraph_flowable(entry.source)
+      out << term_paragraph_flowable(entry.source, resolve(:term_source))
+    end
+
+    def term_number_flowable(number)
+      style = resolve(:term_number)
+      Flowables::TextFlowable.new(
+        [InlineRun.new(number, style: style)],
+        style: style
+      )
+    end
+
+    def term_preferred_flowable(preferred)
+      term_paragraph_flowable(preferred, resolve(:term_preferred))
+    end
+
+    def term_paragraph_flowable(paragraph, style)
+      runs = paragraph.inline_runs.map do |run|
+        InlineRun.new(
+          run.text,
+          style: resolve(run.style_id),
+          baseline_shift: run.baseline_shift,
+          font_size_scale: run.font_size_scale,
+          href: run.href
+        )
+      end
+      Flowables::TextFlowable.new(runs, style: style)
     end
 
     def bibliography_item_flowable(item, out)

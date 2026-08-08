@@ -24,5 +24,4 @@ jobs:
     with:
       next_version: ${{ github.event.inputs.next_version }}
     secrets:
-      rubygems-api-key: ${{ secrets.ARROLIO_CI_RUBYGEMS_API_KEY }}
       pat_token: ${{ secrets.GITHUB_TOKEN }}

@@ -161,6 +161,24 @@ styles:
     margin_bottom: 12pt
     parent: body
     font_name: Times New Roman Italic
+  term_entry_end:
+    parent: body
+    margin_bottom: 12pt
+  term_number:
+    parent: body
+    margin_bottom: 0
+  term_preferred:
+    parent: body
+    margin_bottom: 0
+    font_name: Times New Roman Italic
+  term_definition:
+    parent: body
+    margin_top: 6
+    margin_bottom: 0
+  term_source:
+    parent: body
+    margin_top: 6
+    margin_bottom: 12pt
   xref:
     parent: body
   link:
