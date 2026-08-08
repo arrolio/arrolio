@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'pdfrb'
+require 'pdfrb/content/operators'
 require 'mml'
 
 # Arrolio -- a flavor-agnostic paged-media layout engine.
