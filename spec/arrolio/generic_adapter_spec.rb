@@ -316,4 +316,46 @@ RSpec.describe Arrolio::GenericAdapter do
       expect(figure.image.src).to eq('external.png')
     end
   end
+
+  describe 'definition list (dl/dt/dd) conversion' do
+    let(:rules) do
+      {
+        'metadata' => { 'root' => 'bibdata', 'fields' => { 'docidentifier' => 'docidentifier' } },
+        'element_mapping' => {
+          'clause' => { 'content_type' => 'section' },
+          'p' => { 'content_type' => 'paragraph' },
+          'dl' => { 'content_type' => 'list', 'kind' => 'bullet' }
+        },
+        'selectors' => { 'paragraph' => 'p' },
+        'sections' => { 'container' => 'sections' }
+      }
+    end
+
+    it 'converts dl with dt/dd pairs into list items' do
+      xml = '<root><bibdata><docidentifier>X</docidentifier></bibdata>' \
+            '<sections><clause>' \
+            '<dl><dt>AC</dt><dd><p>Alternating Current</p></dd>' \
+            '<dt>CH</dt><dd><p>Convection Heated</p></dd></dl>' \
+            '</clause></sections></root>'
+      doc = adapter.convert(xml)
+      section = doc.sections.first
+      list = section.children.find { |c| c.is_a?(Arrolio::Content::List) }
+      expect(list).not_to be_nil
+      expect(list.items.length).to eq(2)
+      expect(list.items[0].marker).to eq('AC')
+      expect(list.items[1].marker).to eq('CH')
+    end
+
+    it 'handles empty dd gracefully' do
+      xml = '<root><bibdata><docidentifier>X</docidentifier></bibdata>' \
+            '<sections><clause>' \
+            '<dl><dt>X</dt><dd></dd></dl>' \
+            '</clause></sections></root>'
+      doc = adapter.convert(xml)
+      section = doc.sections.first
+      list = section.children.find { |c| c.is_a?(Arrolio::Content::List) }
+      expect(list).not_to be_nil
+      expect(list.items.length).to eq(1)
+    end
+  end
 end
