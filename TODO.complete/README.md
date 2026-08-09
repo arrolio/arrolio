@@ -22,7 +22,7 @@ on the OIML r060/1 fixture, 27 pages vs 28 reference.
 | 72 | in progress | flowable | high | colspan, bold headers, continuation caption, row min_height |
 | 73 | done | flowable | med | Right-aligned page numbers, bold level-1, sub-indent |
 | 74 | done | render | high | SVG rendering via rsvg-convert (covered by TODO 84) |
-| 75 | in progress | flowable | med | mml integration, 10 specs, ELEMENT_HANDLERS registry |
+| 75 | done | adapter | high | MathML extraction from fmt-stem (recursive math element search) |
 | 76 | in progress | engine | med | Odd/even header alignment shipped |
 | 77 | done | adapter | low | Sub/sup baseline, note label suffix, hyperlink underline |
 | 78 | done | adapter | low | Bibliography as paragraph, hanging indent |
@@ -38,8 +38,9 @@ on the OIML r060/1 fixture, 27 pages vs 28 reference.
 | 88 | pending | text | medium | Hyphenation support for long words |
 | 89 | in progress | flowable | high | Table rowspan support |
 | 90 | pending | flowable | medium | MathML stacked layout (mfrac, msqrt) |
-| 91 | in progress | harness | high | Parity diff diagnostics (per-element, visual overlay) |
+| 91 | done | harness | high | Parity diff diagnostics (rake parity:diff PAGE=N) |
 | 92 | pending | flowable | high | Table cell height parity (row min-height, padding, continuation) |
+| 93 | pending | render | medium | Figure text searchability (SVG text overlay for pdftotext) |
 
 ## Architectural quality (audited 2026-08-09)
 
