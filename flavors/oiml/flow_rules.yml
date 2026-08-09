@@ -290,6 +290,10 @@ content_to_flowable:
   Image: image
   Preformatted: preformatted
   PageBreak: page_break
+image:
+  default_natural_width: 400
+  default_natural_height: 300
+  max_display_width: 450
 style_resolution:
   paragraph: resolve_from_style_id
   heading: resolve_from_title_style_id
