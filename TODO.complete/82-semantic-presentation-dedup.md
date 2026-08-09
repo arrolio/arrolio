@@ -3,7 +3,7 @@ priority: P1
 impact: high
 depends_on: [66]
 layer: adapter
-status: in_progress
+status: done
 est: 1d
 ---
 

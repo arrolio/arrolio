@@ -25,12 +25,11 @@ on the OIML r060/1 fixture, 27 pages vs 28 reference.
 | 75 | done | adapter | high | MathML extraction from fmt-stem (recursive math element search) |
 | 76 | in progress | engine | med | Odd/even header alignment shipped |
 | 77 | done | adapter | low | Sub/sup baseline, note label suffix, hyperlink underline |
-| 78 | done | adapter | low | Bibliography as paragraph, hanging indent |
+| 78 | done | adapter | low | Bibliography hanging indent + tag formatting |
 | 79 | in progress | text | high | KP badness, emergency stretch, Glue merge, TOLERANCE |
 | 80 | done | harness | critical | rake parity:check CI task |
 | 81 | in progress | adapter | high | Conditional XSL style refinements (heading margins, term spacing) |
-| 82 | done | adapter | high | Semantic/presentation element deduplication (xref, eref, identifier) |
-| 83 | done | adapter | high | Nested list support (adapter + flow builder) |
+| 82 | done | adapter | high | Semantic/presentation element deduplication (xref, eref, identifier) || 83 | done | adapter | high | Nested list support (adapter + flow builder) |
 | 84 | done | render | critical | Inline SVG extraction + rsvg-convert rasterization (parity 53→57%) |
 | 85 | done | adapter | medium | Locality reference formatting (clause=X → clause X) |
 | 86 | pending | text | high | List item text overflow (measurement vs render width mismatch) |
