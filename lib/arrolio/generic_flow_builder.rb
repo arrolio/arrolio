@@ -261,7 +261,7 @@ module Arrolio
         )
       end
       out << paragraph_flowable(entry.preferred) if entry.preferred
-      entry.definition.each { |paragraph| out << paragraph_flowable(paragraph) }
+      entry.definition.each { |item| append_child(item, out) }
       return unless entry.source
 
       out << paragraph_flowable(entry.source)
