@@ -199,9 +199,11 @@ module Arrolio
       when Content::Section
         build_section(child, out)
       when Content::Table
+        caption = table_caption_for(child)
+        out << table_caption_flowable(caption) if caption
         out << Flowables::TableFlowable.new(child,
                                             style: resolve(child.style_id),
-                                            caption_text: table_caption_for(child))
+                                            caption_text: caption)
       when Content::List
         out << list_flowable(child)
       when Content::Image
@@ -311,9 +313,15 @@ module Arrolio
     end
 
     def table_caption_for(table)
-      return nil unless table.id
+      table.caption
+    end
 
-      "Table #{table.id}"
+    def table_caption_flowable(caption_text)
+      style = resolve(:figure_caption).with(align: :left)
+      Flowables::TextFlowable.new(
+        [InlineRun.new(caption_text, style: style)],
+        style: style
+      )
     end
 
     def paragraph_flowable(paragraph)
