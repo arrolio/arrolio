@@ -692,7 +692,17 @@ module Arrolio
     def walk_math(elem, style, runs)
       return unless elem
 
-      math_xml = serialize_element_to_xml(elem)
+      math_name = selector('math')
+      math_elem = if elem.name == math_name
+        elem
+      else
+        found = nil
+        elem.each_recursive { |e| found = e if e.name == math_name && found.nil? }
+        found
+      end
+      return unless math_elem
+
+      math_xml = serialize_element_to_xml(math_elem)
       extracted = ::Arrolio::MathML::InlineRunExtractor.extract_from_xml(math_xml,
                                                                          base_style: style)
       runs.concat(extracted)
