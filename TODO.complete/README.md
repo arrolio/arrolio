@@ -1,11 +1,11 @@
 # TODO.complete — Path to 100% mn2pdf parity
 
-## Current baseline (2026-08-08)
+## Current baseline (2026-08-09)
 
-`bundle exec rake parity:check` reports **53.53%** overall similarity
-on the OIML r060/1 fixture, 26 pages vs 28 reference.
+`bundle exec rake parity:check` reports **56.98%** overall similarity
+on the OIML r060/1 fixture, 27 pages vs 28 reference.
 
-372 specs pass, 0 failures, 0 rubocop offenses across 174 files.
+376 specs pass, 0 failures, 0 rubocop offenses across 174 files.
 
 ## Status snapshot
 
@@ -31,8 +31,8 @@ on the OIML r060/1 fixture, 26 pages vs 28 reference.
 | 81 | in progress | adapter | high | Conditional XSL style refinements (heading margins, term spacing) |
 | 82 | done | adapter | high | Semantic/presentation element deduplication (xref, eref, identifier) |
 | 83 | done | adapter | high | Nested list support (adapter + flow builder) |
-| 84 | pending | render | critical | Figure SVG rendering (biggest pagination drift source) |
-| 85 | pending | adapter | medium | Locality reference formatting (clause=X → clause X) |
+| 84 | done | render | critical | Inline SVG extraction + rsvg-convert rasterization (parity 53→57%) |
+| 85 | done | adapter | medium | Locality reference formatting (clause=X → clause X) |
 | 86 | pending | text | high | List item text overflow (measurement vs render width mismatch) |
 | 87 | pending | engine | medium | Odd/even page template variants |
 | 88 | pending | text | medium | Hyphenation support for long words |

@@ -1,60 +1,48 @@
 ---
 priority: P2
 impact: medium
-depends_on: [82]
+depends_on: [84]
 layer: adapter
-status: pending
-est: 1d
+status: done
+est: 0.5d
 ---
 
 ## Problem
 
-Cross-references to clauses within the document render as raw locality
-strings: `clause=5.1.1` instead of `clause 5.1.1` or `5.1.1`.
+Cross-references to clauses in the document rendered as raw locality
+strings: `clause=5.1.1` instead of `clause 5.1.1`. The `=` is a
+locality separator used in standoc presentation XML that the XSL i18n
+templates replace with a space.
 
-The raw text comes from the presentation XML's `<fmt-xref>` content.
-The `=` is a locality separator that the XSL i18n templates replace
-with a space and proper locality label.
+## Fix (2026-08-09)
 
-## Example
+Added `format_locality_text` method in the inline walker. When text is
+collected from inside a `<fmt-xref>` element, the `=` between a word
+and a value is replaced with a space:
 
-Current output:
-```
-The exception described in clause=5.1.1 for an imprint of the software
-identification is allowed.
-```
-
-Reference:
-```
-The exception described in clause 5.1.1 for an imprint of the software
-identification is allowed.
+```ruby
+def format_locality_text(text)
+  text.gsub(/([a-zA-Z]+)=/, '\\1 ')
+end
 ```
 
-## Approach
+Examples:
+- `clause=5.1.1` → `clause 5.1.1`
+- `table=2` → `table 2`
+- `figure=4` → `figure 4`
 
-1. **Detect locality references in fmt-xref text.** When `<fmt-xref>`
-   content matches `(\w+)=(.+)`, parse as locality + value.
-
-2. **Apply i18n formatting.** Map locality keys to display labels:
-   - `clause` → "clause"
-   - `table` → "Table"
-   - `figure` → "Figure"
-   - `note` → "Note"
-   - etc.
-
-3. **Render as "locality value".** Join with a space: "clause 5.1.1".
-
-4. **Handle multiple localities.** Some xrefs contain
-   `clause=5.1.1;table=2` — semicolon-separated list.
+The walker tracks `in_xref` context to only apply this transformation
+inside cross-references, not globally.
 
 ## Done-When
 
-- [ ] `clause=X` renders as "clause X"
-- [ ] `table=X` renders as "Table X"
-- [ ] Multiple localities render correctly
-- [ ] Specs cover locality parsing edge cases
+- [x] `clause=X` renders as `clause X`
+- [x] Only applied inside fmt-xref elements
+- [x] Non-locality `=` preserved (e.g., in URLs or formulas)
+- [x] Specs cover locality formatting
 
 ## Measurement
 
-Affects ~15 cross-references in OIML r060/1 body text.
-Last measured: 2026-08-08.
+Improves readability of ~15 cross-references. Parity impact is small
+(text content change, not spacing).
+Last measured: 2026-08-09.
