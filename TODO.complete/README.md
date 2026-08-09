@@ -39,8 +39,9 @@ on the OIML r060/1 fixture, 27 pages vs 28 reference.
 | 89 | in progress | flowable | high | Table rowspan support |
 | 90 | pending | flowable | medium | MathML stacked layout (mfrac, msqrt) |
 | 91 | in progress | harness | high | Parity diff diagnostics (per-element, visual overlay) |
+| 92 | pending | flowable | high | Table cell height parity (row min-height, padding, continuation) |
 
-## Architectural quality (audited 2026-08-08)
+## Architectural quality (audited 2026-08-09)
 
 - Zero `require_relative` in lib/
 - Zero internal `require 'arrolio/...'` in lib/ (autoload only)
