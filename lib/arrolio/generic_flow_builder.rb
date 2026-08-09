@@ -218,7 +218,8 @@ module Arrolio
       Flowables::NoteFlowable.new(
         formatted_note_label(note.label),
         body,
-        style: resolve(note.style_id)
+        style: resolve(note.style_id),
+        label_style: resolve(:note_label)
       )
     end
 

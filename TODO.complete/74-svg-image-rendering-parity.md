@@ -3,7 +3,7 @@ priority: P0
 impact: high
 depends_on: [70]
 layer: render
-status: pending
+status: done
 est: 3d
 ---
 

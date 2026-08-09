@@ -6,10 +6,10 @@ module Arrolio
     # indented. Reuses ListFlowable's hanging-indent infrastructure.
     class NoteFlowable < ListFlowable
       def initialize(label_text, body_flowables, style: Style::Definition.new,
-                     marker_width: 22.0, body_indent: 6.0)
-        label_style = style.with(font_size: style.font_size)
-        marker_run = InlineRun.new("#{label_text} ", style: label_style)
-        marker_flow = TextFlowable.new([marker_run], style: label_style)
+                     marker_width: 22.0, body_indent: 6.0, label_style: nil)
+        effective_label_style = label_style || style.with(font_size: style.font_size)
+        marker_run = InlineRun.new("#{label_text} ", style: effective_label_style)
+        marker_flow = TextFlowable.new([marker_run], style: effective_label_style)
         super([[marker_flow, body_flowables]],
               kind: :note, style: style,
               marker_width: marker_width, body_indent: body_indent)

@@ -21,7 +21,7 @@ on the OIML r060/1 fixture, 27 pages vs 28 reference.
 | 71 | in progress | flowable | high | PositionedBlock, RotatedText, Style#text_transform shipped |
 | 72 | in progress | flowable | high | colspan, bold headers, continuation caption, row min_height |
 | 73 | done | flowable | med | Right-aligned page numbers, bold level-1, sub-indent |
-| 74 | in progress | render | high | rsvg-convert rasterization wired, source dir resolution |
+| 74 | done | render | high | SVG rendering via rsvg-convert (covered by TODO 84) |
 | 75 | in progress | flowable | med | mml integration, 10 specs, ELEMENT_HANDLERS registry |
 | 76 | in progress | engine | med | Odd/even header alignment shipped |
 | 77 | done | adapter | low | Sub/sup baseline, note label suffix, hyperlink underline |
