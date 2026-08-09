@@ -4,6 +4,8 @@ require 'yaml'
 
 module Arrolio
   class GenericFlowBuilder
+    INLINE_SVG_PREFIX = 'inline-svg:'
+
     attr_reader :layout_spec, :rules, :asset_resolver
 
     def initialize(layout_spec:, rules:, asset_resolver: nil)
@@ -347,7 +349,7 @@ module Arrolio
     end
 
     def image_flowable(image)
-      source = asset_resolver.resolve(image.src)
+      source = resolve_image_source(image)
       image_rules = @rules['image'] || {}
       default_width = (image_rules['default_natural_width'] || 400).to_f
       default_height = (image_rules['default_natural_height'] || 300).to_f
@@ -363,6 +365,20 @@ module Arrolio
         alt: image.alt,
         style: resolve(image.style_id)
       )
+    end
+
+    def resolve_image_source(image)
+      return asset_resolver.resolve(image.src) unless image.src.is_a?(String)
+      return write_inline_svg(image.src) if image.src.start_with?(INLINE_SVG_PREFIX)
+
+      asset_resolver.resolve(image.src)
+    end
+
+    def write_inline_svg(prefixed)
+      svg_xml = prefixed[INLINE_SVG_PREFIX.length..]
+      path = File.join(Dir.mktmpdir('arrolio-svg'), 'figure.svg')
+      File.write(path, svg_xml)
+      path
     end
 
     def svg_dimension(source, name)

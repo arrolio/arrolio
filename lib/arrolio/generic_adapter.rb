@@ -424,19 +424,7 @@ module Arrolio
     end
 
     def convert_figure(elem)
-      image_name = selector('figure_image')
-      src_attr = selector('image_src_attribute')
-      alt_attr = selector('image_alt_attribute')
-      image_elem = find_direct_child(elem, image_name)
-      image = nil
-      if image_elem
-        src = image_elem.attribute(src_attr)&.value
-        if src && !src.empty?
-          image = Content::Image.new(src,
-                                     alt: image_elem.attribute(alt_attr)&.value,
-                                     id: image_elem.attribute(selector('id_attribute'))&.value)
-        end
-      end
+      image = extract_figure_image(elem)
       name = find_first(elem, selector('figure_caption')) ||
              find_first(elem, selector('figure_caption_fallback'))
       caption = nil
@@ -447,6 +435,60 @@ module Arrolio
       return [] if image.nil? && caption.nil?
 
       [Content::FigureGroup.new(image: image, caption: caption, id: elem.attribute(selector('id_attribute'))&.value)]
+    end
+
+    def extract_figure_image(elem)
+      image_name = selector('figure_image')
+      image_elem = find_direct_child(elem, image_name)
+
+      if image_elem
+        svg_elem = nil
+        image_elem.each_recursive { |e| svg_elem = e if e.name == 'svg' && svg_elem.nil? }
+        if svg_elem
+          svg_xml = serialize_element_to_xml(svg_elem)
+          width, height = svg_viewbox_dimensions(svg_elem)
+          return Content::Image.new(
+            "inline-svg:#{svg_xml}",
+            width: width,
+            height: height,
+            id: image_elem.attribute(selector('id_attribute'))&.value
+          )
+        end
+
+        src = image_elem.attribute(selector('image_src_attribute'))&.value
+        return nil if src.nil? || src.empty?
+
+        return Content::Image.new(
+          src,
+          alt: image_elem.attribute(selector('image_alt_attribute'))&.value,
+          id: image_elem.attribute(selector('id_attribute'))&.value
+        )
+      end
+
+      svg_elem = nil
+      elem.each_recursive { |e| svg_elem = e if e.name == 'svg' && svg_elem.nil? }
+      return nil unless svg_elem
+
+      svg_xml = serialize_element_to_xml(svg_elem)
+      width, height = svg_viewbox_dimensions(svg_elem)
+      Content::Image.new(
+        "inline-svg:#{svg_xml}",
+        width: width,
+        height: height,
+        id: elem.attribute(selector('id_attribute'))&.value
+      )
+    end
+
+    def svg_viewbox_dimensions(svg_elem)
+      viewbox = svg_elem.attribute('viewBox')&.value
+      return [nil, nil] unless viewbox
+
+      parts = viewbox.split(/\s+/)
+      return [nil, nil] unless parts.length == 4
+
+      width = parts[2].to_f
+      height = parts[3].to_f
+      width.positive? ? [width, height] : [nil, nil]
     end
 
     def convert_term(elem)
