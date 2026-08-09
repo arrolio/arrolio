@@ -269,4 +269,51 @@ RSpec.describe Arrolio::GenericAdapter do
       expect(text).not_to include('clause=5.1.1')
     end
   end
+
+  describe 'inline SVG figure extraction' do
+    let(:rules) do
+      {
+        'metadata' => { 'root' => 'bibdata', 'fields' => { 'docidentifier' => 'docidentifier' } },
+        'element_mapping' => { 'clause' => { 'content_type' => 'section' },
+                               'figure' => { 'content_type' => 'figure' } },
+        'selectors' => { 'figure_image' => 'image', 'figure_caption' => 'fmt-name',
+                         'image_src_attribute' => 'src', 'id_attribute' => 'id' },
+        'sections' => { 'container' => 'sections' }
+      }
+    end
+
+    it 'extracts inline SVG from image element with viewBox dimensions' do
+      xml = '<root><bibdata><docidentifier>X</docidentifier></bibdata>' \
+            '<sections><clause>' \
+            '<figure id="fig-1">' \
+            '<image src="images/fig.svg">' \
+            '<svg viewBox="0 0 400 300"><rect/></svg>' \
+            '</image>' \
+            '<fmt-name>Test Figure</fmt-name>' \
+            '</figure>' \
+            '</clause></sections></root>'
+      doc = adapter.convert(xml)
+      section = doc.sections.first
+      figure = section.children.find { |c| c.is_a?(Arrolio::Content::FigureGroup) }
+      expect(figure).not_to be_nil
+      expect(figure.image.src).to start_with('inline-svg:')
+      expect(figure.image.width).to eq(400.0)
+      expect(figure.image.height).to eq(300.0)
+    end
+
+    it 'falls back to external src when no inline SVG present' do
+      xml = '<root><bibdata><docidentifier>X</docidentifier></bibdata>' \
+            '<sections><clause>' \
+            '<figure id="fig-2">' \
+            '<image src="external.png"/>' \
+            '<fmt-name>External Figure</fmt-name>' \
+            '</figure>' \
+            '</clause></sections></root>'
+      doc = adapter.convert(xml)
+      section = doc.sections.first
+      figure = section.children.find { |c| c.is_a?(Arrolio::Content::FigureGroup) }
+      expect(figure).not_to be_nil
+      expect(figure.image.src).to eq('external.png')
+    end
+  end
 end

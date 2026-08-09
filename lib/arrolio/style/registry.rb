@@ -9,18 +9,21 @@ module Arrolio
 
       def initialize(overrides = {})
         @overrides = {}
+        @resolution_cache = {}
         overrides.each { |name, attrs| register(name, **attrs) }
         freeze
       end
 
       def register(name, **opts)
         @overrides[name.to_sym] = opts.transform_keys(&:to_sym)
+        @resolution_cache.clear
         name.to_sym
       end
 
       def resolve(name, fallback: Definition.new)
         key = name.to_sym
         return fallback unless @overrides.key?(key)
+        return @resolution_cache[key] if @resolution_cache.key?(key)
 
         chain = []
         cursor = key
@@ -32,7 +35,9 @@ module Arrolio
         end
         merged = chain.reverse_each.reduce({}) { |acc, h| acc.merge(h) }
         merged.delete(:parent)
-        Definition.new(**merged)
+        result = Definition.new(**merged)
+        @resolution_cache[key] = result
+        result
       end
 
       def names = @overrides.keys
