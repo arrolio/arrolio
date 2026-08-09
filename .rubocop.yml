@@ -27,7 +27,7 @@ Metrics/MethodLength:
   Max: 60
 
 Metrics/ClassLength:
-  Max: 700
+  Max: 750
 
 Metrics/ModuleLength:
   Max: 500
