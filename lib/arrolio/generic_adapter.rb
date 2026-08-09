@@ -72,6 +72,8 @@ module Arrolio
       'preformatted' => :convert_preformatted
     }.freeze
 
+    UNICODE_SPACES = Regexp.new("[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000\uFEFF]")
+
     attr_reader :rules, :layout_spec, :selectors
 
     def initialize(rules:, layout_spec: nil)
@@ -821,12 +823,14 @@ module Arrolio
 
     # ---- Text helpers ----
 
+
     def normalize_text(raw)
       return raw unless raw.is_a?(String)
-      return raw unless raw.include?("\n")
+      cleaned = raw.gsub(UNICODE_SPACES, ' ')
+      return cleaned unless cleaned.include?("\n")
 
-      stripped = raw.strip
-      return raw.match?(/\s/) ? ' ' : nil if stripped.empty?
+      stripped = cleaned.strip
+      return cleaned.match?(/\s/) ? ' ' : nil if stripped.empty?
 
       stripped.gsub(/\s+/, ' ')
     end
