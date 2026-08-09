@@ -268,7 +268,38 @@ module Arrolio
     end
 
     def bibliography_item_flowable(item, out)
-      out << paragraph_flowable(bibliography_paragraph(item))
+      tag = item.tag.to_s
+      body_para = bibliography_body_paragraph(item)
+      if tag.empty?
+        out << paragraph_flowable(body_para)
+        return
+      end
+
+      tag_run = Content::InlineRun.new("#{tag} ", style_id: :bibitem_marker)
+      full_runs = [tag_run] + body_para.inline_runs
+      full_para = Content::Paragraph.new(full_runs,
+                                         style_id: item.style_id || :bibitem,
+                                         id: item.id)
+      marker_w = marker_width_of(tag)
+      tf = paragraph_flowable(full_para)
+      out << if tf.is_a?(Flowables::TextFlowable)
+        Flowables::TextFlowable.new(tf.runs, style: tf.style,
+                                             measurer: tf.measurer,
+                                             hanging_indent: marker_w)
+      else
+        tf
+      end
+    end
+
+    def bibliography_body_paragraph(item)
+      runs = []
+      if item.formattedref
+        runs.concat(item.formattedref.inline_runs.map do |r|
+          Content::InlineRun.new(r.text, style_id: r.style_id)
+        end)
+      end
+      Content::Paragraph.new(runs, style_id: item.style_id || :bibitem,
+                                   id: item.id)
     end
 
     def marker_width_of(tag)
@@ -283,20 +314,6 @@ module Arrolio
       return nil unless table.id
 
       "Table #{table.id}"
-    end
-
-    def bibliography_paragraph(item)
-      runs = []
-      if item.tag.is_a?(String) && !item.tag.empty?
-        runs << Content::InlineRun.new("#{item.tag} ", style_id: :bibitem_marker)
-      end
-      if item.formattedref
-        runs.concat(item.formattedref.inline_runs.map do |r|
-          Content::InlineRun.new(r.text, style_id: r.style_id)
-        end)
-      end
-      Content::Paragraph.new(runs, style_id: item.style_id || :bibitem,
-                                   id: item.id)
     end
 
     def paragraph_flowable(paragraph)
