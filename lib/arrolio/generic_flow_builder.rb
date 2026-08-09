@@ -225,9 +225,11 @@ module Arrolio
     def formatted_note_label(label)
       return '' if label.nil? || label.empty?
 
-      suffix = @rules.dig('note', 'label_suffix') || '—'
+      suffix = @rules.dig('note', 'label_suffix') || ':'
       stripped = label.strip
-      stripped.empty? ? '' : "#{stripped} #{suffix}"
+      return '' if stripped.empty?
+
+      suffix.start_with?(':') ? "#{stripped}#{suffix} " : "#{stripped} #{suffix} "
     end
 
     def example_flowable(example)

@@ -311,8 +311,18 @@ module Arrolio
         next unless converter
 
         children.concat(dispatch_converter(converter, child, mapping[child.name]))
+        next unless type == 'paragraph'
+
+        children.concat(extract_embedded_blocks(child))
       end
       children
+    end
+
+    def extract_embedded_blocks(elem)
+      extractor = Arrolio::EmbeddedBlockExtractor.new(@rules, CONVERTER_REGISTRY)
+      extractor.extract(elem) do |converter, descendant, mapping_entry|
+        dispatch_converter(converter, descendant, mapping_entry)
+      end
     end
 
     # Routes to a converter. 'list' needs the kind argument pulled
