@@ -406,11 +406,15 @@ module Arrolio
     end
 
     def convert_list(elem, kind:)
+      return convert_definition_list(elem, kind: kind) if elem.name == 'dl'
+
       items = []
       item_name = selector('list_item')
       label_name = selector('list_item_label')
       para_name = selector('paragraph')
-      list_mapping = (@rules['element_mapping'] || {}).select { |_, v| v['content_type'] == 'list' }
+      list_mapping = (@rules['element_mapping'] || {}).select do |_, v|
+        v['content_type'] == 'list'
+      end
       each_child(elem, item_name) do |li|
         marker = nil
         label_elem = find_first(li, label_name)
@@ -431,6 +435,30 @@ module Arrolio
         items << Content::List::Item.new(content, marker: marker)
       end
       Content::List.new(items, kind: kind, style_id: kind == :ordered ? :list_ordered : :list_bullet)
+    end
+
+    def convert_definition_list(elem, kind:)
+      items = []
+      para_name = selector('paragraph')
+      current_marker = nil
+
+      each_direct_child(elem) do |child|
+        case child.name
+        when 'dt'
+          current_marker = text_of(child).strip
+        when 'dd'
+          content = []
+          each_element(child) do |c|
+            next unless c.name == para_name && c.parent == child
+            content << convert_paragraph(c)
+          end
+          content = [Content::Paragraph.new(collect_inline_runs(child))] if content.empty?
+          items << Content::List::Item.new(content, marker: current_marker)
+          current_marker = nil
+        end
+      end
+
+      Content::List.new(items, kind: kind, style_id: :list_bullet)
     end
 
     def convert_figure(elem)
