@@ -25,4 +25,12 @@ namespace :parity do
   task :check do
     sh 'bundle exec ruby -Ilib scripts/parity_check.rb'
   end
+
+  desc 'Show per-page text diff (PAGE=5 or PAGE=5,6,7)'
+  task :diff do
+    pages = ENV['PAGE']&.split(',')&.map(&:strip)
+    cmd = 'bundle exec ruby -Ilib scripts/parity_diff.rb'
+    cmd += " #{pages.join(' ')}" if pages&.any?
+    sh cmd
+  end
 end
