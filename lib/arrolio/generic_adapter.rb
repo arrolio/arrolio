@@ -550,6 +550,7 @@ module Arrolio
           next unless p.is_a?(REXML::Element)
 
           definition << convert_paragraph(p)
+          extract_embedded_blocks(p).each { |block| definition << block }
         end
       end
 
