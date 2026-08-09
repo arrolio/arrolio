@@ -826,7 +826,7 @@ module Arrolio
       return raw unless raw.include?("\n")
 
       stripped = raw.strip
-      return raw.match?(/ /) ? ' ' : nil if stripped.empty?
+      return raw.match?(/\s/) ? ' ' : nil if stripped.empty?
 
       stripped.gsub(/\s+/, ' ')
     end
