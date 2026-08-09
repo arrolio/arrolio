@@ -37,6 +37,7 @@ module Arrolio
   autoload :AssetResolver, 'arrolio/asset_resolver'
   autoload :GenericAdapter, 'arrolio/generic_adapter'
   autoload :GenericFlowBuilder, 'arrolio/generic_flow_builder'
+  autoload :EmbeddedBlockExtractor, 'arrolio/embedded_block_extractor'
   autoload :ConfigDrivenPipeline, 'arrolio/config_driven_pipeline'
   autoload :TocBuilder, 'arrolio/toc_builder'
   autoload :FontScanner, 'arrolio/font_scanner'
