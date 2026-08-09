@@ -562,9 +562,20 @@ module Arrolio
 
       return [] if number.nil? && preferred.nil? && definition.empty? && source.nil?
 
-      [Content::TermEntry.new(number: number, preferred: preferred,
-                              definition: definition, source: source,
-                              id: elem.attribute(selector('id_attribute'))&.value)]
+      entry = Content::TermEntry.new(number: number, preferred: preferred,
+                                     definition: definition, source: source,
+                                     id: elem.attribute(selector('id_attribute'))&.value)
+      results = [entry]
+
+      each_element(elem) do |child|
+        next unless child.name == 'termnote'
+        next unless child.parent == elem
+
+        note = convert_note(child)
+        results.concat(note)
+      end
+
+      results
     end
 
     def convert_note(elem)
