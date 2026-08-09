@@ -379,8 +379,19 @@ module Arrolio
     def convert_table(elem)
       header = convert_table_rows(find_first(elem, selector('table_header')), true)
       body = convert_table_rows(find_first(elem, selector('table_body')), false)
+      caption = extract_table_caption(elem)
       Content::Table.new(header: header, body: body, style_id: :table,
-                         id: elem.attribute(selector('id_attribute'))&.value)
+                         id: elem.attribute(selector('id_attribute'))&.value,
+                         caption: caption)
+    end
+
+    def extract_table_caption(elem)
+      name = find_first(elem, selector('figure_caption')) ||
+             find_first(elem, selector('figure_caption_fallback'))
+      return nil unless name
+
+      text = text_of(name).strip
+      text.empty? ? nil : text
     end
 
     def convert_table_rows(parent, is_header)

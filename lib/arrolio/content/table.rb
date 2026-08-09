@@ -3,15 +3,16 @@
 module Arrolio
   module Content
     class Table
-      attr_reader :header, :body, :column_widths, :style_id, :id
+      attr_reader :header, :body, :column_widths, :style_id, :id, :caption
 
       def initialize(header: [], body: [], column_widths: nil,
-                     style_id: :table, id: nil)
+                     style_id: :table, id: nil, caption: nil)
         @header = header.map { |row| coerce_row(row) }.freeze
         @body = body.map { |row| coerce_row(row) }.freeze
         @column_widths = column_widths&.map(&:to_f)&.freeze
         @style_id = style_id.to_sym
         @id = id
+        @caption = caption
         freeze
       end
 
