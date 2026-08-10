@@ -40,8 +40,9 @@ on the OIML r060/1 fixture, 27 pages vs 28 reference.
 | 91 | done | harness | high | Parity diff diagnostics (rake parity:diff PAGE=N) |
 | 92 | pending | flowable | high | Table cell height parity (row min-height, padding, continuation) |
 | 93 | pending | render | medium | Figure text searchability (SVG text overlay for pdftotext) |
+| 94 | pending | engine | critical | FO space resolution (max of consecutive spaces, not sum) |
 
-## Architectural quality (audited 2026-08-09)
+## Architectural quality (audited 2026-08-10)
 
 - Zero `require_relative` in lib/
 - Zero internal `require 'arrolio/...'` in lib/ (autoload only)
