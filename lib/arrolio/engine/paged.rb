@@ -15,7 +15,8 @@ module Arrolio
       def layout
         @pages = []
         @page_count_opened = 0
-        @footnote_page_map = {} # footnote.id / marker -> first page_number
+        @footnote_page_map = {}
+        @prev_space_after = 0.0
         context = FlowContext.new(layout_spec: @layout_spec, page_number: 1)
         pending = @flowables.dup
         page_state = open_page(context)
@@ -37,16 +38,16 @@ module Arrolio
             page_state.footer = @current_footer
             page_state.header_align = @current_header_align
             page_state.footer_align = @current_footer_align
+            @prev_space_after = 0.0
             next
           end
 
           if flowable.is_a?(Flowables::PageBreak)
             page_state = open_page(context)
+            @prev_space_after = 0.0
             next
           end
 
-          # Footnote anchors: record on the current page without
-          # consuming frame space (the flowable has zero height).
           if flowable.is_a?(Flowables::FootnoteMarkerFlowable)
             key = flowable.footnote.id || flowable.footnote.marker
             @footnote_page_map[key] ||= page_state.page_number
@@ -55,16 +56,19 @@ module Arrolio
           end
 
           page_state = open_page(context) if flowable.page_break_before? && @pages.any? && !page_state.fresh
-          page_state = open_page(context) if page_state.frame.full?
+          if page_state.frame.full?
+            page_state = open_page(context)
+            @prev_space_after = 0.0
+          end
 
           width = page_state.frame.width
           if flowable.keep_together? &&
              flowable.height(width, context) > page_state.frame.remaining_height &&
              flowable.height(width, context) <= page_state.frame.height
             page_state = open_page(context)
+            @prev_space_after = 0.0
           end
 
-          # Record heading entries for ToC + outline building.
           if flowable.is_a?(Flowables::HeadingFlowable)
             context.record_heading(number: flowable.number,
                                    title: flowable.title,
@@ -92,19 +96,23 @@ module Arrolio
 
         if natural <= frame.remaining_height
           emit(page_state, flowable, context)
+          @prev_space_after = flowable.space_after.to_f
         elsif flowable.splittable?
           head, tail = flowable.split(width, frame.remaining_height, context)
           if head
             emit(page_state, head, context)
+            @prev_space_after = head.space_after.to_f
             pending.unshift(tail) if tail
           else
             return page_state unless frame.full?
 
             new_state = open_page(context)
+            @prev_space_after = 0.0
             place(new_state, flowable, context, pending)
           end
         else
           emit(page_state, flowable, context)
+          @prev_space_after = flowable.space_after.to_f
         end
         page_state
       end
@@ -113,9 +121,14 @@ module Arrolio
         frame = page_state.frame
         x = frame.x
         y_top = frame.cursor_y
-        boxes, consumed = flowable.emit(x, y_top, frame.width, context)
+
+        curr_before = flowable.space_before.to_f
+        overlap = [@prev_space_after, curr_before].min
+        adjusted_y = y_top + overlap
+
+        boxes, consumed = flowable.emit(x, adjusted_y, frame.width, context)
         page_state.body_boxes.concat(boxes)
-        frame.consume!(consumed)
+        frame.consume!(consumed - overlap)
       end
 
       def open_page(context)
