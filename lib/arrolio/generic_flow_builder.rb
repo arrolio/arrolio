@@ -103,8 +103,8 @@ module Arrolio
     def content_for(document, role)
       case role.to_s
       when 'preface' then document.preface
-      when 'body' then document.sections + document.bibliography
-      when 'bibliography' then []
+      when 'body' then document.sections
+      when 'bibliography' then document.bibliography
       else []
       end
     end
