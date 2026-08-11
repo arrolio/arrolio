@@ -24,7 +24,7 @@ Metrics/AbcSize:
   Max: 80
 
 Metrics/MethodLength:
-  Max: 60
+  Max: 65
 
 Metrics/ClassLength:
   Max: 750

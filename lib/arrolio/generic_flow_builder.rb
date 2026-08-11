@@ -184,7 +184,7 @@ module Arrolio
     def append_child(child, out)
       case child
       when Content::Paragraph
-        out << paragraph_flowable(child)
+        out << paragraph_flowable(child, standalone: true)
         emit_footnote_markers_for(child, out)
       when Content::Note
         out << note_flowable(child)
@@ -257,9 +257,10 @@ module Arrolio
 
     def term_entry_flowable(entry, out)
       if entry.number
+        number_style = resolve(:term).with(margin_bottom: 0.0)
         out << Flowables::TextFlowable.new(
-          [InlineRun.new(entry.number, style: resolve(:term))],
-          style: resolve(:term)
+          [InlineRun.new(entry.number, style: number_style)],
+          style: number_style
         )
       end
       out << paragraph_flowable(entry.preferred) if entry.preferred
@@ -324,7 +325,7 @@ module Arrolio
       )
     end
 
-    def paragraph_flowable(paragraph)
+    def paragraph_flowable(paragraph, standalone: false)
       runs = paragraph.inline_runs.map do |run|
         InlineRun.new(
           run.text,
@@ -334,7 +335,9 @@ module Arrolio
           href: run.href
         )
       end
-      Flowables::TextFlowable.new(runs, style: resolve(paragraph.style_id))
+      style = resolve(paragraph.style_id)
+      style = style.with(margin_bottom: 8.0) if standalone && paragraph.style_id == :body
+      Flowables::TextFlowable.new(runs, style: style)
     end
 
     def preformatted_flowable(preformatted)
