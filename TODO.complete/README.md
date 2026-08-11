@@ -2,8 +2,8 @@
 
 ## Current baseline (2026-08-09)
 
-`bundle exec rake parity:check` reports **56.98%** overall similarity
-on the OIML r060/1 fixture, 27 pages vs 28 reference.
+`bundle exec rake parity:check` reports **49.36%** overall similarity
+on the OIML r060/1 fixture, **28 pages vs 28 reference** (first time page count matches!).
 
 376 specs pass, 0 failures, 0 rubocop offenses across 174 files.
 
@@ -40,7 +40,7 @@ on the OIML r060/1 fixture, 27 pages vs 28 reference.
 | 91 | done | harness | high | Parity diff diagnostics (rake parity:diff PAGE=N) |
 | 92 | pending | flowable | high | Table cell height parity (row min-height, padding, continuation) |
 | 93 | pending | render | medium | Figure text searchability (SVG text overlay for pdftotext) |
-| 94 | pending | engine | critical | FO space resolution (max of consecutive spaces, not sum) |
+| 94 | done | engine | critical | FO space resolution (max of consecutive spaces) — 28 pages! |
 
 ## Architectural quality (audited 2026-08-10)
 
