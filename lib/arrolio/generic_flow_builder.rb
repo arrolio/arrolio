@@ -263,7 +263,18 @@ module Arrolio
           style: number_style
         )
       end
-      out << paragraph_flowable(entry.preferred) if entry.preferred
+      if entry.preferred
+        preferred_style = resolve(:term).with(margin_bottom: 0.0)
+        out << Flowables::TextFlowable.new(
+          entry.preferred.inline_runs.map do |run|
+            InlineRun.new(run.text, style: resolve(run.style_id),
+                                    baseline_shift: run.baseline_shift,
+                                    font_size_scale: run.font_size_scale,
+                                    href: run.href)
+          end,
+          style: preferred_style
+        )
+      end
       entry.definition.each { |item| append_child(item, out) }
       return unless entry.source
 
