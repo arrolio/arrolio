@@ -347,7 +347,7 @@ module Arrolio
         )
       end
       style = resolve(paragraph.style_id)
-      style = style.with(margin_bottom: 8.0) if standalone && paragraph.style_id == :body
+      style = style.with(margin_bottom: 6.0) if standalone && paragraph.style_id == :body
       Flowables::TextFlowable.new(runs, style: style)
     end
 
