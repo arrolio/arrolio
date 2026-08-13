@@ -238,10 +238,10 @@ cover_content:
 - type: spacer
   size: 20
 - type: text
-  source: INTERNATIONAL
+  source: RECOMMENDATION
   style: cover_title_other
 - type: text
-  source: RECOMMENDATION
+  source: INTERNATIONAL
   style: cover_title_other
 - type: spacer
   size: 10
@@ -276,7 +276,7 @@ cover_content:
 - type: spacer
   size: 20
 - type: text
-  source: "{{docidentifier}} {{edition}}"
+  source: "{{docidentifier}} {{edition_label}}"
   style: cover_label
 section:
   heading_style: "{{title_style_id}}"
