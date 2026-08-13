@@ -229,7 +229,7 @@ module Arrolio
       return '' if label.nil? || label.empty?
 
       suffix = @rules.dig('note', 'label_suffix') || ':'
-      stripped = label.strip
+      stripped = label.strip.chomp(':').strip
       return '' if stripped.empty?
 
       suffix.start_with?(':') ? "#{stripped}#{suffix} " : "#{stripped} #{suffix} "
