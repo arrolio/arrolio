@@ -17,7 +17,7 @@ module Arrolio
         freeze
       end
 
-      def heading? = !@title.nil?
+      def heading? = !@title.nil? || !@number.nil?
 
       def ==(other)
         other.is_a?(self.class) &&

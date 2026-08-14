@@ -142,7 +142,7 @@ RSpec.describe Arrolio::GenericAdapter do
       section = doc.sections.first
       expect(section.number).to eq('2.1')
       expect(section.title).to be_nil
-      expect(section.heading?).to be(false)
+      expect(section.heading?).to be(true)
     end
   end
 
