@@ -181,10 +181,10 @@ module Arrolio
       end
     end
 
-    def append_child(child, out)
+    def append_child(child, out, standalone: true)
       case child
       when Content::Paragraph
-        out << paragraph_flowable(child, standalone: true)
+        out << paragraph_flowable(child, standalone: standalone)
         emit_footnote_markers_for(child, out)
       when Content::Note
         out << note_flowable(child)
@@ -275,7 +275,7 @@ module Arrolio
           style: preferred_style
         )
       end
-      entry.definition.each { |item| append_child(item, out) }
+      entry.definition.each { |item| append_child(item, out, standalone: false) }
       return unless entry.source
 
       out << paragraph_flowable(entry.source)
@@ -347,7 +347,7 @@ module Arrolio
         )
       end
       style = resolve(paragraph.style_id)
-      style = style.with(margin_bottom: 6.0) if standalone && paragraph.style_id == :body
+      style = style.with(margin_bottom: 10.0) if standalone && paragraph.style_id == :body
       Flowables::TextFlowable.new(runs, style: style)
     end
 
