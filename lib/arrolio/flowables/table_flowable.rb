@@ -8,6 +8,8 @@ module Arrolio
     class TableFlowable < Flowable
       attr_reader :table, :column_widths, :continued, :caption_text
 
+      CAPTION_DASH = Regexp.new("[\u00A0\u2009\u0020]\u2014").freeze
+
       def initialize(table, style: Style::Definition.new,
                      continued: false, caption_text: nil)
         super(style: style)
@@ -174,14 +176,22 @@ module Arrolio
 
       def emit_continuation_caption(x, y, width, boxes, _context)
         caption_style = @style.with(align: :left, font_size: @style.font_size)
+        short_caption = short_caption_text
         tf = TextFlowable.new(
-          [InlineRun.new("#{@caption_text} (continued)", style: caption_style)],
+          [InlineRun.new("#{short_caption} (continued)", style: caption_style)],
           style: caption_style
         )
         line_h = tf.height(width)
         tboxes, = tf.emit(x, y, width, nil)
         boxes.concat(tboxes)
         line_h
+      end
+
+      def short_caption_text
+        parts = @caption_text.split(CAPTION_DASH)
+        return @caption_text if parts.length < 2
+
+        parts.first.to_s
       end
 
       # Resolve a cell's effective style. Header cells get the bold
