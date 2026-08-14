@@ -278,7 +278,14 @@ module Arrolio
       entry.definition.each { |item| append_child(item, out, standalone: false) }
       return unless entry.source
 
-      out << paragraph_flowable(entry.source)
+      source_style = resolve(entry.source.style_id).with(margin_top: 2.0, margin_bottom: 2.0)
+      source_runs = entry.source.inline_runs.map do |run|
+        InlineRun.new(run.text, style: resolve(run.style_id),
+                                baseline_shift: run.baseline_shift,
+                                font_size_scale: run.font_size_scale,
+                                href: run.href)
+      end
+      out << Flowables::TextFlowable.new(source_runs, style: source_style)
     end
 
     def bibliography_item_flowable(item, out)
