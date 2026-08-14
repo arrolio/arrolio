@@ -72,6 +72,8 @@ module Arrolio
       'preformatted' => :convert_preformatted
     }.freeze
 
+    XREF_ELEMENTS = ['fmt-xref-label', 'fmt-xref', 'xref'].freeze
+
     UNICODE_SPACES = Regexp.new("[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000\uFEFF]")
 
     attr_reader :rules, :layout_spec, :selectors
@@ -823,6 +825,10 @@ module Arrolio
 
     def walk_heading_text(element, &block)
       element.children.each do |child|
+        next if child.is_a?(REXML::Element) &&
+                (XREF_ELEMENTS.include?(child.name) ||
+                 child.attribute('element')&.value == 'xref')
+
         case child
         when REXML::Text
           yield(child.value, child.parent)
