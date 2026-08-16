@@ -82,7 +82,7 @@ RSpec.describe 'Phase 2 semantic dispatch through GenericFlowBuilder' do
   end
 
   describe 'Content::BibliographyItem dispatch' do
-    it 'emits a TextFlowable combining tag + formattedref' do
+    it 'emits a NoteFlowable with tag marker + formattedref body' do
       ref = Arrolio::Content::Paragraph.new(
         [Arrolio::Content::InlineRun.new('Smith 2020')], style_id: :bibitem
       )
@@ -90,22 +90,19 @@ RSpec.describe 'Phase 2 semantic dispatch through GenericFlowBuilder' do
       document = build_document(item)
 
       flowables = builder.build(document)
-      text_flowables = flowables.grep(Arrolio::Flowables::TextFlowable)
-      bib = text_flowables.find { |f| f.runs.any? { |r| r.text.include?('[Smith2020]') } }
-      expect(bib).not_to be_nil
-      combined = bib.runs.map(&:text).join
-      expect(combined).to include('[Smith2020]')
-      expect(combined).to include('Smith 2020')
+      note = flowables.grep(Arrolio::Flowables::NoteFlowable).first
+      expect(note).not_to be_nil
+      body_text = note.items.flat_map { |_, bfs| bfs.flat_map(&:runs) }.map(&:text).join
+      expect(body_text).to include('Smith 2020')
     end
 
-    it 'emits a TextFlowable with just the tag when no formattedref' do
+    it 'emits a NoteFlowable when no formattedref' do
       item = Arrolio::Content::BibliographyItem.new(tag: '[X]', formattedref: nil)
       document = build_document(item)
 
       flowables = builder.build(document)
-      text_flowables = flowables.grep(Arrolio::Flowables::TextFlowable)
-      bib = text_flowables.find { |f| f.runs.any? { |r| r.text.include?('[X]') } }
-      expect(bib).not_to be_nil
+      note = flowables.grep(Arrolio::Flowables::NoteFlowable).first
+      expect(note).not_to be_nil
     end
   end
 end
