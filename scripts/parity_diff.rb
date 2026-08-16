@@ -31,13 +31,13 @@ module ParityDiff
     target_pages = pages&.map(&:to_i) || (1..[ours_pages, ref_pages].max).to_a
 
     target_pages.each do |page_num|
-      puts "=" * 70
+      puts '=' * 70
       puts "PAGE #{page_num}"
-      puts "=" * 70
+      puts '=' * 70
       ours_text = extract_text(OURS, page_num)
       ref_text = extract_text(REFERENCE, page_num)
       show_diff(ours_text, ref_text)
-      puts ""
+      puts ''
     end
   end
 
@@ -47,19 +47,19 @@ module ParityDiff
     FileUtils.mkdir_p(File.dirname(OURS))
     Arroolio::ConfigDrivenPipeline.render(
       xml, io: OURS, flavor_dir: FLAVOR_DIR,
-      input_path: FIXTURE, extra_image_dirs: [SOURCE_DIR]
+           input_path: FIXTURE, extra_image_dirs: [SOURCE_DIR]
     )
   end
 
   def self.page_count(pdf)
-    `pdftotext "#{pdf}" - 2>/dev/null`.scan(/\f/).length + 1
+    `pdftotext "#{pdf}" - 2>/dev/null`.scan("\f").length + 1
   rescue StandardError
     0
   end
 
   def self.extract_text(pdf, page)
     `pdftotext -f #{page} -l #{page} "#{pdf}" - 2>/dev/null`
-      .gsub(/\f/, '').strip
+      .delete("\f").strip
   end
 
   def self.show_diff(ours, ref)
