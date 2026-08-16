@@ -2,7 +2,7 @@
 
 ## Current baseline (2026-08-09)
 
-`bundle exec rake parity:check` reports **62.34%** overall similarity
+`bundle exec rake parity:check` reports **62.7%** overall similarity
 on the OIML r060/1 fixture, **28 pages vs 28 reference** (all pages PARTIAL+).
 
 376 specs pass, 0 failures, 0 rubocop offenses across 174 files.
