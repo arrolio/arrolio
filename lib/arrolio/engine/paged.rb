@@ -38,6 +38,8 @@ module Arrolio
             page_state.footer = @current_footer
             page_state.header_align = @current_header_align
             page_state.footer_align = @current_footer_align
+            page_state.title_template = flowable.title_template
+            @title_template = nil
             @prev_space_after = 0.0
             next
           end
@@ -190,7 +192,8 @@ module Arrolio
             footer_text: format_text(state.footer, state.page_number, total),
             header_align: state.header_align,
             footer_align: state.footer_align,
-            footnotes: state.footnotes
+            footnotes: state.footnotes,
+            title_text: state.title_template
           )
         end
         @pages.replace(built)
@@ -206,6 +209,7 @@ module Arrolio
     OpenPage = Struct.new(:template, :page_number, :frame, :body_boxes,
                           :fresh, :role, :header, :footer,
                           :header_align, :footer_align, :footnotes,
+                          :title_template,
                           keyword_init: true)
   end
 end

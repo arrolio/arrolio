@@ -75,13 +75,15 @@ module Arrolio
     end
 
     def sequence_start(document, sequence)
+      title = sequence['role'].to_s == 'body' ? title_text(document) : nil
       Flowables::PageSequenceStart.new(
         role: sequence.fetch('role'),
         header_template: interpolate(sequence['header'], document),
         footer_template: sequence['footer'],
         header_align: sequence['header_align'] || :right,
         footer_align: sequence['footer_align'] || :center,
-        initial_page_number: sequence['initial_page_number']
+        initial_page_number: sequence['initial_page_number'],
+        title_template: title
       )
     end
 
@@ -89,15 +91,15 @@ module Arrolio
       if sequence['build_content'] == 'cover_content'
         build_cover_content(document, out)
       elsif source.is_a?(Array)
-        append_title_block(document, out) if sequence['role'].to_s == 'body'
         build_sections(source, out)
       end
     end
 
-    def append_title_block(document, out)
-      return unless document.title_block
+    def title_text(document)
+      return nil unless document.title_block
 
-      out << paragraph_flowable(document.title_block)
+      text = document.title_block.inline_runs.map(&:text).join.strip
+      text.empty? ? nil : text
     end
 
     def content_for(document, role)

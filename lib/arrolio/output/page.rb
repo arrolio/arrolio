@@ -5,13 +5,13 @@ module Arrolio
     class Page
       attr_reader :number, :template_name, :template_role, :page_size,
                   :regions, :static_regions, :header_text, :footer_text,
-                  :header_align, :footer_align, :footnotes
+                  :header_align, :footer_align, :footnotes, :title_text
 
       def initialize(number:, template_name:, page_size:,
                      regions:, static_regions: {}, template_role: :body,
                      header_text: nil, footer_text: nil,
                      header_align: :right, footer_align: :center,
-                     footnotes: [])
+                     footnotes: [], title_text: nil)
         @number = number.to_i
         @template_name = template_name.to_sym
         @template_role = template_role.to_sym
@@ -23,6 +23,7 @@ module Arrolio
         @header_align = header_align.to_sym
         @footer_align = footer_align.to_sym
         @footnotes = Array(footnotes).freeze
+        @title_text = title_text
         freeze
       end
 

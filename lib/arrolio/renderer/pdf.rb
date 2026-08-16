@@ -240,6 +240,7 @@ module Arrolio
         pdfrb_page.value[:Resources] = catalog.value[:Resources]
         canvas = pdfrb_page.canvas
         render_cover_logo(canvas, output_page) if output_page.template_role == :cover && @logo_ref
+        render_page_title(canvas, output_page) if output_page.title_text
         render_header_footer(canvas, output_page) unless output_page.template_role == :cover
         render_page_footnotes(canvas, output_page) unless output_page.template_role == :cover
         (output_page.static_regions.values + output_page.regions.values).each do |region|
@@ -294,6 +295,24 @@ module Arrolio
         @invoke_xobject_class ||= Class.new(Pdfrb::Content::Operator::Base) do
           def self.name = 'Do'
         end
+      end
+
+      def render_page_title(canvas, page)
+        header_footer_style
+        body = page.regions[:body]
+        return unless body
+
+        font_name = 'Times New Roman Bold'
+        size = 18.0
+        measurer = GlyphMeasurer.new(font_name: font_name)
+        tw = measurer.width_of_string(page.title_text, font_size: size)
+        x = (page.width - tw) / 2.0
+        baseline = body.y + body.height + 31.0
+        ref = embedded_or_standard(font_name)
+        payload = encoded_or_text(font_name, page.title_text)
+        canvas.text(payload, at: [x, baseline], font: ref, size: size)
+      rescue StandardError => e
+        Arroolio::Logger.warn "render_page_title failed: #{e.message[0, 80]}"
       end
 
       def render_header_footer(canvas, page)
