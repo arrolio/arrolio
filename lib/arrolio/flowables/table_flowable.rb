@@ -171,7 +171,8 @@ module Arrolio
       def rebuild_table(header, body)
         Content::Table.new(header: header, body: body,
                            column_widths: @table.column_widths,
-                           style_id: @table.style_id, id: @table.id)
+                           style_id: @table.style_id, id: @table.id,
+                           caption: @table.caption)
       end
 
       def emit_continuation_caption(x, y, width, boxes, _context)
