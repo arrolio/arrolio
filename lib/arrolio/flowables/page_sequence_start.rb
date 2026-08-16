@@ -7,17 +7,19 @@ module Arrolio
     # until the next PageSequenceStart.
     class PageSequenceStart < Flowable
       attr_reader :role, :header_template, :footer_template,
-                  :header_align, :footer_align, :initial_page_number
+                  :header_align, :footer_align, :initial_page_number,
+                  :title_template
 
       def initialize(role:, header_template: nil, footer_template: nil,
                      header_align: :right, footer_align: :center,
-                     initial_page_number: nil)
+                     initial_page_number: nil, title_template: nil)
         @role = role.to_sym
         @header_template = header_template
         @footer_template = footer_template
         @header_align = header_align.to_sym
         @footer_align = footer_align.to_sym
         @initial_page_number = initial_page_number
+        @title_template = title_template
       end
 
       def height(_width, _context = nil) = 0.0
