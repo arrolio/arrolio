@@ -296,20 +296,14 @@ module Arrolio
         return
       end
 
-      tag_run = Content::InlineRun.new("#{tag} ", style_id: :bibitem_marker)
-      full_runs = [tag_run] + body_para.inline_runs
-      full_para = Content::Paragraph.new(full_runs,
-                                         style_id: item.style_id || :bibitem,
-                                         id: item.id)
-      marker_w = marker_width_of(tag)
-      tf = paragraph_flowable(full_para)
-      out << if tf.is_a?(Flowables::TextFlowable)
-        Flowables::TextFlowable.new(tf.runs, style: tf.style,
-                                             measurer: tf.measurer,
-                                             hanging_indent: marker_w)
-      else
-        tf
-      end
+      body = paragraph_flowable(body_para)
+      out << Flowables::NoteFlowable.new(
+        tag,
+        [body],
+        style: resolve(item.style_id || :bibitem),
+        label_style: resolve(:bibitem_marker),
+        marker_width: 24.0
+      )
     end
 
     def bibliography_body_paragraph(item)
