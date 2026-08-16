@@ -92,12 +92,28 @@ module Arrolio
                               line_spacing: @style.line_spacing)
       end
 
+      # Rebuilds a run list from laid-out lines. A line break
+      # consumes the inter-word glue, and placed runs don't carry it,
+      # so a separator is re-inserted at each line boundary —
+      # otherwise re-layout glues the boundary words together
+      # ("…increasing and" + "decreasing loads."). Hyphen breaks
+      # already join their words; they must not gain a space.
       def collect_runs(lines)
         runs = []
         lines.each do |line|
+          first = line.placed_runs.first&.run
+          runs << InlineRun.new(' ', style: first.style) if separator_needed?(runs.last, first)
           line.placed_runs.each { |pr| runs << pr.run }
         end
         runs
+      end
+
+      def separator_needed?(last_run, first_run)
+        return false if last_run.nil? || first_run.nil?
+        return false if last_run.text.end_with?('-')
+        return false if last_run.text.match?(/\s\z/) || first_run.text.match?(/\A\s/)
+
+        true
       end
     end
   end

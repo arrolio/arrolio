@@ -3,7 +3,7 @@ priority: P1
 impact: high
 depends_on: [79]
 layer: text
-status: pending
+status: done
 est: 2d
 ---
 
@@ -21,53 +21,60 @@ For legally relevant software of digital load cells the following
 statements according to [OIML_D_31_2008] shall be applied.
 ```
 
-Placed box (verified correct):
-- Line 0: "For legally relevant software of digital load cells..."
-- Line 1: "according to [OIML_D_31_2008] shall be applied."
+Rendered PDF (before fix): the line ran to x=597 on a 595pt page —
+"be applied." was drawn off-page and clipped by readers.
 
-Rendered PDF:
-- Line 1 ends at "shall"
-- "be applied." is MISSING
-- Nested list item "1)" appears immediately after
+## Root cause (found 2026-08-17)
 
-## Root cause hypothesis
+NOT a font-metrics mismatch — TTF advance widths match the embedded
+render exactly. The Knuth-Plass breaker rejected every intermediate
+break of the paragraph (best candidate ratio 2.68 > TOLERANCE 2.5),
+so the only surviving path was the FORCED final break, which bypasses
+the ratio check: the whole paragraph rendered as one 552.6pt line on
+a 426.7pt measure.
 
-The `ListFlowable#emit` computes `body_width` correctly (427pt) and the
-`TextFlowable` produces 2 lines at that width. But the RENDERED text
-overflows the body width by ~74pt (extends to x=597 vs max x=523).
+## Fix
 
-This suggests a **measurement discrepancy**: the GlyphMeasurer computes
-text width differently from the embedded font renderer. The `[OIML_D_31_2008]`
-token (with underscores and brackets) may have different glyph widths in
-the TTF metrics vs the PDF rendering.
-
-## Approach
-
-1. **Audit measurement vs rendering width.** Compare GlyphMeasurer
-   output for `[OIML_D_31_2008]` against the actual rendered width
-   in the PDF.
-
-2. **Check font substitution.** If the renderer falls back to
-   Helvetica for some glyphs, widths will differ. Verify that ALL
-   characters in `[OIML_D_31_2008]` exist in the embedded
-   Times New Roman subset.
-
-3. **Check subset coverage.** The font embedder may not include
-   underscore (`_`) or brackets (`[`, `]`) in the subset, causing
-   fallback rendering.
-
-4. **Force-include punctuation glyphs.** Ensure `[`, `]`, `_`, `(`,
-   `)` are always in the subset even if they appear only in
-   cross-references.
+- `KnuthPlass::Breaker`: TeX-style emergency-stretch pass. When the
+  first pass yields no feasible solution, re-solve with
+  EMERGENCY_STRETCH added to every line's stretchability — the
+  paragraph breaks properly instead of overflowing.
+- `KnuthPlass::Breaker`: removed the `prune?` cap that disabled
+  active nodes beyond `line_widths.length + 10` lines — any
+  paragraph or table cell longer than 11 lines got its tail crammed
+  into one overfull line (visible as overlapping table-cell text).
+- `KnuthPlass::Breaker#build_placed_runs`: style-preserving run
+  grouping. A line is merged into one text operation per rendering
+  signature; bold/italic/sub/superscript runs keep their formatting
+  (previously the whole line took the first run's style). Trailing
+  glue at the break is dropped so justify counts real word gaps.
+- `TextFlowable#collect_runs`: re-inserts the word separator that a
+  line break consumed when a split paragraph is rebuilt — otherwise
+  re-layout glues boundary words ("…increasing anddecreasing").
+  Hyphen breaks gain no space ("analogue-active" stays joined).
+- `Renderer::Pdf#render_line_runs`: justified lines are drawn as one
+  positioned text operation per word (FOP's model) with the stretch
+  accumulated in each word's x. PDF word spacing (Tw) does not apply
+  to two-byte CID-encoded embedded fonts, so justification cannot
+  rely on it; the old boundary-shift approach concentrated the whole
+  line's stretch at run boundaries (34pt holes around math runs).
+- `GenericFlowBuilder`: `require 'tmpdir'` (was a transitive-require
+  accident).
+- Prefix sums for item widths/stretch/shrink make width queries O(1).
 
 ## Done-When
 
-- [ ] "be applied." renders after "shall" in list item b)
-- [ ] Text never overflows body width in list items
-- [ ] GlyphMeasurer widths match rendered widths within 1pt
-- [ ] Specs cover list item with long inline tokens
+- [x] "be applied." renders after "shall" in list item b)
+- [x] Text never overflows body width in list items
+- [x] GlyphMeasurer widths match rendered widths (verified: measured
+      501.6pt vs rendered 501.2pt for the failing line)
+- [x] Specs cover list item with long inline tokens
 
 ## Measurement
 
-Affects ~3-5 list items with long bracketed references.
-Last measured: 2026-08-08.
+Overall similarity 62.7% → 59.9% (2026-08-17). Text pages unchanged;
+the drop is pages 23–27, where previously-overlapping table cells now
+occupy their true height. Our table rows are taller than FOP's
+(column-width debt — TODO 72/92); the old render accidentally matched
+page boundaries while its cell text overlapped. Recovering the metric
+requires table layout parity, not reverting these fixes.

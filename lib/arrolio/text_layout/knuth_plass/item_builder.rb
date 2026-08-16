@@ -22,11 +22,11 @@ module Arrolio
           @runs.each_with_index do |run, run_idx|
             build_items_for_run(run, run_idx, items)
           end
-          # Emergency stretch: zero-width glue with infinite stretch
-          # before the FINISHED penalty. This matches TeX's
-          # \emergency_stretch — guarantees the breaker always finds
-          # a path even when intermediate breaks are infeasible
-          # under the chosen TOLERANCE.
+          # Parfillskip: zero-width glue with infinite stretch before
+          # the FINISHED penalty (TeX's \parfillskip). Makes the last
+          # line of a paragraph never loose, so short final lines are
+          # always feasible. Paragraphs with no feasible intermediate
+          # break are rescued by Breaker's emergency-stretch pass.
           items << Glue.new(width: 0, stretch: Float::INFINITY, shrink: 0)
           items << FINISHED
           items

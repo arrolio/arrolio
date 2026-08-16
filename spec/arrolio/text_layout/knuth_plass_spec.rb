@@ -71,26 +71,65 @@ RSpec.describe Arrolio::TextLayout::KnuthPlass do
       end.new(dummy: nil)
     end
 
-    it 'lays out text that fits on one line as one line' do
-      run = Arrolio::InlineRun.new('short', style: style)
-      items = Arrolio::TextLayout::KnuthPlass::ItemBuilder.new([run], measurer: measurer).build
-      breaker = described_class.new(
-        items: items, line_widths: [500.0], runs: [run],
+    def layout(text, width, runs = nil)
+      runs ||= [Arrolio::InlineRun.new(text, style: style)]
+      items = Arrolio::TextLayout::KnuthPlass::ItemBuilder.new(runs, measurer: measurer).build
+      described_class.new(
+        items: items, line_widths: [width], runs: runs,
         measurer: measurer, align: :left
-      )
-      lines = breaker.layout
+      ).layout
+    end
+
+    it 'lays out text that fits on one line as one line' do
+      lines = layout('short', 500.0)
       expect(lines.length).to eq(1)
     end
 
     it 'wraps long text into multiple lines' do
-      run = Arrolio::InlineRun.new('word ' * 20, style: style)
-      items = Arrolio::TextLayout::KnuthPlass::ItemBuilder.new([run], measurer: measurer).build
-      breaker = described_class.new(
-        items: items, line_widths: [100.0], runs: [run],
-        measurer: measurer, align: :left
-      )
-      lines = breaker.layout
+      lines = layout('word ' * 20, 100.0)
       expect(lines.length).to be > 1
+    end
+
+    it 'never returns a line wider than the measure' do
+      lines = layout('word ' * 20, 100.0)
+      expect(lines.all? { |l| l.width <= 100.0 }).to be(true)
+    end
+
+    # Every intermediate break is looser than TOLERANCE, so the first
+    # pass finds no feasible split. Without the emergency-stretch
+    # pass the only surviving path is the forced final break and the
+    # whole paragraph renders as one overfull, off-page line.
+    it 'breaks paragraphs with no feasible split via emergency stretch' do
+      lines = layout('aaaa bbbb cccc dddd', 70.0)
+      expect(lines.length).to eq(2)
+      expect(lines.all? { |l| l.width <= 70.0 }).to be(true)
+      expect(lines.map { |l| l.placed_runs.map { |pr| pr.run.text }.join }.join(' '))
+        .to eq('aaaa bbbb cccc dddd')
+    end
+
+    it 'lays out paragraphs longer than eleven lines' do
+      lines = layout('word ' * 24, 75.0)
+      expect(lines.length).to eq(12)
+      expect(lines.all? { |l| l.width <= 75.0 }).to be(true)
+    end
+
+    it 'keeps mixed-style runs as separate placed runs' do
+      bold = style.with(font_name: 'Times-Bold')
+      runs = [
+        Arrolio::InlineRun.new('one ', style: style),
+        Arrolio::InlineRun.new('two', style: bold),
+        Arrolio::InlineRun.new(' three', style: style)
+      ]
+      lines = layout('one two three', 500.0, runs)
+      expect(lines.length).to eq(1)
+      fonts = lines.first.placed_runs.map { |pr| pr.run.style.font_name }
+      expect(fonts).to eq(['Times-Roman', 'Times-Bold', 'Times-Roman'])
+      expect(lines.first.placed_runs.map { |pr| pr.run.text }).to eq(['one ', 'two ', 'three'])
+    end
+
+    it 'drops the trailing glue so justify counts real gaps only' do
+      lines = layout('one two three', 500.0)
+      expect(lines.first.placed_runs.map { |pr| pr.run.text }.join).to eq('one two three')
     end
   end
 end

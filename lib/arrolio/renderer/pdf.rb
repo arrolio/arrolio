@@ -412,32 +412,51 @@ module Arrolio
         extra_offset = 0.0
         line.placed_runs.each do |pr|
           run = pr.run
-          x = line_x + pr.x_offset + extra_offset
+          run_x = line_x + pr.x_offset
           font_name = run.style.font_name
           ref = embedded_or_standard(font_name)
-          payload = encoded_or_text(font_name, run.text)
           y, size = baseline_position_for(run, baseline_y)
-          opts = { at: [x, y], font: ref, size: size }
-          if run.style.character_spacing && !run.style.character_spacing.zero?
-            opts[:char_spacing] = run.style.character_spacing
+          measurer = GlyphMeasurer.new(font_name: font_name)
+          cursor = 0.0
+          run_start = nil
+          text_chunks(run.text, justify).each do |chunk|
+            x = run_x + extra_offset + cursor
+            run_start ||= x
+            payload = encoded_or_text(font_name, chunk)
+            opts = { at: [x, y], font: ref, size: size }
+            if run.style.character_spacing && !run.style.character_spacing.zero?
+              opts[:char_spacing] = run.style.character_spacing
+            end
+            if run.style.word_spacing && !run.style.word_spacing.zero?
+              opts[:word_spacing] = run.style.word_spacing
+            end
+            record_link_if_needed(run, x, y, size) if cursor.zero?
+            canvas.text(payload, **opts)
+            cursor += measurer.width_of_string(chunk, font_size: size)
+            extra_offset += (chunk.count(' ') * justify) if justify.positive?
           end
-          if run.style.word_spacing && !run.style.word_spacing.zero?
-            opts[:word_spacing] = run.style.word_spacing
-          end
-          record_link_if_needed(run, x, y, opts[:size])
-          canvas.text(payload, **opts)
-          draw_underline(canvas, run, x, y, size) if run.style.underline
-          extra_offset += (run.text.count(' ') * justify) if justify.positive?
+          draw_underline(canvas, run, run_start, y, size, cursor) if run.style.underline
         end
+      end
+
+      # PDF word spacing (Tw) does not apply to two-byte CID-encoded
+      # embedded fonts, so justification cannot rely on it. Instead a
+      # justified line is drawn as one positioned text operation per
+      # word — FOP's model — with each word's x carrying the stretch
+      # accumulated so far. The separating space stays attached to
+      # the preceding word so text extraction still sees word gaps.
+      def text_chunks(text, justify)
+        return [text] if justify <= 0.0
+
+        text.split(/(?<=\s)(?=\S)/)
       end
 
       # Draws a thin horizontal rule below a run's baseline when the
       # style's `underline` flag is set. Matches FOP/HTML convention:
       # the rule sits ~1pt below baseline, thickness ~5% of font size.
-      def draw_underline(canvas, run, x, baseline_y, size)
+      def draw_underline(canvas, _run, x, baseline_y, size, width)
         weight = [size * 0.05, 0.5].max
         underline_y = baseline_y - (size * 0.18)
-        width = run.text.length * size * 0.45
         canvas.line(x, underline_y, x + width, underline_y)
         canvas.line_width = weight
         canvas.stroke

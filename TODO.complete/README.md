@@ -32,7 +32,7 @@ on the OIML r060/1 fixture, **28 pages vs 28 reference** (all pages PARTIAL+).
 | 82 | done | adapter | high | Semantic/presentation element deduplication (xref, eref, identifier) || 83 | done | adapter | high | Nested list support (adapter + flow builder) |
 | 84 | done | render | critical | Inline SVG extraction + rsvg-convert rasterization (parity 53→57%) |
 | 85 | done | adapter | medium | Locality reference formatting (clause=X → clause X) |
-| 86 | pending | text | high | List item text overflow (measurement vs render width mismatch) |
+| 86 | done | text | high | KP emergency pass, run-group styles, word-level justify (text loss fixed) |
 | 87 | pending | engine | medium | Odd/even page template variants |
 | 88 | pending | text | medium | Hyphenation support for long words |
 | 89 | in progress | flowable | high | Table rowspan support |

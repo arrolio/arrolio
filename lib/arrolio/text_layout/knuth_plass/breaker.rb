@@ -12,6 +12,13 @@ module Arrolio
       # converges in O(n) for typical text because most candidate
       # breaks are pruned early.
       #
+      # When no break sequence is feasible within TOLERANCE (every
+      # candidate line is too loose), a second pass runs with
+      # emergency stretch added to every line's stretchability —
+      # TeX's \emergencystretch. Without it, the only surviving path
+      # is the forced final break, which packs the whole paragraph
+      # into one overfull line and silently runs off the page.
+      #
       # Produces TextLayout::Line[] output — compatible with the
       # existing Greedy breaker so the engine can swap freely.
       class Breaker
@@ -20,16 +27,17 @@ module Arrolio
         # Tolerance for adjustment ratio — lines with |ratio| above
         # this are infeasible and rejected. Standard TeX default
         # (\tolerance=200) maps to ratio ≈ 1.26 because badness is
-        # 100*|r|^3. We use a slightly looser limit (1.5) to allow
+        # 100*|r|^3. We use a slightly looser limit (2.5) to allow
         # reasonable stretch on tight paragraphs while rejecting
         # the pathological overfills greedy avoids by construction.
         TOLERANCE = 2.5
 
+        # Stretch added to every line during the emergency pass.
+        # Comparable to TeX's \emergencystretch = 2em at body size.
+        EMERGENCY_STRETCH = 20.0
+
         # Extra penalty for consecutive flagged breaks (hyphens).
         FLAGGED_PENALTY = 3000.0
-
-        # Extra penalty for the last line being underfull.
-        DEMERITS_LAST_LINE = 50.0
 
         attr_reader :items, :line_widths, :runs, :measurer, :align
 
@@ -48,60 +56,74 @@ module Arrolio
         end
 
         def layout
-          nodes = active_nodes
-          return [] if nodes.empty?
+          build_prefix_sums
+          node = solve
+          node = solve(emergency_stretch: EMERGENCY_STRETCH) unless feasible?(node)
+          return [] if node.nil?
 
-          # Only consider nodes that reached the end of the items
-          # (the FINISHED penalty at the last position).
-          final_nodes = nodes.select { |n| n.position == @items.length - 1 }
-          return [] if final_nodes.empty?
-
-          # Backtrack from the best final node.
-          breaks = reconstruct_breaks(best_final_node(final_nodes))
-
-          # Build Line objects from the break points.
-          lines = []
-          prev_item = 0
-          breaks.each_with_index do |br, line_idx|
-            width = line_width_for(line_idx)
-            placed = build_placed_runs(prev_item, br, width)
-            used = compute_line_width(prev_item, br)
-            lines << Line.new(placed, width: used, max_width: width, align: @align)
-            prev_item = br
-          end
-          lines
+          build_lines(node)
         end
 
         # Internal: a node in the dynamic programming graph.
         Node = Struct.new(:position, :line, :fitness, :total_demerits,
                           :previous, keyword_init: true)
 
+        # Internal: a run of same-signature text being merged into a
+        # single PlacedRun (one canvas.text call at render time).
+        RunGroup = Struct.new(:signature, :text, :x_offset, keyword_init: true)
+
         private
 
         # Active-node dynamic programming. Each active node represents
         # a feasible break position. We iterate through items and
         # try breaking at each feasible position.
-        def active_nodes
-          @active = [Node.new(position: -1, line: 0, fitness: 1,
-                              total_demerits: 0, previous: nil)]
+        def solve(emergency_stretch: 0.0)
+          @emergency_stretch = emergency_stretch.to_f
+          active = [Node.new(position: -1, line: 0, fitness: 1,
+                             total_demerits: 0, previous: nil)]
           @items.each_with_index do |_item, i|
             next unless feasible_break?(i)
 
-            @active = @active.reject { |a| prune?(a, i) }
-            candidates = @active.filter_map { |a| try_break(a, i) }
-            best = best_candidate(candidates)
-            @active << best if best
+            best = best_candidate(active.filter_map { |a| try_break(a, i) })
+            active << best if best
           end
-          @active
+          best_final_node(active.select { |n| n.position == @items.length - 1 })
+        end
+
+        # True when the solution contains no line whose adjustment
+        # ratio escaped TOLERANCE via a forced break. When false, the
+        # paragraph needs the emergency pass.
+        def feasible?(final_node)
+          return false if final_node.nil?
+
+          prev_item = 0
+          reconstruct_breaks(final_node).each_with_index do |br, line_idx|
+            natural = compute_line_width(prev_item, br)
+            ratio = adjustment_ratio(natural, line_width_for(line_idx),
+                                     prev_item, br)
+            return false if ratio.abs > TOLERANCE
+
+            prev_item = br
+          end
+          true
+        end
+
+        def build_lines(final_node)
+          lines = []
+          prev_item = 0
+          reconstruct_breaks(final_node).each_with_index do |br, line_idx|
+            width = line_width_for(line_idx)
+            placed = build_placed_runs(prev_item, br)
+            lines << Line.new(placed, width: compute_line_width(prev_item, br),
+                                      max_width: width, align: @align)
+            prev_item = br
+          end
+          lines
         end
 
         def feasible_break?(i)
           item = @items[i]
           (item.penalty? && !item.no_break?) || (item.glue? && i.positive? && @items[i - 1].box?)
-        end
-
-        def prune?(node, _current)
-          node.line >= @line_widths.length + 10
         end
 
         def try_break(node, break_pos)
@@ -115,19 +137,16 @@ module Arrolio
 
           # Forced breaks are always accepted but still penalized
           # for bad ratios so the algorithm prefers shorter lines.
-          unless is_forced
-            return nil if ratio.abs > TOLERANCE
-          end
+          return nil if !is_forced && ratio.abs > TOLERANCE
 
-          ratio = 0.0 if ratio == Infinity || ratio == -Infinity
+          ratio = 0.0 if ratio.infinite?
           demerits = demerits_for(ratio, break_pos)
           total = node.total_demerits + demerits
-          fitness = fitness_class(ratio)
 
           Node.new(
             position: break_pos,
             line: node.line + 1,
-            fitness: fitness,
+            fitness: fitness_class(ratio),
             total_demerits: total,
             previous: node
           )
@@ -142,9 +161,10 @@ module Arrolio
         end
 
         # Adjustment ratio: how stretched (positive) or shrunk
-        # (negative) a line is. 0 = perfect fit.
+        # (negative) a line is. 0 = perfect fit. Emergency stretch
+        # widens the feasibility window without changing shrink.
         def adjustment_ratio(natural_width, target_width, line_start, line_end)
-          glue_stretch = line_stretch(line_start, line_end)
+          glue_stretch = line_stretch(line_start, line_end) + @emergency_stretch
           glue_shrink = line_shrink(line_start, line_end)
 
           if natural_width < target_width
@@ -182,21 +202,25 @@ module Arrolio
           end
         end
 
+        # Prefix sums so range width/stretch/shrink queries are O(1).
+        def build_prefix_sums
+          @prefix_width = [0.0]
+          @prefix_stretch = [0.0]
+          @prefix_shrink = [0.0]
+          @items.each do |item|
+            @prefix_width << (@prefix_width.last + item.width.to_f)
+            @prefix_stretch << (@prefix_stretch.last + (item.glue? ? item.stretch : 0.0))
+            @prefix_shrink << (@prefix_shrink.last + (item.glue? ? item.shrink : 0.0))
+          end
+        end
+
         # Sum of widths from item +start+ to item +stop+ (exclusive).
         # Discards trailing glue at the break point.
         def compute_line_width(start, stop)
           return 0.0 if start >= stop
 
-          sum = 0.0
-          (start...stop).each do |i|
-            item = @items[i]
-            next if item.nil?
-
-            # Trailing glue after last box is discarded at break.
-            last_box = last_box_index_in(start, stop)
-            sum += item.width if i <= last_box
-          end
-          sum
+          last_box = last_box_index_in(start, stop)
+          last_box < start ? 0.0 : @prefix_width[last_box + 1] - @prefix_width[start]
         end
 
         def last_box_index_in(start, stop)
@@ -208,15 +232,11 @@ module Arrolio
         end
 
         def line_stretch(line_start, line_end)
-          sum = 0.0
-          (line_start...line_end).each { |i| sum += @items[i].stretch if @items[i]&.glue? }
-          sum
+          @prefix_stretch[line_end] - @prefix_stretch[line_start]
         end
 
         def line_shrink(line_start, line_end)
-          sum = 0.0
-          (line_start...line_end).each { |i| sum += @items[i].shrink if @items[i]&.glue? }
-          sum
+          @prefix_shrink[line_end] - @prefix_shrink[line_start]
         end
 
         def line_width_for(line_idx)
@@ -233,21 +253,19 @@ module Arrolio
           breaks.reverse
         end
 
-        def build_placed_runs(start_item, stop_item, _width)
-          # Merge Box + Glue items into single placed_runs so the
-          # renderer emits one canvas.text call per group. Without
-          # merging, each Glue becomes its own Tj block; pdftotext
-          # reads Tj blocks as character sequences and may not see
-          # a single-space Tj as a word separator, producing
-          # "durabilityerror" instead of "durability error".
+        # Merges contiguous Box + Glue items into PlacedRuns — one
+        # canvas.text call per group — so pdftotext sees word
+        # separators instead of glued-together Tj fragments. A new
+        # group starts whenever the rendering signature (style,
+        # baseline shift, scale, href) changes, so bold/italic and
+        # sub/superscript runs keep their formatting. Glue past the
+        # line's last box (at the break) is dropped: it is discarded
+        # by width accounting and would otherwise inflate the
+        # renderer's justify word count.
+        def build_placed_runs(start_item, stop_item)
+          last_box = last_box_index_in(start_item, stop_item)
           placed = []
-          current_text = String.new
-          current_style = nil
-          current_x = 0.0
-          baseline_shift = nil
-          font_size_scale = 1.0
-          href = nil
-          started = false
+          group = nil
 
           (start_item...stop_item).each do |i|
             item = @items[i]
@@ -261,46 +279,35 @@ module Arrolio
               slice = run.text[item.char_offset, item.char_length]
               next if slice.nil? || slice.empty?
 
-              unless started
-                current_x = sum_item_widths(start_item, i)
-                current_style = run.style
-                baseline_shift = run.baseline_shift
-                font_size_scale = run.font_size_scale
-                href = run.href
-                started = true
+              signature = [run.style, run.baseline_shift,
+                           run.font_size_scale, run.href]
+              if group.nil? || group.signature != signature
+                flush_placed_group(placed, group) if group
+                group = RunGroup.new(signature: signature, text: String.new,
+                                     x_offset: item_offset(start_item, i))
               end
-              current_text << slice
-            elsif item.glue?
-              run = item.run_index ? @runs[item.run_index] : @runs.first
-              current_style ||= run ? run.style : Arrolio::Style::Definition.new
-              current_text << ' '
+              group.text << slice
+            elsif item.glue? && group && i < last_box
+              group.text << ' '
             end
           end
-
-          if started
-            flush_placed_group(placed, current_text, current_style, current_x,
-                               baseline_shift, font_size_scale, href)
-          end
+          flush_placed_group(placed, group) if group
           placed
         end
 
-        def sum_item_widths(start_idx, end_idx)
-          (start_idx...end_idx).sum { |i| @items[i]&.width.to_f }
+        def item_offset(start_item, item_idx)
+          @prefix_width[item_idx] - @prefix_width[start_item]
         end
 
-        def flush_placed_group(placed, text, style, x, baseline_shift, font_size_scale, href)
-          return if text.nil? || text.empty?
+        def flush_placed_group(placed, group)
+          return if group.text.empty?
 
-          run = InlineRun.new(text, style: style,
-                                    baseline_shift: baseline_shift,
-                                    font_size_scale: font_size_scale,
-                                    href: href)
-          placed << Line::PlacedRun.new(run: run, x_offset: x)
-        end
-
-        def finalize_node(position, line, fitness, total_demerits, previous)
-          Node.new(position: position, line: line, fitness: fitness,
-                   total_demerits: total_demerits, previous: previous)
+          style, baseline_shift, font_size_scale, href = group.signature
+          run = InlineRun.new(group.text, style: style,
+                                          baseline_shift: baseline_shift,
+                                          font_size_scale: font_size_scale,
+                                          href: href)
+          placed << Line::PlacedRun.new(run: run, x_offset: group.x_offset)
         end
       end
     end
