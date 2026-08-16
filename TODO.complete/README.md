@@ -41,6 +41,7 @@ on the OIML r060/1 fixture, **28 pages vs 28 reference** (all pages PARTIAL+).
 | 92 | pending | flowable | high | Table cell height parity (row min-height, padding, continuation) |
 | 93 | pending | render | medium | Figure text searchability (SVG text overlay for pdftotext) |
 | 94 | done | engine | critical | FO space resolution (max of consecutive spaces) — 28 pages! |
+| 95 | pending | engine | high | Title block as header static content (saves ~58pt/page) |
 
 ## Architectural quality (audited 2026-08-10)
 
