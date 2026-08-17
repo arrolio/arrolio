@@ -682,7 +682,12 @@ module Arrolio
       each_element(elem) do |child|
         next unless child.name == para_name
 
-        body << convert_paragraph(child)
+        para = convert_paragraph(child)
+        # Example bodies take the example style (leading, indents) —
+        # the source paragraphs carry the generic inline style.
+        body << Content::Paragraph.new(para.inline_runs, style_id: :example,
+                                        id: para.id,
+                                        footnote_refs: para.footnote_refs)
       end
       return [] if body.empty?
 
