@@ -203,10 +203,11 @@ module Arrolio
         build_section(child, out)
       when Content::Table
         caption = table_caption_for(child)
-        out << table_caption_flowable(caption) if caption
         out << Flowables::TableFlowable.new(child,
                                             style: resolve(child.style_id),
-                                            caption_text: caption)
+                                            caption_text: caption,
+                                            caption_style: resolve(:figure_caption).with(align: :left),
+                                            **table_geometry)
       when Content::List
         out << list_flowable(child)
       when Content::Image
@@ -332,12 +333,16 @@ module Arrolio
       table.caption
     end
 
-    def table_caption_flowable(caption_text)
-      style = resolve(:figure_caption).with(align: :left)
-      Flowables::TextFlowable.new(
-        [InlineRun.new(caption_text, style: style)],
-        style: style
-      )
+    # Table geometry (minimum row height, cell padding, footnote
+    # size) is flavor configuration — extracted from the flavor's
+    # XSL row/cell styles — not engine policy.
+    def table_geometry
+      config = @rules['table'] || {}
+      {
+        min_row_height: config.fetch('min_row_height', 0.0).to_f,
+        cell_padding: config.fetch('cell_padding', 2.0).to_f,
+        footnote_font_size: config['footnote_font_size']&.to_f
+      }
     end
 
     def paragraph_flowable(paragraph, standalone: false)
@@ -431,7 +436,7 @@ module Arrolio
       return nil unless source && File.exist?(source) && source.match?(/\.svg\z/i)
 
       value = File.read(source)[/(?:#{name})=["']([\d.]+)/, 1]
-      value&.to_f
+      value && (value.to_f * SVG_PX_TO_PT)
     end
 
     def resolve(style_id)

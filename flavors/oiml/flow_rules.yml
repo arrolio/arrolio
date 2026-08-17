@@ -303,3 +303,14 @@ toc:
   styles:
     entry: toc_entry
     sub: toc_entry_sub
+
+# Table geometry, extracted from the flavor XSL and calibrated
+# against the reference PDF (mn2pdf v2.55):
+# - min_row_height: table-row-style min-height 8.3mm (23.53pt)
+#   plus border/padding allowance; reference row pitch 25.45pt.
+# - cell_padding: reference cell text inset 3.3pt (1.2mm).
+# - footnote_font_size: reference table footnotes 9pt.
+table:
+  min_row_height: 25.45
+  cell_padding: 3.3
+  footnote_font_size: 9.0

@@ -35,13 +35,14 @@ on the OIML r060/1 fixture, **28 pages vs 28 reference** (all pages PARTIAL+).
 | 86 | done | text | high | KP emergency pass, run-group styles, word-level justify (text loss fixed) |
 | 87 | pending | engine | medium | Odd/even page template variants |
 | 88 | pending | text | medium | Hyphenation support for long words |
-| 89 | in progress | flowable | high | Table rowspan support |
+| 89 | done | flowable | high | Rowspan via Table::Grid (welded groups, valign) |
 | 90 | pending | flowable | medium | MathML stacked layout (mfrac, msqrt) |
 | 91 | done | harness | high | Parity diff diagnostics (rake parity:diff PAGE=N) |
-| 92 | pending | flowable | high | Table cell height parity (row min-height, padding, continuation) |
+| 92 | done | flowable | high | Table geometry config, footnotes, px→pt SVG, caption-in-table |
 | 93 | pending | render | medium | Figure text searchability (SVG text overlay for pdftotext) |
 | 94 | done | engine | critical | FO space resolution (max of consecutive spaces) — 28 pages! |
 | 95 | done | engine | high | Title block as header static content |
+| 96 | pending | layout | high | Pagination drift per region (drift map in TODO 96) |
 
 ## Architectural quality (audited 2026-08-10)
 
@@ -58,7 +59,7 @@ on the OIML r060/1 fixture, **28 pages vs 28 reference** (all pages PARTIAL+).
 ## Critical path to 90%+
 
 ```
-70 (done) → 79 (hyphenation) → 72 (rowspan) → 71 (cover) → 75 (mfrac)
+96 (drift map, region by region) → 71 (cover) → 88 (hyphenation) → 90 (mfrac)
 ```
 
 ## Verification

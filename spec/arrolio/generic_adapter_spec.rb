@@ -297,8 +297,8 @@ RSpec.describe Arrolio::GenericAdapter do
       figure = section.children.find { |c| c.is_a?(Arrolio::Content::FigureGroup) }
       expect(figure).not_to be_nil
       expect(figure.image.src).to start_with('inline-svg:')
-      expect(figure.image.width).to eq(400.0)
-      expect(figure.image.height).to eq(300.0)
+      expect(figure.image.width).to eq(300.0) # 400px * 72/96
+      expect(figure.image.height).to eq(225.0) # 300px * 72/96
     end
 
     it 'falls back to external src when no inline SVG present' do
