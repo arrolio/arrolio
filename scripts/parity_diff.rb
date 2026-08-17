@@ -45,7 +45,7 @@ module ParityDiff
     require 'arrolio/config_driven_pipeline'
     xml = File.read(FIXTURE)
     FileUtils.mkdir_p(File.dirname(OURS))
-    Arroolio::ConfigDrivenPipeline.render(
+    Arrolio::ConfigDrivenPipeline.render(
       xml, io: OURS, flavor_dir: FLAVOR_DIR,
            input_path: FIXTURE, extra_image_dirs: [SOURCE_DIR]
     )

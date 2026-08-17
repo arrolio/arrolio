@@ -91,7 +91,11 @@ module Arrolio
 
       private
 
-      def place(page_state, flowable, context, pending)
+      # Returns the page state that content was last placed on — a
+      # whole-flowable move to a fresh page must propagate, or the
+      # caller keeps filling the old page and content falls out of
+      # document order.
+      def place(page_state, flowable, context, pending, moved_page: false)
         frame = page_state.frame
         width = frame.width
         natural = flowable.height(width, context)
@@ -99,24 +103,35 @@ module Arrolio
         if natural <= frame.remaining_height
           emit(page_state, flowable, context)
           @prev_space_after = flowable.space_after.to_f
-        elsif flowable.splittable?
-          head, tail = flowable.split(width, frame.remaining_height, context)
-          if head
-            emit(page_state, head, context)
-            @prev_space_after = head.space_after.to_f
-            pending.unshift(tail) if tail
-          else
-            return page_state unless frame.full?
+          return page_state
+        end
 
-            new_state = open_page(context)
-            @prev_space_after = 0.0
-            place(new_state, flowable, context, pending)
-          end
-        else
+        unless flowable.splittable?
           emit(page_state, flowable, context)
           @prev_space_after = flowable.space_after.to_f
+          return page_state
         end
-        page_state
+
+        head, tail = flowable.split(width, frame.remaining_height, context)
+        if head
+          emit(page_state, head, context)
+          @prev_space_after = head.space_after.to_f
+          pending.unshift(tail) if tail
+          return page_state
+        end
+        if moved_page
+          # Already on a fresh page and still no fitting head — the
+          # first unsplittable chunk exceeds a full page. Draw it
+          # (overflowing) rather than dropping content or looping.
+          emit(page_state, flowable, context)
+          @prev_space_after = flowable.space_after.to_f
+          return page_state
+        end
+
+        # The flowable's first chunk does not fit the remainder;
+        # retry on a fresh page where it can split properly.
+        @prev_space_after = 0.0
+        place(open_page(context), flowable, context, pending, moved_page: true)
       end
 
       def emit(page_state, flowable, context)

@@ -14,6 +14,9 @@ module XslConfigGenerator
   end
 
   class Builder
+    # Border/padding allowance added to the XSL row min-height.
+    ROW_ALLOWANCE = 1.92
+
     def initialize(xsl_path, output_dir, profile_path)
       @xsl_path = File.expand_path(xsl_path)
       @output_dir = File.expand_path(output_dir)
@@ -110,6 +113,26 @@ module XslConfigGenerator
         'link' => style_from('link-style').merge('parent' => 'body', 'font_name' => o['link_font_name']),
         'bibitem' => { 'parent' => 'body', 'margin_top' => 4, 'margin_bottom' => 4 },
         'footnote' => { 'parent' => 'body', 'font_size' => 9, 'margin_top' => 2, 'margin_bottom' => 2 }
+      }
+    end
+
+    # Row geometry extracted from the flavor XSL: table-row-style's
+    # min-height (e.g. 8.3mm) plus ROW_ALLOWANCE, the border/padding
+    # allowance measured against mn2pdf output (the rendered pitch is
+    # ~1.9pt above the bare min-height). Cell padding and footnote
+    # size default to values calibrated against the reference PDF.
+    def table_geometry
+      min_height = @attribute_sets.dig('table-row-style', 'min-height')
+      min_height_mm = min_height&.gsub(/[^\d.]/, '')
+      min_row_height = if min_height_mm
+                         ((min_height_mm.to_f * 2.83464567) + ROW_ALLOWANCE).round(2)
+                       else
+                         0.0
+                       end
+      {
+        'min_row_height' => min_row_height,
+        'cell_padding' => 3.3,
+        'footnote_font_size' => 9.0
       }
     end
 
@@ -225,6 +248,7 @@ module XslConfigGenerator
         'xsl_templates' => @templates.select { |template| template['name'] },
         'page_sequences' => page_sequences,
         'cover_content' => @profile['cover_content'] || [],
+        'table' => table_geometry,
         'section' => {
           'heading_style' => '{{title_style_id}}',
           'body_style' => '{{style_id}}',

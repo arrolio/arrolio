@@ -5,5 +5,6 @@ module Arrolio
   # - AutoLayout — content-based column width computation.
   module Table
     autoload :AutoLayout, 'arrolio/table/auto_layout'
+    autoload :Grid, 'arrolio/table/grid'
   end
 end

@@ -3,16 +3,18 @@
 module Arrolio
   module Content
     class Table
-      attr_reader :header, :body, :column_widths, :style_id, :id, :caption
+      attr_reader :header, :body, :column_widths, :style_id, :id, :caption,
+                  :footnotes
 
       def initialize(header: [], body: [], column_widths: nil,
-                     style_id: :table, id: nil, caption: nil)
+                     style_id: :table, id: nil, caption: nil, footnotes: [])
         @header = header.map { |row| coerce_row(row) }.freeze
         @body = body.map { |row| coerce_row(row) }.freeze
         @column_widths = column_widths&.map(&:to_f)&.freeze
         @style_id = style_id.to_sym
         @id = id
         @caption = caption
+        @footnotes = Array(footnotes).freeze
         freeze
       end
 
@@ -20,8 +22,11 @@ module Arrolio
         @header + @body
       end
 
+      # Colspan-aware column count. Rowspan can still hide columns
+      # (a row covered from above has fewer cells); Table::Grid is
+      # the authoritative count for layout.
       def column_count
-        rows.map { |r| r.cells.length }.max || 0
+        rows.map { |r| r.cells.sum(&:colspan) }.max || 0
       end
 
       def ==(other)
@@ -30,13 +35,14 @@ module Arrolio
           body == other.body &&
           column_widths == other.column_widths &&
           style_id == other.style_id &&
-          id == other.id
+          id == other.id &&
+          footnotes == other.footnotes
       end
 
       alias eql? ==
 
       def hash
-        [self.class, header, body, column_widths, style_id, id].hash
+        [self.class, header, body, column_widths, style_id, id, footnotes].hash
       end
 
       private
@@ -83,15 +89,16 @@ module Arrolio
     end
 
     class Table::Cell
-      attr_reader :content, :colspan, :rowspan, :style_id, :align
+      attr_reader :content, :colspan, :rowspan, :style_id, :align, :valign
 
       def initialize(content = [], colspan: 1, rowspan: 1,
-                     style_id: :table_cell, align: nil)
+                     style_id: :table_cell, align: nil, valign: nil)
         @content = Array(content).freeze
         @colspan = colspan.to_i
         @rowspan = rowspan.to_i
         @style_id = style_id.to_sym
-        @align = align
+        @align = align&.to_sym
+        @valign = valign&.to_sym
         freeze
       end
 
@@ -107,13 +114,14 @@ module Arrolio
           colspan == other.colspan &&
           rowspan == other.rowspan &&
           style_id == other.style_id &&
-          align == other.align
+          align == other.align &&
+          valign == other.valign
       end
 
       alias eql? ==
 
       def hash
-        [self.class, content, colspan, rowspan, style_id, align].hash
+        [self.class, content, colspan, rowspan, style_id, align, valign].hash
       end
     end
   end

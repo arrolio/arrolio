@@ -312,7 +312,7 @@ module Arrolio
         payload = encoded_or_text(font_name, page.title_text)
         canvas.text(payload, at: [x, baseline], font: ref, size: size)
       rescue StandardError => e
-        Arroolio::Logger.warn "render_page_title failed: #{e.message[0, 80]}"
+        Arrolio::Logger.warn "render_page_title failed: #{e.message[0, 80]}"
       end
 
       def render_header_footer(canvas, page)
@@ -385,7 +385,7 @@ module Arrolio
         canvas.text(payload, at: [box.x, baseline_y], font: ref, size: style.font_size,
                              tm: [cos, sin, -sin, cos, box.x, baseline_y])
       rescue StandardError => e
-        Arroolio::Logger.warn "render_rotated_text failed: #{e.message[0, 80]}"
+        Arrolio::Logger.warn "render_rotated_text failed: #{e.message[0, 80]}"
       end
 
       def render_text(canvas, box)
@@ -461,7 +461,7 @@ module Arrolio
         canvas.line_width = weight
         canvas.stroke
       rescue StandardError => e
-        Arroolio::Logger.warn "draw_underline failed: #{e.message[0, 60]}"
+        Arrolio::Logger.warn "draw_underline failed: #{e.message[0, 60]}"
       end
 
       # Returns [y, font_size] for a run, applying baseline shift and

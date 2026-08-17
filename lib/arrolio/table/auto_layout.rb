@@ -15,12 +15,13 @@ module Arrolio
       MIN_COLUMN_WIDTH = 20.0 # points — prevents columns from collapsing
       CELL_PADDING = 8.0      # points — left + right padding per cell
 
-      attr_reader :table, :available_width, :measurer
+      attr_reader :table, :available_width, :measurer, :grid
 
-      def initialize(table, available_width:, measurer: nil)
+      def initialize(table, available_width:, measurer: nil, grid: nil)
         @table = table
         @available_width = available_width.to_f
         @measurer = measurer || default_measurer
+        @grid = grid || Grid.build(table)
       end
 
       # Returns an Array of Float widths (one per column), summing
@@ -35,29 +36,26 @@ module Arrolio
       private
 
       def column_count
-        @table.column_count
+        [@table.column_count, @grid.column_count].max
       end
 
       # Natural width of each column = max cell natural width across
-      # rows. Cells with colspan distribute their natural width
-      # equally across the spanned slots so a wide header doesn't
-      # accidentally collapse.
+      # rows. Placements come from the occupancy grid, so cells land
+      # in the columns they actually occupy (rowspan cells in later
+      # rows no longer shift into the wrong slot). Cells with colspan
+      # distribute their natural width equally across the spanned
+      # slots so a wide header doesn't accidentally collapse.
       def natural_widths
         widths = Array.new(column_count, MIN_COLUMN_WIDTH)
-        @table.rows.each do |row|
-          ci = 0
-          row.cells.each do |cell|
-            span = [cell.colspan.to_i, 1].max
-            span = [span, column_count - ci].min
-            w = cell_natural_width(cell)
-            share = w / span.to_f
-            span.times do |offset|
-              idx = ci + offset
-              break if idx >= widths.length
+        @grid.placements.each do |placement|
+          span = [placement.colspan, 1].max
+          span = [span, column_count - placement.column_index].min
+          share = cell_natural_width(placement.cell) / span.to_f
+          span.times do |offset|
+            idx = placement.column_index + offset
+            break if idx >= widths.length
 
-              widths[idx] = [widths[idx], share].max
-            end
-            ci += span
+            widths[idx] = [widths[idx], share].max
           end
         end
         widths
