@@ -239,12 +239,16 @@ module Arrolio
       suffix.start_with?(':') ? "#{stripped}#{suffix} " : "#{stripped} #{suffix} "
     end
 
+    # Examples render the label as a block heading with the body
+    # indented 35.4pt — the FOP example layout.
     def example_flowable(example)
       body = example.body.map { |paragraph| paragraph_flowable(paragraph) }
       Flowables::NoteFlowable.new(
         example.label,
         body,
-        style: resolve(example.style_id)
+        style: resolve(example.style_id),
+        body_indent: 35.4,
+        label_mode: :block
       )
     end
 

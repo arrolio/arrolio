@@ -670,9 +670,12 @@ module Arrolio
       [Content::Note.new(label: label, body: body, id: elem.attribute(selector('id_attribute'))&.value)]
     end
 
+    # An example renders its label as a block heading ("Example:"),
+    # so the label is the localized element name only — the autonum
+    # in fmt-name belongs to cross-references, not the display.
     def convert_example(elem)
       label_elem = find_first(elem, selector('note_label'))
-      label = label_elem ? text_of(label_elem).strip : ''
+      label = element_name_text(label_elem) || (label_elem ? text_of(label_elem).strip : '')
 
       para_name = selector('paragraph')
       body = []
@@ -684,6 +687,23 @@ module Arrolio
       return [] if body.empty?
 
       [Content::Example.new(label: label, body: body, id: elem.attribute(selector('id_attribute'))&.value)]
+    end
+
+    def element_name_text(label_elem)
+      return nil unless label_elem
+
+      name_class = selector('element_name')
+      return nil unless name_class
+
+      span = nil
+      label_elem.each_recursive do |node|
+        next unless node.is_a?(REXML::Element) && node.name == selector('span') &&
+                    node.attribute('class')&.value == name_class
+
+        span = node
+        break
+      end
+      span ? text_of(span).strip : nil
     end
 
     def convert_bibitem(bi)

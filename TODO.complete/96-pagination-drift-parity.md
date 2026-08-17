@@ -51,7 +51,7 @@ page breaks reset drift to ~0, so each region is independent:
 | 5.1–5.1.5 | ±0.05pg | aligned |
 | 5.1.5→5.1.6 | −103pt | Figure 4 block shorter than reference |
 | 5.3.2→5.4 | −212pt | Table 4 block: our table ~25pt shorter, pre-table text ~50pt, gaps |
-| 5.5.1→5.5.2 | −179pt | Example blocks: reference renders "Example:" label on its own line with blank lines around the body; ours runs it in |
+| 5.5.1→5.5.2 | −125pt | Example blocks fixed (2026-08-18): "Example:" block label + 35.4pt body indent; remainder is creep/math content |
 | 5.6.1→5.6.2 | −127pt | open |
 | 5.7.x | −70pt | open |
 | 6.x–Annex | −0.8pg | follows from above |
