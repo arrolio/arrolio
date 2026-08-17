@@ -282,6 +282,27 @@ RSpec.describe Arrolio::GenericAdapter do
       }
     end
 
+    it 'derives section level from the autonumber dotted depth' do
+      xml = '<root><bibdata><docidentifier>X</docidentifier></bibdata>' \
+            '<sections><clause id="c1"><title>One</title><fmt-title>One</fmt-title>' \
+            '<clause id="c2"><title>Two</title><fmt-title>' \
+            '<semx element="autonum">5.1</semx> Two</fmt-title>' \
+            '<clause id="c3"><title>Three</title><fmt-title>' \
+            '<semx element="autonum">5.1.1</semx> Three</fmt-title></clause>' \
+            '</clause></clause></sections></root>'
+      doc = adapter.convert(xml)
+      levels = []
+      collect = lambda do |secs|
+        secs.each do |sec|
+          levels << [sec.title.to_s, sec.level]
+          collect.call(sec.children.grep(Arrolio::Content::Section))
+        end
+      end
+      collect.call(doc.sections)
+      expect(levels).to include(['Two', 2])
+      expect(levels).to include(['Three', 3])
+    end
+
     it 'extracts inline SVG from image element with viewBox dimensions' do
       xml = '<root><bibdata><docidentifier>X</docidentifier></bibdata>' \
             '<sections><clause>' \

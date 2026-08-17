@@ -277,7 +277,7 @@ module Arrolio
     def convert_clause(elem)
       title, number = extract_heading(elem)
       children = convert_children(elem)
-      level = clause_level(elem)
+      level = clause_level(elem, number: number)
       Content::Section.new(
         title: title, level: level, number: number,
         id: elem.attribute(selector('id_attribute'))&.value, children: children,
@@ -286,7 +286,15 @@ module Arrolio
       )
     end
 
-    def clause_level(elem)
+    # The level derives from the autonumber's dotted depth ("5.1.1"
+    # → 3, "A.1" → 2) when present — the semantic truth — falling
+    # back to the fmt-title depth attribute. Titles without either
+    # stay level 1. Relying on the attribute alone mis-leveled most
+    # sections (3.x, 5.1.x) because their fmt-title carries no depth.
+    def clause_level(elem, number: nil)
+      dotted = number.to_s.split('.').length
+      return dotted if dotted > 1 && number.to_s.match?(/\A[\dA-Z]/)
+
       heading_name = selector('heading')
       depth_attr = selector('heading_depth_attribute')
       fmt_title = elem.elements.first { |e| e.name == heading_name }

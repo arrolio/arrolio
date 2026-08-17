@@ -3,7 +3,7 @@ priority: P1
 impact: high
 depends_on: [89, 92]
 layer: layout
-status: pending
+status: in progress
 est: 3d
 ---
 
@@ -15,21 +15,50 @@ space than the reference, page by page, so headings and tables land
 on different pages. Whole-table moves (correct FOP semantics) turn
 small drift into large whitespace gaps.
 
-## Drift map (heading absolute-position delta, 2026-08-17, 64.07%)
+## Progress (2026-08-18, 59.12% after geometry corrections)
+
+Fixed (all verified against the reference):
+- **Body region geometry**: the body was shrunk by the before/after
+  region extents — XSL-FO keeps the body at the full content
+  rectangle; extents only size the header/footer strips inside the
+  margins. The old geometry wasted 102pt per page and "matched" the
+  reference only by accident.
+- **Section levels** derive from the autonumber's dotted depth
+  ("5.1.1" → 3); the fmt-title depth attribute is absent for most
+  sections, so nearly every heading resolved to level 1 and its
+  level-specific margins never applied.
+- **Term entry spacing**: +12pt before each entry's number, +6pt
+  after the preferred term (reference pitch 109.5pt vs our 87.5pt).
+  Terms region now within ±0.2pg.
+- **Heading margins**: heading_2 margin-bottom 20pt, heading_3 8pt
+  (reference level-2/3 gaps measured 25pt vs our 17pt).
+- **Header/footer offsets** calibrated to the reference (10.34mm /
+  13.6mm from the body margin).
+
+The metric moved 64.07% → 59.12% because the corrected geometry
+re-flowed every page; the old alignment was built on a wrong body
+position. Remaining deficits are now clean and quantified below.
+
+## Drift map (heading absolute-position delta, 2026-08-18, 59.12%)
 
 Measured as (our page×770 + y) − (ref page×770 + y) per heading;
 page breaks reset drift to ~0, so each region is independent:
 
 | Region | Drift | Notes |
 |--------|-------|-------|
-| 2.1–2.3 (intro/foreword) | +0.8pg | we consume more space |
-| 3.1–3.1.3 (terms start) | +1.0pg | recovers to +0.28 by 3.1.4 |
-| 3.4 | ~0 | aligned |
-| 3.5–3.9 (terms) | −1.9pg | we are far DENSER (term spacing) |
-| 5.1–5.3.2 | +0.05pg | aligned after section page break |
-| 5.3.2→5.4 | +0.76pg | Table 3/4 region: whole-table gaps |
-| 5.7.2.5→6.1 | +1.4pg | Table 5/6 region: accumulated |
-| 6.x–Annex | +1.1–1.4pg | follows from above |
+| 2.1–3.1 (intro/foreword) | +0.7..1.0pg | we consume more space (open) |
+| 3.2–3.9 (terms) | ±0.2pg | ALIGNED after term spacing fix |
+| 5.1–5.1.5 | ±0.05pg | aligned |
+| 5.1.5→5.1.6 | −103pt | Figure 4 block shorter than reference |
+| 5.3.2→5.4 | −212pt | Table 4 block: our table ~25pt shorter, pre-table text ~50pt, gaps |
+| 5.5.1→5.5.2 | −179pt | Example blocks: reference renders "Example:" label on its own line with blank lines around the body; ours runs it in |
+| 5.6.1→5.6.2 | −127pt | open |
+| 5.7.x | −70pt | open |
+| 6.x–Annex | −0.8pg | follows from above |
+
+Beware false anchors when measuring: cross-references in body text
+("see 5.1.6 and 5.1.7") match the heading regex — validate monotonic
+page order before trusting a span.
 
 ## Approach
 

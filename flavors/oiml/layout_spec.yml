@@ -91,12 +91,13 @@ styles:
     font_name: Times New Roman Bold
     keep_together: true
   heading_2:
-    margin_bottom: 12pt
+    margin_bottom: 20pt
     font_size: 11.0
     parent: body
     font_name: Times New Roman Bold
     keep_together: true
   heading_3:
+    margin_bottom: 8pt
     font_size: 11.0
     parent: body
     font_name: Times New Roman Bold
@@ -269,3 +270,10 @@ flows:
   main:
     region: body
     default_style_id: body
+
+# Running header/footer placement, calibrated against the reference
+# PDF: header text top at 36pt from the page edge, footer text top
+# at 796pt, with the 26.5mm page margins and 9pt Arial-class font.
+header_footer:
+  header_offset: 10.34
+  footer_offset: 13.6

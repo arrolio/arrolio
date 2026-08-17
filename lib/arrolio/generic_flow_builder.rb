@@ -261,14 +261,14 @@ module Arrolio
 
     def term_entry_flowable(entry, out)
       if entry.number
-        number_style = resolve(:term).with(margin_bottom: 0.0)
+        number_style = resolve(:term).with(margin_top: 12.0, margin_bottom: 0.0)
         out << Flowables::TextFlowable.new(
           [InlineRun.new(entry.number, style: number_style)],
           style: number_style
         )
       end
       if entry.preferred
-        preferred_style = resolve(:term).with(margin_bottom: 0.0)
+        preferred_style = resolve(:term).with(margin_top: 0.0, margin_bottom: 6.0)
         out << Flowables::TextFlowable.new(
           entry.preferred.inline_runs.map do |run|
             InlineRun.new(run.text, style: resolve(run.style_id),
