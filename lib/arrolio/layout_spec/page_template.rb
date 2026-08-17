@@ -87,27 +87,33 @@ module Arrolio
         { before: 0.0, after: 0.0, start: 0.0, end: 0.0 }
       end
 
+      # XSL-FO geometry: the body region is the page content
+      # rectangle (page minus page margins). The before/after/start/
+      # end extents size the auxiliary regions that sit INSIDE the
+      # margins — they never displace the body. Shrinking the body
+      # by the extents wasted the whole header/footer strip on
+      # every page.
       def compute_regions
         pw = width
         ph = height
         m = @margins
         e = @region_extents
-        inner_w = pw - m[:left] - m[:right] - e[:start] - e[:end]
-        inner_h = ph - m[:top] - m[:bottom] - e[:before] - e[:after]
+        inner_w = pw - m[:left] - m[:right]
+        inner_h = ph - m[:top] - m[:bottom]
         {
           body: Region.new(name: :body,
-                           x: m[:left] + e[:start],
-                           y: m[:bottom] + e[:after],
+                           x: m[:left],
+                           y: m[:bottom],
                            width: inner_w,
                            height: inner_h),
           before: Region.new(name: :before,
-                             x: m[:left] + e[:start],
-                             y: ph - m[:top] - e[:before],
+                             x: m[:left],
+                             y: ph - m[:top],
                              width: inner_w,
                              height: e[:before]),
           after: Region.new(name: :after,
-                            x: m[:left] + e[:start],
-                            y: m[:bottom],
+                            x: m[:left],
+                            y: m[:bottom] - e[:after],
                             width: inner_w,
                             height: e[:after]),
           start: Region.new(name: :start,
