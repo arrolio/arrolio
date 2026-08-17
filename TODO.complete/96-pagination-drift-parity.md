@@ -34,12 +34,18 @@ page breaks reset drift to ~0, so each region is independent:
 ## Approach
 
 1. Instrument per-region spacing: compare y-gaps of consecutive
-   headings/paragraphs ours vs reference (the drift map generator
-   lives in this TODO's history — re-derive with
+   headings/paragraphs ours vs reference (re-derive with
    `pdftotext -bbox` + heading regex).
-2. Terms (3.x): our term entries are ~30% denser than FOP — compare
-   term-entry spacing (number/name/definition/source margins) with
-   the XSL term styles.
+2. Terms (3.x): measured (2026-08-17) our entry pitch 87.5pt vs
+   reference 109.5pt. Per entry the reference has +6pt after the
+   preferred term and +12pt before the next entry's number
+   (number/preferred/definition lines otherwise identical). CAUTION:
+   closing this deficit is a knife edge — +6pt/entry already pushes
+   section 4/5 one page later and the overall metric drops ~15pp
+   (5.x/6.x misalign). The spacing must land so the region END
+   matches the reference exactly; apply the full +18-22pt/entry only
+   together with matching the region's non-term content (notes,
+   figures 1-3 spacing).
 3. Intro/foreword (2.x): we run 0.8pg longer — compare note/paragraph
    spacing on pages 5-6.
 4. Figure caption spacing in 5.1.6-5.1.7 (~70pt excess).
