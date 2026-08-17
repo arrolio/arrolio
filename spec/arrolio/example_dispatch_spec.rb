@@ -25,9 +25,19 @@ RSpec.describe 'Content::Example dispatch through GenericFlowBuilder' do
     flowables = builder.build(document)
     note_flowables = flowables.grep(Arrolio::Flowables::NoteFlowable)
     expect(note_flowables.length).to eq(1)
-    marker, = note_flowables.first.items.first
-    marker_text = marker.is_a?(String) ? marker : marker.runs.map(&:text).join
-    expect(marker_text).to include('EXAMPLE 1')
+
+    note = note_flowables.first
+    expect(note.label_mode).to eq(:block)
+
+    boxes, = note.emit(100.0, 500.0, 400.0, nil)
+    text_boxes = boxes.select { |b| b.kind == :text }.sort_by { |b| -b.y }
+    line_text = lambda do |box|
+      box.data[:lines].map { |l| l.placed_runs.map { |pr| pr.run.text }.join }.join
+    end
+    expect(line_text.call(text_boxes.first)).to eq('EXAMPLE 1:')
+    body_box = text_boxes.last
+    expect(body_box.x).to be > 100.0
+    expect(line_text.call(body_box)).to include('Example body text.')
   end
 
   it 'GenericAdapter#convert_example emits Content::Example from <example>' do

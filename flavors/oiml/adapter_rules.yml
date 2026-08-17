@@ -62,7 +62,7 @@ element_mapping:
   termnote:
     content_type: note
   example:
-    content_type: note
+    content_type: example
   pre:
     content_type: preformatted
   sourcecode:
@@ -146,6 +146,7 @@ selectors:
   term_definition: fmt-definition
   term_source: fmt-termsource
   note_label: fmt-name
+  element_name: fmt-element-name
   figure_image: image
   figure_caption: fmt-name
   figure_caption_fallback: name
