@@ -3,13 +3,34 @@ priority: P2
 impact: med
 depends_on: [50, 66]
 layer: adapter
-status: done
+status: in progress
 est: 2d
 ---
 
-## Status: done
+## Status: in progress (per-page footnote area reopened 2026-08-18)
 
-All four pieces of TODO 60 are now implemented:
+The shipped page-bottom rendering collects footnotes onto the page
+where their markers are EMITTED — which, for the OIML flavor, is the
+last body page (markers are appended after all sections). The
+reference (FOP) implements the real footnote model: the body of a
+footnote referenced on page N renders at the BOTTOM OF PAGE N, the
+body text shrinks above the footnote area, and a separator rule
+divides them. Visible in the 5.3.2 region: the reference pins the
+"1) Associated with apportionment..." body to page 19's bottom
+(freeing 115pt of body flow that our output fills with the inline
+text), which is a −212pt pagination span (TODO 96).
+
+### Remaining work
+
+- Emit FootnoteMarkerFlowables at the actual `<fn>` reference sites
+  inside paragraphs (the adapter already records
+  `Paragraph#footnote_refs`), not appended at the end.
+- Engine: reserve a footnote zone at the page bottom sized by the
+  page's collected footnotes; body frame shrinks accordingly; the
+  footnote that does not fit its page's remainder moves its REFERENCE
+  to the next page (FOP semantics).
+
+### Shipped pieces (previous sessions):
 
 1. **Footnote extraction** (`<fmt-footnote-container>` / `<fmt-fn-body>`)
    — `GenericAdapter#extract_footnotes` collects them into
