@@ -18,6 +18,10 @@ module Arrolio
   # hard-coded element names — every XML element/attribute the adapter
   # touches is named in the rules' `selectors` block.
   class GenericAdapter
+    autoload :FootnoteExtraction, 'arrolio/generic_adapter/footnote_extraction'
+
+    include FootnoteExtraction
+
     DEFAULT_SELECTORS = {
       'heading' => 'fmt-title',
       'heading_depth_attribute' => 'depth',
@@ -216,38 +220,6 @@ module Arrolio
       result
     end
 
-    def extract_footnotes(root)
-      container_name = selector('footnote_container')
-      body_name = selector('footnote_body')
-      marker_name = selector('footnote_marker')
-      return [] unless container_name && body_name
-
-      footnotes = []
-      each_element(root) do |elem|
-        next unless elem.name == container_name
-
-        marker = elem.attribute('id')&.value || elem.attribute(marker_name)&.value || ''
-        body_elem = find_first(elem, body_name)
-        body = []
-        if body_elem
-          para_name = selector('paragraph')
-          each_element(body_elem) do |child|
-            next unless child.name == para_name
-
-            body << convert_paragraph(child)
-          end
-        end
-        next if body.empty?
-
-        footnotes << Content::Footnote.new(
-          marker: marker,
-          body: body,
-          id: elem.attribute(selector('id_attribute'))&.value
-        )
-      end
-      footnotes
-    end
-
     def extract_bibliography(root)
       biblio_elem = find_first(root, selector('bibliography_container'))
       return [] unless biblio_elem
@@ -362,8 +334,13 @@ module Arrolio
       convert_clause(child)
     end
 
+    # A paragraph's <fn> reference contributes only its marker; the
+    # body renders in the page's footnote zone (engine collects
+    # FootnoteMarkerFlowables per page). Inlining the body into the
+    # runs doubles the text and displaces the flow.
     def convert_paragraph(elem)
-      runs = collect_inline_runs(elem)
+      fn_name = selector('footnote_marker')
+      runs = collect_inline_runs(elem, exclude: fn_name)
       refs = extract_footnote_refs(elem)
       Content::Paragraph.new(runs, style_id: paragraph_style(elem),
                                    id: elem.attribute(selector('id_attribute'))&.value,
@@ -686,8 +663,8 @@ module Arrolio
         # Example bodies take the example style (leading, indents) —
         # the source paragraphs carry the generic inline style.
         body << Content::Paragraph.new(para.inline_runs, style_id: :example,
-                                        id: para.id,
-                                        footnote_refs: para.footnote_refs)
+                                                         id: para.id,
+                                                         footnote_refs: para.footnote_refs)
       end
       return [] if body.empty?
 

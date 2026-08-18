@@ -22,13 +22,20 @@ text), which is a −212pt pagination span (TODO 96).
 
 ### Remaining work
 
-- Emit FootnoteMarkerFlowables at the actual `<fn>` reference sites
-  inside paragraphs (the adapter already records
-  `Paragraph#footnote_refs`), not appended at the end.
+- ~~Footnote bodies inline in paragraphs~~ — fixed 2026-08-18:
+  `convert_paragraph` excludes the `<fn>` subtree from runs;
+  `extract_footnotes` registers raw `<fn>` elements recursively
+  (REXML `each_element` only visits direct children, so deeply
+  nested footnotes never registered); OIML enables
+  `page_bottom_footnotes`, so the 5.3.2 footnote body now renders
+  at the bottom of page 19 like the reference.
+- Inline superscript marker at the reference site (the reference
+  shows "1)" where the footnote is cited; we currently render the
+  body at the page bottom but no marker in the text).
 - Engine: reserve a footnote zone at the page bottom sized by the
-  page's collected footnotes; body frame shrinks accordingly; the
-  footnote that does not fit its page's remainder moves its REFERENCE
-  to the next page (FOP semantics).
+  page's collected footnotes; body frame shrinks accordingly; a
+  footnote that does not fit its page's remainder moves its
+  REFERENCE to the next page (FOP semantics).
 
 ### Shipped pieces (previous sessions):
 
