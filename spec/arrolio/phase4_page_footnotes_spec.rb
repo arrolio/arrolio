@@ -11,12 +11,27 @@ RSpec.describe 'Phase 4: per-page footnote collection and rendering' do
     Arrolio::Content::Footnote.new(marker: '1', body: body, id: 'fn1')
   end
 
-  it 'FootnoteMarkerFlowable has zero height and emits nothing' do
+  it 'reserves the footnote body height and emits nothing into the body area' do
     marker = Arrolio::Flowables::FootnoteMarkerFlowable.new(footnote)
-    expect(marker.height(200)).to eq(0.0)
+    expect(marker.height(200)).to be > 0.0
     boxes, consumed = marker.emit(0, 100, 200)
     expect(boxes).to eq([])
-    expect(consumed).to eq(0.0)
+    expect(consumed).to eq(marker.height(200))
+  end
+
+  it 'body_flowable prefixes the marker and wraps the body at the width' do
+    style = Arrolio::Style::Definition.new(font_name: 'Times-Roman', font_size: 9)
+    flow = Arrolio::Flowables::FootnoteMarkerFlowable.body_flowable(footnote, style)
+    text = flow.runs.map(&:text).join
+    expect(text).to start_with('1) ')
+    expect(text).to include('Footnote body text.')
+
+    long_body = [Arrolio::Content::Paragraph.new(
+      [Arrolio::Content::InlineRun.new('word ' * 60)]
+    )]
+    long = Arrolio::Content::Footnote.new(marker: '2', body: long_body)
+    long_flow = Arrolio::Flowables::FootnoteMarkerFlowable.body_flowable(long, style)
+    expect(long_flow.height(180)).to be > long_flow.height(400)
   end
 
   it 'FootnoteMarkerFlowable carries the footnote reference' do

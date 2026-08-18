@@ -339,8 +339,7 @@ module Arrolio
     # FootnoteMarkerFlowables per page). Inlining the body into the
     # runs doubles the text and displaces the flow.
     def convert_paragraph(elem)
-      fn_name = selector('footnote_marker')
-      runs = collect_inline_runs(elem, exclude: fn_name)
+      runs = collect_inline_runs(elem, footnote_markers: true)
       refs = extract_footnote_refs(elem)
       Content::Paragraph.new(runs, style_id: paragraph_style(elem),
                                    id: elem.attribute(selector('id_attribute'))&.value,
@@ -712,9 +711,11 @@ module Arrolio
 
     # ---- Inline run collection (driven by rules) ----
 
-    def collect_inline_runs(elem, default_style: :inline, exclude: nil)
+    def collect_inline_runs(elem, default_style: :inline, exclude: nil,
+                            footnote_markers: false)
       runs = []
       stem_name = selector('stem')
+      fn_name = footnote_markers ? selector('footnote_marker') : nil
       stem_formatted_name = selector('stem_formatted')
       math_name = selector('math')
       tab_name = selector('tab_inline')
@@ -736,6 +737,19 @@ module Arrolio
                                                font_size_scale: scale)
         when REXML::Element
           next if exclude && node.name == exclude
+
+          if fn_name && node.name == fn_name
+            marker = node.attribute('reference')&.value ||
+                     node.attribute('id')&.value
+            unless marker.nil? || marker.empty?
+              runs << Content::InlineRun.new(
+                marker, style_id: style,
+                        baseline_shift: Content::InlineRun::BASELINE_SUP,
+                        font_size_scale: 0.7
+              )
+            end
+            next
+          end
 
           new_style = resolve_inline_style(node, style)
           sub_baseline, sub_scale = baseline_for_style(inline_styles, node,
