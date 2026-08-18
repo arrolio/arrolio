@@ -314,3 +314,8 @@ table:
   min_row_height: 25.45
   cell_padding: 3.3
   footnote_font_size: 9.0
+
+# FOP renders footnote bodies at the bottom of the page carrying
+# their reference; the engine collects FootnoteMarkerFlowables per
+# page and the renderer draws them above the footer zone.
+page_bottom_footnotes: true
