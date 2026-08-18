@@ -249,26 +249,35 @@ module Arrolio
         @link_annotator.flush(pdfrb_page)
       end
 
+      # Footnote bodies occupy the zone the engine reserved at the
+      # page bottom. The layout comes from
+      # FootnoteMarkerFlowable.body_flowable - the same policy the
+      # engine used to reserve the space - so the drawn block fits
+      # the reserved zone exactly.
       def render_page_footnotes(canvas, page)
-        return unless page.footnotes && !page.footnotes.empty?
+        return if page.footnotes.nil? || page.footnotes.empty?
 
-        hf = header_footer_style
-        y = hf[:margin_bottom] + 20
-        page.footnotes.each do |footnote|
-          marker = footnote.marker.to_s
-          body_text = footnote.body.map do |node|
-            node.is_a?(Arrolio::Content::Paragraph) ? node.text : node.to_s
-          end.join(' ')
-          line = "#{marker} #{body_text}".strip
-          next if line.empty?
-
-          payload = encoded_or_text(hf[:font_name], line)
-          ref = embedded_or_standard(hf[:font_name])
-          canvas.text(payload, at: [hf[:margin_lr], y], font: ref, size: 7.0)
-          y -= 9.0
+        style = footnote_style
+        body = page.body_region
+        width = body ? body.width : page.width * 0.85
+        x = body ? body.x : page.width * 0.075
+        flowables = page.footnotes.map do |footnote|
+          Flowables::FootnoteMarkerFlowable.body_flowable(footnote, style)
+        end
+        total = flowables.sum { |flow| flow.height(width) }
+        y = header_footer_style[:margin_bottom] + 20 + total
+        flowables.each do |flow|
+          boxes, = flow.emit(x, y, width, nil)
+          boxes.each { |box| render_box(canvas, box) }
+          y -= flow.height(width)
         end
       rescue StandardError => e
         Arrolio::Logger.warn "footnote render failed: #{e.class}: #{e.message[0, 80]}"
+      end
+
+      def footnote_style
+        style = @layout_spec&.resolve_style(:footnote)
+        style.nil? || style.font_size.nil? ? Style::Definition.new(font_size: 9.0) : style
       end
 
       def render_cover_logo(canvas, page)

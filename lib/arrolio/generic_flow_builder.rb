@@ -44,7 +44,9 @@ module Arrolio
       return unless @rules['page_bottom_footnotes']
 
       document.footnotes.each do |footnote|
-        flowables << Flowables::FootnoteMarkerFlowable.new(footnote)
+        flowables << Flowables::FootnoteMarkerFlowable.new(
+          footnote, style: resolve(:footnote)
+        )
       end
     end
 
@@ -180,7 +182,9 @@ module Arrolio
         footnote = @document.footnotes.find { |fn| fn.id == ref_id || fn.marker == ref_id }
         next unless footnote
 
-        out << Flowables::FootnoteMarkerFlowable.new(footnote)
+        out << Flowables::FootnoteMarkerFlowable.new(
+          footnote, style: resolve(:footnote)
+        )
       end
     end
 
