@@ -50,7 +50,7 @@ page breaks reset drift to ~0, so each region is independent:
 | 3.2–3.9 (terms) | ±0.2pg | ALIGNED after term spacing fix |
 | 5.1–5.1.5 | ±0.05pg | aligned |
 | 5.1.5→5.1.6 | −103pt | Figure 4 block shorter than reference |
-| 5.3.2→5.4 | −212pt | Table 4 block: our table ~25pt shorter, pre-table text ~50pt, gaps |
+| 5.3.2→5.4 | −212pt | Two FEATURE gaps, not spacing (2026-08-18): (1) the footnote in 5.3.2's second paragraph renders INLINE in our output; the reference pins its body ("1) Associated with apportionment...") to the PAGE BOTTOM via the FOP footnote area, leaving 115pt of body space free on p19. (2) the "0.3 ≤ pLC ≤ 0.8" formula renders as a centered DISPLAY line in the reference; we inline it. See TODO 60 (page-bottom footnotes) and TODO 90 (display formulas) |
 | 5.5.1→5.5.2 | −125pt | Example blocks fixed (2026-08-18): "Example:" block label + 35.4pt body indent; remainder is creep/math content |
 | 5.6.1→5.6.2 | −127pt | open |
 | 5.7.x | −70pt | open |
