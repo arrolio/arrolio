@@ -11,7 +11,7 @@ on the OIML r060/1 fixture, **28 pages vs 28 reference** (all pages PARTIAL+).
 
 | TODO | Status | Layer | Impact | What shipped |
 |------|--------|-------|--------|-------------|
-| 60 | in progress | adapter | med | Per-page footnote area (FOP semantics) — extraction/markers shipped |
+| 60 | done | adapter | med | Per-page footnote model: marker, zone reservation, page-bottom bodies |
 | 61 | done | engine | high | Typed errors with metadata, strict mode |
 | 62 | done | font | low | FontScanner + FontMetrics::Registry auto-resolution |
 | 63 | done | adapter | med | Zero flavor artifacts in lib/ (grep-enforced) |

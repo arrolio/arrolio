@@ -3,11 +3,11 @@ priority: P2
 impact: med
 depends_on: [50, 66]
 layer: adapter
-status: in progress
+status: done
 est: 2d
 ---
 
-## Status: in progress (per-page footnote area reopened 2026-08-18)
+## Status: done (per-page footnote model completed 2026-08-18, PR #74)
 
 The shipped page-bottom rendering collects footnotes onto the page
 where their markers are EMITTED — which, for the OIML flavor, is the
@@ -29,13 +29,15 @@ text), which is a −212pt pagination span (TODO 96).
   nested footnotes never registered); OIML enables
   `page_bottom_footnotes`, so the 5.3.2 footnote body now renders
   at the bottom of page 19 like the reference.
-- Inline superscript marker at the reference site (the reference
-  shows "1)" where the footnote is cited; we currently render the
-  body at the page bottom but no marker in the text).
-- Engine: reserve a footnote zone at the page bottom sized by the
-  page's collected footnotes; body frame shrinks accordingly; a
-  footnote that does not fit its page's remainder moves its
-  REFERENCE to the next page (FOP semantics).
+- ~~Inline superscript marker~~ — shipped PR #74: the run walker
+  emits the marker run in document order at the <fn> site.
+- ~~Footnote-zone reservation~~ — shipped PR #74:
+  FootnoteMarkerFlowable#height equals the laid-out body block
+  (shared `body_flowable` policy) and is consumed from the body
+  flow; the renderer draws through the same policy.
+- Known approximation: when a footnote body does not fit the page
+  remainder, FOP moves the REFERENCE to the next page; we reserve
+  and possibly overflow. Acceptable until a two-pass engine.
 
 ### Shipped pieces (previous sessions):
 
