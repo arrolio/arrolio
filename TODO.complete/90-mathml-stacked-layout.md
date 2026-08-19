@@ -9,6 +9,23 @@ est: 1d
 
 ## Problem
 
+MathML stacked layout (mfrac, msqrt) renders flat.
+
+## Measured nuance (2026-08-19)
+
+Do NOT expand line height for every line carrying sub/superscript
+runs: the reference keeps ordinary symbol sub/sups compact (the
+terminology region's E_min/D_max/v_min lines are single-height and
+were aligned). Only the parenthesized display-style expressions
+(e.g. 5.3.2's ": (0.3 <= pLC <= 0.8)," after a colon) lay out stacked
+- whole expression ~10pt below the text baseline, parens at the
+text level, box two lines tall. A global 1.9x on math lines was
+tested and overshoots the document by 2 pages (29 vs 28). The
+discriminator between compact sub/sup and stacked expressions is in
+the base XSL's stem handling (not the OIML extension) - find it
+before implementing.
+
+
 MathML fractions (`<mfrac>`) render as "numerator denominator" on one
 line instead of a stacked fraction. Other stacked elements (mroot,
 msqrt) also need vertical layout.
