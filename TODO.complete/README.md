@@ -36,13 +36,13 @@ on the OIML r060/1 fixture, **28 pages vs 28 reference** (all pages PARTIAL+).
 | 87 | pending | engine | medium | Odd/even page template variants |
 | 88 | pending | text | medium | Hyphenation support for long words |
 | 89 | done | flowable | high | Rowspan via Table::Grid (welded groups, valign) |
-| 90 | pending | flowable | medium | MathML stacked layout (mfrac, msqrt) |
+| 90 | in progress | flowable | medium | Operator-math stacking shipped (1.9x); mfrac/msqrt open |
 | 91 | done | harness | high | Parity diff diagnostics (rake parity:diff PAGE=N) |
 | 92 | done | flowable | high | Table geometry config, footnotes, px→pt SVG, caption-in-table |
 | 93 | pending | render | medium | Figure text searchability (SVG text overlay for pdftotext) |
 | 94 | done | engine | critical | FO space resolution (max of consecutive spaces) — 28 pages! |
 | 95 | done | engine | high | Title block as header static content |
-| 96 | pending | layout | high | Pagination drift per region (drift map in TODO 96) |
+| 96 | in progress | layout | high | Math stacking shipped (64.53%); intro + 3.6-4 region open |
 
 ## Architectural quality (audited 2026-08-10)
 

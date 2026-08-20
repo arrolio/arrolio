@@ -18,10 +18,11 @@ module Arrolio
 
       class << self
         def text(x:, y:, width:, height:, lines:, line_height:, style:,
-                 hanging_indent: 0.0, link_dest: nil)
+                 hanging_indent: 0.0, line_heights: nil, link_dest: nil)
           new(x: x, y: y, width: width, height: height, kind: :text,
               data: { lines: Array(lines).freeze,
                       line_height: line_height.to_f,
+                      line_heights: line_heights&.map(&:to_f)&.freeze,
                       style: style,
                       hanging_indent: hanging_indent.to_f },
               link_dest: link_dest)
