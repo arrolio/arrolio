@@ -17,24 +17,39 @@ module Arrolio
         @hanging_indent = hanging_indent.to_f
       end
 
+      # Inline math with relational operators lays out stacked in
+      # the reference (JEuclid gives the formula box roughly two
+      # text lines of vertical extent); simple sub/superscripts stay
+      # compact. The operators only ever come from math content.
+      MATH_OPERATOR = /[\u2264\u2265\u00d7\u00f7\u00b1\u2212\u2260]/
+      MATH_LINE_FACTOR = 1.9
+
       def height(width, _context = nil)
         effective_width = width - @hanging_indent
-        (laid_out(effective_width).length * line_height) + space_before + space_after
+        laid = laid_out(effective_width)
+        text_height = (laid.length * line_height) +
+                      (math_line_count(laid) * line_height * (MATH_LINE_FACTOR - 1.0))
+        text_height + space_before + space_after
       end
 
       def emit(x, y, width, _context = nil)
         effective_width = width - @hanging_indent
         lines = laid_out(effective_width)
-        text_height = line_height * lines.length
+        text_height = (lines.length * line_height) +
+                      (math_line_count(lines) * line_height * (MATH_LINE_FACTOR - 1.0))
         total = text_height + space_before + space_after
         return [[], total] if lines.empty?
 
         text_y = y - space_before
+        heights = lines.map do |line|
+          math = line.placed_runs.any? { |pr| pr.run.text.match?(MATH_OPERATOR) }
+          line_height * (math ? MATH_LINE_FACTOR : 1.0)
+        end
         box = Output::PlacedBox.text(
           x: x, y: text_y - text_height,
           width: width, height: text_height,
           lines: lines, line_height: line_height, style: @style,
-          hanging_indent: @hanging_indent
+          hanging_indent: @hanging_indent, line_heights: heights
         )
         [[box], total]
       end
@@ -90,6 +105,12 @@ module Arrolio
       def line_height
         @measurer.line_height(font_size: @style.font_size,
                               line_spacing: @style.line_spacing)
+      end
+
+      def math_line_count(lines)
+        lines.count do |line|
+          line.placed_runs.any? { |pr| pr.run.text.match?(MATH_OPERATOR) }
+        end
       end
 
       # Rebuilds a run list from laid-out lines. A line break

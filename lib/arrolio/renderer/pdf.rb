@@ -407,12 +407,20 @@ module Arrolio
         x_origin = box.x
         y_top = box.y + box.height
 
+        heights = box.data[:line_heights] ||
+                  Array.new(lines.length, line_height)
+        offset = 0.0
         lines.each_with_index do |line, idx|
-          baseline_y = y_top - (idx * line_height) - ascender
+          # A math line's slot is taller than a text line; the
+          # reference draws the stacked expression at the BOTTOM of
+          # its slot (the text-level parens stay at the line top).
+          drop = heights[idx] - line_height
+          baseline_y = y_top - offset - ascender - drop
           indent = idx.zero? ? 0 : hanging_indent
           line_x = x_origin + indent + line.x_offset
           render_line_runs(canvas, line, line_x, baseline_y, style,
                            last_line: idx == lines.length - 1)
+          offset += heights[idx]
         end
       end
 
