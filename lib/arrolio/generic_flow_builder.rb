@@ -233,13 +233,19 @@ module Arrolio
     end
 
     def note_flowable(note)
-      body = note.body.map { |paragraph| paragraph_flowable(paragraph) }
+      body = note.body.map { |node| note_body_flowable(node) }
       Flowables::NoteFlowable.new(
         formatted_note_label(note.label),
         body,
         style: resolve(note.style_id),
         label_style: resolve(:note_label)
       )
+    end
+
+    def note_body_flowable(node)
+      return list_flowable(node) if node.is_a?(Content::List)
+
+      paragraph_flowable(node)
     end
 
     def formatted_note_label(label)

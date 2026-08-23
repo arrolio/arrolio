@@ -564,6 +564,9 @@ module Arrolio
       results
     end
 
+    # A note's body is paragraphs PLUS embedded lists (a termnote
+    # may end in a bullet list of capabilities, for example) - the
+    # list elements are siblings of the paragraphs, not children.
     def convert_note(elem)
       label_elem = find_first(elem, selector('note_label'))
       label = label_elem ? text_of(label_elem).strip : ''
@@ -571,13 +574,24 @@ module Arrolio
       para_name = selector('paragraph')
       body = []
       each_element(elem) do |child|
-        next unless child.name == para_name
-
-        body << convert_paragraph(child)
+        case child.name
+        when para_name
+          body << convert_paragraph(child)
+          extract_embedded_blocks(child).each { |block| body << block }
+        when 'ul', 'ol'
+          dispatch_list(child, body)
+        end
       end
       return [] if body.empty?
 
       [Content::Note.new(label: label, body: body, id: elem.attribute(selector('id_attribute'))&.value)]
+    end
+
+    def dispatch_list(elem, body)
+      mapping_entry = (@rules['element_mapping'] || {})[elem.name]
+      kind = mapping_entry&.fetch('kind', nil)&.to_sym || :bullet
+      converted = convert_list(elem, kind: kind)
+      body.concat(converted.is_a?(Array) ? converted : [converted])
     end
 
     # An example renders its label as a block heading ("Example:"),
