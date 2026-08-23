@@ -82,6 +82,20 @@ Density-debt suspects, in priority order:
 The builder now supports `section.page_break_before_numbers` for
 landings-matched breaks once the density debt closes.
 
+## Fixed (2026-08-19, fourth pass)
+
+- Nested-term definition text no longer glues into the parent: the
+  raw <concept> element (refterm + renderterm + xref triple) is
+  skipped in favor of <fmt-concept> (the rendered form) - term
+  references now render once, with their number ("analogue-passive
+  load cell (3.1.3.1)"). 'term' joined the block-level skips and
+  definition paragraphs scope to the entry's own term.
+- The verified drift map (labels now correct) shows: section 1
+  occupies a full page for us vs 414pt in the reference (the forced
+  break), 3.1.3.2/.3 spans were short from the (now fixed) missing
+  content, and after-section breaks were no-ops. Section-2 region
+  runs +44/+24pt per subsection (open).
+
 ## Correction (2026-08-19, third pass)
 
 Section 3.7's per-entry pitch difference is 0pt TOTAL over all 21
