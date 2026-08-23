@@ -494,6 +494,16 @@ module Arrolio
       width.positive? ? [width, height] : [nil, nil]
     end
 
+    def nested_in_term?(node, boundary)
+      ancestor = node.parent
+      while ancestor && ancestor != boundary
+        return true if ancestor.name == 'term'
+
+        ancestor = ancestor.parent
+      end
+      false
+    end
+
     def convert_term(elem)
       number = nil
       number_elem = find_first(elem, selector('term_number'))
@@ -511,8 +521,12 @@ module Arrolio
       definition_elem = find_first(elem, selector('term_definition'))
       if definition_elem
         para_name = selector('paragraph')
+        # Only paragraphs of THIS term: nested <term> entries are
+        # converted separately, and their paragraphs must not be
+        # swallowed into the parent definition.
         REXML::XPath.each(definition_elem, ".//#{para_name}") do |p|
           next unless p.is_a?(REXML::Element)
+          next if p.parent != definition_elem && nested_in_term?(p, definition_elem)
 
           definition << convert_paragraph(p)
           extract_embedded_blocks(p).each { |block| definition << block }

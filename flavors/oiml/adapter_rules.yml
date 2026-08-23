@@ -98,6 +98,7 @@ span_class_styles:
   citetable: xref
   citesection: xref
 block_level_elements:
+- term
 - note
 - termnote
 - example
@@ -112,6 +113,8 @@ block_level_elements:
 - fmt-fn-body
 - fmt-footnote-container
 skip_metadata_elements:
+- refterm
+- concept
 - asciimath
 - latexmath
 - image
