@@ -60,6 +60,28 @@ Beware false anchors when measuring: cross-references in body text
 ("see 5.1.6 and 5.1.7") match the heading regex — validate monotonic
 page order before trusting a span.
 
+## Key discovery (2026-08-19): the forced breaks are compensating
+
+The reference flows CONTINUOUSLY - no forced section breaks in the
+XSL; its fresh-page section starts (3 Terminology, 5 Metrological,
+Bibliography) are natural landings. Our content under continuous
+flow is only 23-25 pages vs the reference's 28: a genuine ~3-5 page
+DENSITY debt that the per-section forced breaks (insert_page_break_
+before/after_section: true) mask by resyncing every region.
+Continuous flow scores 33%, selective breaks (3/5/Bibliography)
+score 42%, forced breaks score 64.53%.
+
+Density-debt suspects, in priority order:
+1. mfrac/msqrt flattened to "/" text (TODO 90 open piece): the 3.7
+   measurement/error terms contain fraction formulas the reference
+   renders as tall stacked blocks (2-3 lines each); ours render one
+   line. Likely 1-2 pages.
+2. Line pitch: ours 13.0 vs reference 13.4 (~0.4pt/line = ~0.7pg).
+3. Figures 1-4 sizing and the foreword/intro region's +0.7pg.
+
+The builder now supports `section.page_break_before_numbers` for
+landings-matched breaks once the density debt closes.
+
 ## Approach
 
 1. Instrument per-region spacing: compare y-gaps of consecutive
