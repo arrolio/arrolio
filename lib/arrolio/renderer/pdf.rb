@@ -316,7 +316,7 @@ module Arrolio
         measurer = GlyphMeasurer.new(font_name: font_name)
         tw = measurer.width_of_string(page.title_text, font_size: size)
         x = (page.width - tw) / 2.0
-        baseline = body.y + body.height + 31.0
+        baseline = body.y + body.height - 9.0
         ref = embedded_or_standard(font_name)
         payload = encoded_or_text(font_name, page.title_text)
         canvas.text(payload, at: [x, baseline], font: ref, size: size)
