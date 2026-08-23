@@ -84,6 +84,7 @@ styles:
     align: justify
     margin_bottom: 0
     line_break: knuth_plass
+    line_spacing: 1.24
   heading_1:
     font_size: 14.0
     align: left
@@ -132,7 +133,7 @@ styles:
   example:
     font_size: 11.0
     margin_bottom: 0pt
-    line_spacing: 1.4
+    line_spacing: 1.24
     parent: body
   caption_label:
     parent: body
@@ -154,7 +155,7 @@ styles:
     font_name: Courier
     font_size: 9
     align: left
-    line_spacing: 1.0
+    line_spacing: 1.24
     margin_bottom: 6
   identifier:
     parent: body
