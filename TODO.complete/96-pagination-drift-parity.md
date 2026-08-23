@@ -82,6 +82,19 @@ Density-debt suspects, in priority order:
 The builder now supports `section.page_break_before_numbers` for
 landings-matched breaks once the density debt closes.
 
+## Diagnostic notes (2026-08-19, second pass)
+
+- Pages 18-20 (18-32%) are one page behind the reference from p17:
+  section 3's remaining ~470pt debt (3.7 -104, 3.8 -190, 3.9 -57,
+  3.5/3.6 -70 combined) pushes section 4 to a forced break a page
+  late. Section 4's own span is aligned (229 vs 237pt).
+- 3.8's term entry pitch is ALIGNED (88 vs 89pt) and the "[1]"
+  source marker renders inline correctly (a superscript y-offset
+  makes pdftotext split it into a separate row - false alarm); the
+  -190pt accumulates later in the region (check its tables/notes).
+- Terminology pitch overall: ours 89.4 vs ref 92.4 (~174pt total) -
+  a ~3pt/entry source-line or entry-gap remainder.
+
 ## Approach
 
 1. Instrument per-region spacing: compare y-gaps of consecutive
