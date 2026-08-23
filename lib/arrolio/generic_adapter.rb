@@ -620,11 +620,17 @@ module Arrolio
       results = [entry]
 
       each_element(elem) do |child|
-        next unless child.name == 'termnote'
         next unless child.parent == elem
 
-        note = convert_note(child)
-        results.concat(note)
+        case child.name
+        when 'termnote'
+          results.concat(convert_note(child))
+        when elem.name
+          # Nested terms (e.g. 3.1.3.1-3.1.3.4 under "load cell")
+          # are entries in their own right; dropping them loses whole
+          # definitions.
+          results.concat(convert_term(child))
+        end
       end
 
       results
