@@ -133,8 +133,11 @@ module Arrolio
     def build_sections(sections, out)
       section_rules = @rules.fetch('section', {})
       break_between = section_rules.fetch('insert_page_break_before', false)
+      break_numbers = section_rules.fetch('page_break_before_numbers', [])
       sections.each_with_index do |section, index|
-        needs_break = break_between && index.positive? && !bibliography_section?(section)
+        forced = break_numbers.include?(section.number.to_s)
+        needs_break = (break_between || forced) && index.positive? &&
+                      !bibliography_section?(section)
         out << Flowables::PageBreak.new if needs_break
         build_section(section, out)
       end
