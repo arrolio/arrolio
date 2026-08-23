@@ -82,6 +82,18 @@ Density-debt suspects, in priority order:
 The builder now supports `section.page_break_before_numbers` for
 landings-matched breaks once the density debt closes.
 
+## Correction (2026-08-19, third pass)
+
+Section 3.7's per-entry pitch difference is 0pt TOTAL over all 21
+entries - perfectly aligned. The earlier per-subsection span table
+is UNRELIABLE: each row's span belongs to the PREVIOUS section
+(off-by-one labeling), and it was measured on a scratch render.
+Before fixing any more spacing, re-derive the drift map on the
+current render with verified labeling (print heading + position for
+both PDFs side by side). Also tested and REVERTED: a blanket
+SCRIPT_LINE_FACTOR 1.4 on sub/sup-bearing lines (+2 pages overshoot
+- script lines are far too numerous for blanket factors).
+
 ## Diagnostic notes (2026-08-19, second pass)
 
 - Pages 18-20 (18-32%) are one page behind the reference from p17:
