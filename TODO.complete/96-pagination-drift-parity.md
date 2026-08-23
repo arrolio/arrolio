@@ -82,6 +82,15 @@ Density-debt suspects, in priority order:
 The builder now supports `section.page_break_before_numbers` for
 landings-matched breaks once the density debt closes.
 
+## Remaining 3.1 ledger (2026-08-19, fifth pass)
+
+After the note-lists restore, 3.1's entry gaps over 15pt:
+after 3.1.3.1 -25, after 3.1.3.2 -40, after 3.1.8 -69, after
+3.1.10 -19. Content verified COMPLETE (the apparent missing words
+in 3.1.9 were a debug-display truncation artifact - always dump
+full lines before diagnosing); the deficits are small spacing
+deltas (note-to-source gaps ~6pt, bullet pitch 14 vs 17).
+
 ## Fixed (2026-08-19, fourth pass)
 
 - Nested-term definition text no longer glues into the parent: the
