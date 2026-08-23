@@ -98,11 +98,17 @@ module Arrolio
       end
     end
 
+    # The first body page opens with the part title ("Part 1 -
+    # {part title}") - the docidentifier's trailing part number
+    # supplies the prefix.
     def title_text(document)
       return nil unless document.title_block
 
       text = document.title_block.inline_runs.map(&:text).join.strip
-      text.empty? ? nil : text
+      return nil if text.empty?
+
+      part = document.metadata[:docidentifier].to_s[/-(\d+)\z/, 1]
+      part ? "Part #{part} - #{text}" : text
     end
 
     def content_for(document, role)
