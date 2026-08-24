@@ -81,11 +81,21 @@ module Arrolio
           @emergency_stretch = emergency_stretch.to_f
           active = [Node.new(position: -1, line: 0, fitness: 1,
                              total_demerits: 0, previous: nil)]
-          @items.each_with_index do |_item, i|
+          @items.each_with_index do |item, i|
             next unless feasible_break?(i)
 
             best = best_candidate(active.filter_map { |a| try_break(a, i) })
-            active << best if best
+            next unless best
+
+            if item.penalty? && item.forced_break?
+              # A forced break must be taken: no earlier active node
+              # may span across it (otherwise the DP happily skips
+              # forced breaks when the parfill glue makes the single
+              # line feasible).
+              active = [best]
+            else
+              active << best
+            end
           end
           best_final_node(active.select { |n| n.position == @items.length - 1 })
         end

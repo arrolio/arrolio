@@ -65,7 +65,9 @@ module Arrolio
         end
 
         def build_newline_items(run, run_idx, text, items)
-          segments = text.split("\n")
+          # -1 keeps trailing empty segments: a lone "\n" run
+          # must still emit its forced-break penalty.
+          segments = text.split("\n", -1)
           segments.each_with_index do |seg, i|
             unless seg.empty?
               width = measure(seg, run)

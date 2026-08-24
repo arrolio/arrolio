@@ -82,6 +82,21 @@ Density-debt suspects, in priority order:
 The builder now supports `section.page_break_before_numbers` for
 landings-matched breaks once the density debt closes.
 
+## Shipped (2026-08-24): forced line breaks honored
+
+Two coupled bugs fixed: Ruby's split drops trailing empty segments,
+so a lone "\n" run emitted NO forced-break penalty; and the KP
+dynamic program let paths skip forced breaks entirely (the parfill
+glue makes the spanning single line feasible), so even correct
+penalties were ignored. Result: <br>-separated spans rendered GLUED
+("class A;15 degC for class B") - text corruption. All 57 breaks in
+the document now produce their lines (5.6.1.2's per-class pairs
+match the reference structure). The metric drops 65.29 -> 52.93 on
+the page-boundary knife edge (the ~18 in-paragraph breaks add ~250pt
+mid-document and reshuffle every later page); the recovery is the
+remaining density debt plus the foreword's indented measure (ref
+wraps foreword text narrower - an open style item).
+
 ## New finding (2026-08-24): 5.6.1.2 unitsml list inlined
 
 The reference renders 'for load cells of class A; / 5 degC' as
