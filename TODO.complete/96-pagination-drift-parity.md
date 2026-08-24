@@ -82,6 +82,17 @@ Density-debt suspects, in priority order:
 The builder now supports `section.page_break_before_numbers` for
 landings-matched breaks once the density debt closes.
 
+## New finding (2026-08-24): 5.6.1.2 unitsml list inlined
+
+The reference renders 'for load cells of class A; / 5 degC' as
+stacked line PAIRS (one per class); we inline the whole set as one
+flowing line ('5 degC for load cells of class A; 15 degC for...').
+The unitsml values now reserve stacked height (the +digit trigger),
+but the LIST STRUCTURE itself is missing - the XML's list-ish
+markup around these items needs adapter investigation. Same shape
+likely in 5.6.1.3 ('2 degC for load cells of class A...') and the
+6.x marking lists.
+
 ## Ruled out (2026-08-24)
 
 - Note leading: styling note bodies :note applies the style's 8pt
