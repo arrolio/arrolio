@@ -82,6 +82,18 @@ Density-debt suspects, in priority order:
 The builder now supports `section.page_break_before_numbers` for
 landings-matched breaks once the density debt closes.
 
+## Open: foreword lines overflow the measure (2026-08-24)
+
+Rendered foreword lines reach x=545 vs the body right edge 523
+(+22pt into the margin; one line +94pt of text beyond the layout
+measure). The LAYOUT is verified correct: TextFlowable#emit
+receives width=450.7 and the standalone KP layout wraps the same
+runs within it (lines <=456). Suspect a renderer-vs-layout metric
+mismatch on these paragraphs (justified word positioning computed
+from different measurements than the layout used). Start here:
+instrument render_line_runs' cursor vs the line's placed-run
+x_offsets for a foreword line.
+
 ## Shipped (2026-08-24): forced line breaks honored
 
 Two coupled bugs fixed: Ruby's split drops trailing empty segments,
