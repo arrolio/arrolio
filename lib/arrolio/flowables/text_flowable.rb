@@ -21,7 +21,7 @@ module Arrolio
       # the reference (JEuclid gives the formula box roughly two
       # text lines of vertical extent); simple sub/superscripts stay
       # compact. The operators only ever come from math content.
-      MATH_OPERATOR = /[\u2264\u2265\u00d7\u00f7\u00b1\u2212\u2260]/
+      MATH_OPERATOR = /[\u2264\u2265\u00d7\u00f7\u00b1\u2212\u2260]|\+\d/
       MATH_LINE_FACTOR = 1.9
 
       def height(width, _context = nil)
