@@ -82,6 +82,17 @@ Density-debt suspects, in priority order:
 The builder now supports `section.page_break_before_numbers` for
 landings-matched breaks once the density debt closes.
 
+## Ruled out (2026-08-24)
+
+- Note leading: styling note bodies :note applies the style's 8pt
+  paragraph margin between every body line (same trap as the
+  example fix) and any line_spacing lift (1.3-1.6 swept) drops the
+  metric 2-3pp. Notes are correctly spaced in aggregate.
+- Figure sizing: reference figure 1's vector text spans 332pt wide
+  vs our placed 337pt - figures are at the right scale (the 0.75
+  sweep stands). The -324pt 2.3-to-3 continuous span is page-break
+  interaction around figure 1, not missing figure height.
+
 ## Remaining 3.1 ledger (2026-08-19, fifth pass)
 
 After the note-lists restore, 3.1's entry gaps over 15pt:
