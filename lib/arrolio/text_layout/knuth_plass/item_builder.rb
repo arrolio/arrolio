@@ -44,6 +44,26 @@ module Arrolio
             return
           end
 
+          build_word_items(run, run_idx, text, 0, items)
+        end
+
+        # A run with embedded newlines wraps WITHIN each segment
+        # (a segment can be a whole paragraph) and places a forced
+        # break between segments. Emitting each segment as a single
+        # box made long segments unbreakable overfull lines.
+        def build_newline_items(run, run_idx, text, items)
+          # -1 keeps trailing empty segments: a lone "\n" run
+          # must still emit its forced-break penalty.
+          segments = text.split("\n", -1)
+          base = 0
+          segments.each_with_index do |seg, i|
+            build_word_items(run, run_idx, seg, base, items) unless seg.empty?
+            base += seg.length + 1
+            items << Penalty.new(penalty: -Float::INFINITY, run_index: run_idx) if i < segments.length - 1
+          end
+        end
+
+        def build_word_items(run, run_idx, text, base_offset, items)
           words = text.split(/(\s+)/)
           offset = 0
           words.each do |word|
@@ -52,30 +72,15 @@ module Arrolio
               stretch = measure(' ', run) * 0.5
               shrink = measure(' ', run) * 0.33
               items << Glue.new(width: width, stretch: stretch, shrink: shrink,
-                                run_index: run_idx, char_offset: offset)
+                                run_index: run_idx, char_offset: base_offset + offset)
             elsif word.include?('-')
-              build_hyphenated_word(word, run, run_idx, offset, items)
+              build_hyphenated_word(word, run, run_idx, base_offset + offset, items)
             elsif !word.empty?
               width = measure(word, run)
               items << Box.new(width: width, run_index: run_idx,
-                               char_offset: offset, char_length: word.length)
+                               char_offset: base_offset + offset, char_length: word.length)
             end
             offset += word.length
-          end
-        end
-
-        def build_newline_items(run, run_idx, text, items)
-          # -1 keeps trailing empty segments: a lone "\n" run
-          # must still emit its forced-break penalty.
-          segments = text.split("\n", -1)
-          segments.each_with_index do |seg, i|
-            unless seg.empty?
-              width = measure(seg, run)
-              items << Box.new(width: width, run_index: run_idx,
-                               char_offset: text.index(seg) || 0,
-                               char_length: seg.length)
-            end
-            items << Penalty.new(penalty: -Float::INFINITY, run_index: run_idx) if i < segments.length - 1
           end
         end
 
