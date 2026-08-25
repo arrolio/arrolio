@@ -316,3 +316,16 @@ table:
 # their reference; the engine collects FootnoteMarkerFlowables per
 # page and the renderer draws them above the footer zone.
 page_bottom_footnotes: true
+
+# List marker geometry measured from the reference PDF (p4 foreword):
+# bullet at +18.4pt from the margin, text hanging at +38.2pt,
+# ~5.6pt extra between items (last item line -> next first line 19pt
+# vs the 13.4pt body pitch).
+list:
+  defaults:
+    bullet_marker: "■ "
+  geometry:
+    marker_indent: 18.4
+    marker_width: 19.8
+    body_indent: 0.0
+    item_spacing: 5.6

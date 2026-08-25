@@ -107,7 +107,8 @@ module Arrolio
             text,
             font_size: run.style.font_size * run.font_size_scale,
             character_spacing: run.style.character_spacing,
-            word_spacing: 0
+            word_spacing: 0,
+            font_name: run.style.font_name
           )
         end
       end

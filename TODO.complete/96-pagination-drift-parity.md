@@ -82,6 +82,29 @@ Density-debt suspects, in priority order:
 The builder now supports `section.page_break_before_numbers` for
 landings-matched breaks once the density debt closes.
 
+## Shipped (2026-08-25): measure overflows FIXED (three coupled bugs)
+
+1. Per-run font measurement: the KP ItemBuilder and InlineRun#width
+   measured EVERY run with the paragraph's font — bold runs priced
+   at regular widths, so following runs' x_offsets under-allocated
+   and words OVERLAPPED ("(OIML , R)" corruption). GlyphMeasurer
+   gained an optional font_name on width_of_run/string; both call
+   sites pass run.style.font_name.
+2. Justify SHRINK was never rendered: `extra_offset` accumulated
+   only when justify was positive, so compressed lines (ratio
+   > -1, legitimate TeX shrink — e.g. nat 456.5 vs measure 450.7)
+   drew at natural width, past the measure. Both gates fixed
+   (positive-only and the <= 0 early return in text_chunks).
+3. List marker geometry now flavor config (list.geometry:
+   marker_indent 18.4, marker_width 19.8, item_spacing 5.6) and
+   unordered lists render the configured bullet, not the fmt-name
+   autonum placeholder ("—" -> "■", x=90.7, hang 110.5/113.2).
+After: ZERO words past the measure document-wide (was 20+ on p4-8).
+Metric 52.52 -> 46.72 on the knife edge (correct bold widths
+re-wrap every bold-bearing paragraph and reshuffle mid-document
+boundaries; p16 is a pure off-by-one shift, no content loss).
+Recovery rides on the density debt below.
+
 ## Open: foreword lines overflow the measure (2026-08-24)
 
 Rendered foreword lines reach x=545 vs the body right edge 523

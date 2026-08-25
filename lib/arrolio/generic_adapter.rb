@@ -388,9 +388,14 @@ module Arrolio
         v['content_type'] == 'list'
       end
       each_child(elem, item_name) do |li|
+        # Ordered lists carry their autonum in the label element;
+        # unordered lists don't number (the label text is a
+        # placeholder) — they render the flavor's bullet instead.
         marker = nil
-        label_elem = find_first(li, label_name)
-        marker = text_of(label_elem) if label_elem
+        if kind != :bullet
+          label_elem = find_first(li, label_name)
+          marker = text_of(label_elem) if label_elem
+        end
 
         content = []
         each_element(li) do |child|
