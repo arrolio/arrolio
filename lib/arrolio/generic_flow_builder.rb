@@ -382,7 +382,22 @@ module Arrolio
         end
         [marker, body]
       end
-      Flowables::ListFlowable.new(items, kind: list.kind, style: resolve(list.style_id))
+      Flowables::ListFlowable.new(items, kind: list.kind,
+                                         style: resolve(list.style_id),
+                                         **list_geometry)
+    end
+
+    # List marker geometry (indent, marker column, inter-item
+    # spacing) is flavor configuration extracted from the flavor's
+    # XSL list styles — not engine policy.
+    def list_geometry
+      config = @rules.dig('list', 'geometry') || {}
+      {
+        marker_indent: config.fetch('marker_indent', 0.0).to_f,
+        marker_width: config.fetch('marker_width', 18.0).to_f,
+        body_indent: config.fetch('body_indent', 6.0).to_f,
+        item_spacing: config.fetch('item_spacing', 0.0).to_f
+      }
     end
 
     def flowable_for_list_content(content)

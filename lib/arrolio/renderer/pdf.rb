@@ -450,7 +450,11 @@ module Arrolio
             record_link_if_needed(run, x, y, size) if cursor.zero?
             canvas.text(payload, **opts)
             cursor += measurer.width_of_string(chunk, font_size: size)
-            extra_offset += (chunk.count(' ') * justify) if justify.positive?
+            # Justify must SHRINK as well as stretch: a compressed
+            # line (ratio > -1) relies on negative space adjustment —
+            # skipping it draws the line at natural width, past the
+            # measure.
+            extra_offset += (chunk.count(' ') * justify) unless justify.zero?
           end
           draw_underline(canvas, run, run_start, y, size, cursor) if run.style.underline
         end
@@ -463,7 +467,7 @@ module Arrolio
       # accumulated so far. The separating space stays attached to
       # the preceding word so text extraction still sees word gaps.
       def text_chunks(text, justify)
-        return [text] if justify <= 0.0
+        return [text] if justify.zero?
 
         text.split(/(?<=\s)(?=\S)/)
       end

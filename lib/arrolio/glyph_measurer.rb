@@ -21,17 +21,28 @@ module Arrolio
       !@metrics.nil?
     end
 
-    def width_of_string(str, font_size:)
-      return estimate(str, font_size) unless available?
+    def metrics_for(font_name)
+      return @metrics if font_name.nil? || font_name.to_s == @font_name
 
-      @metrics.width_of_string(str, font_size: font_size)
+      ::Arrolio::FontMetrics::Registry[font_name.to_s]
+    end
+
+    # +font_name+ lets a paragraph-level measurer price a run that
+    # carries a different font (e.g. a bold run inside a regular
+    # paragraph). Falls back to the instance font when nil.
+    def width_of_string(str, font_size:, font_name: nil)
+      metrics = metrics_for(font_name)
+      return estimate(str, font_size) if metrics.nil?
+
+      metrics.width_of_string(str, font_size: font_size)
     end
 
     # Width of a run including character_spacing (Tc — extra space
     # added after every glyph) and word_spacing (Tw — extra space
     # added after every space glyph). Matches PDF rendering rules.
-    def width_of_run(str, font_size:, character_spacing: 0, word_spacing: 0)
-      base = width_of_string(str, font_size: font_size)
+    def width_of_run(str, font_size:, character_spacing: 0, word_spacing: 0,
+                     font_name: nil)
+      base = width_of_string(str, font_size: font_size, font_name: font_name)
       char_count = str.length
       word_count = str.count('  ')
       extra = (character_spacing.to_f * [char_count - 1, 0].max) +

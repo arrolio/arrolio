@@ -35,7 +35,8 @@ module Arrolio
         @text,
         font_size: font_size * @font_size_scale,
         character_spacing: style.character_spacing,
-        word_spacing: style.word_spacing
+        word_spacing: style.word_spacing,
+        font_name: style.font_name
       )
     end
 
