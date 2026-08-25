@@ -263,6 +263,24 @@ module Arrolio
       out << Flowables::TextFlowable.new(runs, style: caption_style)
     end
 
+    # Re-emits the last paragraph flowable with the configured
+    # between-sibling space (XSL-FO space-before semantics).
+    def apply_sibling_spacing(_item, out)
+      spacing = term_config.fetch('definition_paragraph_space_before', 0.0).to_f
+      return if spacing.zero? || out.empty?
+
+      last = out.last
+      return unless last.is_a?(Flowables::TextFlowable)
+
+      out[-1] = Flowables::TextFlowable.new(last.runs,
+                                            style: last.style.with(margin_top: spacing),
+                                            measurer: last.measurer)
+    end
+
+    def term_config
+      @rules['term'] || {}
+    end
+
     def term_entry_flowable(entry, out)
       if entry.number
         number_style = resolve(:term).with(margin_top: 12.0, margin_bottom: 0.0)
@@ -283,10 +301,18 @@ module Arrolio
           style: preferred_style
         )
       end
-      entry.definition.each { |item| append_child(item, out, standalone: false) }
+      # FOP applies space-before BETWEEN sibling blocks (not before
+      # the first) — term definitions' second+ paragraphs (the
+      # "(For notes...)" line) and the SOURCE line each carry it.
+      entry.definition.each_with_index do |item, index|
+        append_child(item, out, standalone: false)
+        apply_sibling_spacing(item, out) if index.positive?
+      end
       return unless entry.source
 
-      source_style = resolve(entry.source.style_id).with(margin_top: 2.0, margin_bottom: 2.0)
+      source_style = resolve(entry.source.style_id)
+                          .with(margin_top: term_config.fetch('source_space_before', 2.0).to_f,
+                                margin_bottom: 2.0)
       source_runs = entry.source.inline_runs.map do |run|
         InlineRun.new(run.text, style: resolve(run.style_id),
                                 baseline_shift: run.baseline_shift,
