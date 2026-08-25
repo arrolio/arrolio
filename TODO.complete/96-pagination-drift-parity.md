@@ -287,6 +287,15 @@ slowly. Remaining per-region deltas:
 - 5.6.1.3 -69, 3.1 -72, 5.1.7 -116: smaller residues.
 - 5.5.1 fixed (was -95, now -6); 5.6.1.3 improved (-134 -> -69).
 
+## Shipped (2026-08-25, PR #97): table captions carry inline runs
+
+extract_table_caption flattened via text_of — embedded stems
+serialized to raw asciimath ('n_("LC")') and rendered across ~3
+stacked pseudo-lines: Table 1's caption block was ~190pt vs the
+reference's ~20pt (the bulk of the 5.1.2 +419pt deficit). Captions
+now collect inline runs (math subscripts survive: "(nLC)" one
+line). Pages 30 -> 29; parity 40.92 -> 41.82.
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).
