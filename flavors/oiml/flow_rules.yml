@@ -329,3 +329,11 @@ list:
     marker_width: 19.8
     body_indent: 0.0
     item_spacing: 5.6
+
+# Term entry spacing (FOP space-before BETWEEN sibling blocks):
+# the definition's second+ paragraphs ("(For notes...)") and the
+# SOURCE line each carry ~7.6pt space-before (reference pitch gaps
+# 21pt vs our 14pt; ~10pt deficit per entry over ~63 entries).
+term:
+  definition_paragraph_space_before: 7.6
+  source_space_before: 7.5

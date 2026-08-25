@@ -256,6 +256,37 @@ SCRIPT_LINE_FACTOR 1.4 on sub/sup-bearing lines (+2 pages overshoot
   re-check). Note: the parity harness is TEXT-based (position
   insensitive) — geometry fixes only move it via page boundaries.
 
+## Shipped (2026-08-25): term entry sibling spacing
+
+FOP applies space-before BETWEEN sibling blocks: each term entry's
+second+ definition paragraphs ("(For notes...)" line) and the
+SOURCE line carry ~7.6pt space-before in the reference (gaps 21pt
+vs our 14pt = ~10pt/entry deficit, x63 entries ~ 630pt). New
+flavor config `term: {definition_paragraph_space_before: 7.6,
+source_space_before: 7.5}`; the builder applies it after the first
+definition paragraph and on the SOURCE flowable. Entry spans now
+101pt vs ref 98 (3.1.4/.5 measured). Continuous flow 25 -> 26pp
+(ref 28); forced-break render grows to 30pp (knife edge — metric
+40.92% and IGNORED until debt closes; text-based harness punishes
+boundary reshuffles only).
+
+## Fresh drift map (2026-08-25, continuous, post term-spacing)
+
+Drift is now nearly UNIFORM: -1165pt at 3.1 to -1507 at 5.7.2 —
+i.e. ~1.5 pages consumed by the foreword/intro region, growing
+slowly. Remaining per-region deltas:
+- 5.1.2 span +419pt (WE RUN LONG): our Table 1 + Figure 4 + Table
+  2 blocks consume ~598pt where the ref packs ~180pt (heading-to-
+  heading, p15-16 vs p17). Needs table/figure height methodology
+  (row-pitch? whole-table keep_together page moves? figure scale).
+  Ref Table 1 rows pitch ~25-26pt (419/445/470) - same floor as
+  ours; suspect Figure 4 image height + page-break waste.
+- 3.7 span -182pt (tail entries 3.7.16-.21 still unsampled).
+- 5.3.2 span -218pt (the display formula + footnote region;
+  TODO 90 display-formula piece).
+- 5.6.1.3 -69, 3.1 -72, 5.1.7 -116: smaller residues.
+- 5.5.1 fixed (was -95, now -6); 5.6.1.3 improved (-134 -> -69).
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).
