@@ -147,7 +147,12 @@ module Arrolio
 
           # Forced breaks are always accepted but still penalized
           # for bad ratios so the algorithm prefers shorter lines.
-          return nil if !is_forced && ratio.abs > TOLERANCE
+          # TeX semantics: shrink is a hard limit (ratio < -1 needs
+          # more compression than the glue has - an overfull box),
+          # stretch is soft up to TOLERANCE. Allowing ratio < -1
+          # made the DP prefer overfull compression over loose
+          # lines (clamped badness scores compression cheaper).
+          return nil if !is_forced && (ratio > TOLERANCE || ratio < -1.0)
 
           ratio = 0.0 if ratio.infinite?
           demerits = demerits_for(ratio, break_pos)
