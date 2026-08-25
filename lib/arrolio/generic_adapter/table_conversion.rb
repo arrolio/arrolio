@@ -17,13 +17,16 @@ module Arrolio
                            footnotes: header_footnotes + body_footnotes)
       end
 
+      # The caption carries inline content (math subscripts, xrefs) —
+      # flattening to text serializes stems to their raw asciimath
+      # form ("n_(\"LC\")"). Collect runs like figure captions do.
       def extract_table_caption(elem)
         name = find_first(elem, selector('figure_caption')) ||
                find_first(elem, selector('figure_caption_fallback'))
         return nil unless name
 
-        text = text_of(name).strip
-        text.empty? ? nil : text
+        runs = collect_inline_runs(name)
+        runs.empty? ? nil : Content::Paragraph.new(runs, style_id: :figure_caption)
       end
 
       def convert_table_rows(parent, is_header)
