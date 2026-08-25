@@ -8,20 +8,21 @@ module Arrolio
     # continuation caption on split, and table footnotes rendered
     # below the last row.
     class TableFlowable < Flowable
-      attr_reader :table, :continued, :caption_text, :grid,
+      attr_reader :table, :continued, :caption_text, :caption_runs, :grid,
                   :min_row_height, :cell_padding, :footnote_font_size
 
       CAPTION_DASH = Regexp.new("[\u00A0\u2009\u0020]\u2014").freeze
       FOOTNOTE_SPACING = 10.0
 
       def initialize(table, style: Style::Definition.new,
-                     continued: false, caption_text: nil,
+                     continued: false, caption_text: nil, caption_runs: nil,
                      caption_style: nil, min_row_height: 0.0,
                      cell_padding: 2.0, footnote_font_size: nil)
         super(style: style)
         @table = table
         @continued = continued
-        @caption_text = caption_text
+        @caption_runs = caption_runs
+        @caption_text = caption_text || caption_runs&.map(&:text)&.join
         @caption_style = caption_style
         @min_row_height = min_row_height.to_f
         @cell_padding = cell_padding.to_f
@@ -314,11 +315,15 @@ module Arrolio
       end
 
       def emit_caption(x, y, width, boxes)
-        text = @continued ? "#{short_caption_text} (continued)" : @caption_text
-        tf = TextFlowable.new(
-          [InlineRun.new(text, style: caption_style)],
-          style: caption_style
-        )
+        runs = if @continued
+                 text = "#{short_caption_text} (continued)"
+                 [InlineRun.new(text, style: caption_style)]
+               elsif @caption_runs
+                 @caption_runs
+               else
+                 [InlineRun.new(@caption_text, style: caption_style)]
+               end
+        tf = TextFlowable.new(runs, style: caption_style)
         line_h = tf.height(width)
         tboxes, = tf.emit(x, y, width, nil)
         boxes.concat(tboxes)
@@ -332,10 +337,12 @@ module Arrolio
       def caption_height(width)
         return 0.0 if @caption_text.nil?
 
-        TextFlowable.new(
-          [InlineRun.new(@caption_text, style: caption_style)],
-          style: caption_style
-        ).height(width)
+        caption_flowable(width).height(width)
+      end
+
+      def caption_flowable(_width)
+        runs = @caption_runs || [InlineRun.new(@caption_text, style: caption_style)]
+        TextFlowable.new(runs, style: caption_style)
       end
 
       def short_caption_text

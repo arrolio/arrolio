@@ -196,10 +196,9 @@ module Arrolio
       when Content::Section
         build_section(child, out)
       when Content::Table
-        caption = table_caption_for(child)
         out << Flowables::TableFlowable.new(child,
                                             style: resolve(child.style_id),
-                                            caption_text: caption,
+                                            caption_runs: caption_runs_for(child),
                                             caption_style: resolve(:figure_caption).with(align: :left),
                                             **table_geometry)
       when Content::List
@@ -359,8 +358,10 @@ module Arrolio
                    .width_of_string("#{tag} ", font_size: style.font_size)
     end
 
-    def table_caption_for(table)
-      table.caption
+    def caption_runs_for(table)
+      return nil if table.caption.nil?
+
+      paragraph_flowable(table.caption, standalone: false).runs
     end
 
     # Table geometry (minimum row height, cell padding, footnote
