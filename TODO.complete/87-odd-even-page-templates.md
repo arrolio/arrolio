@@ -22,7 +22,11 @@ but the underlying template (margins, region extents) is the same.
 ## Current state
 
 - `header_align_for(page_number)` in `Engine::Paged` returns `:left`
-  for even, `:right` for odd — SHIPPED.
+  for even, `:right` for odd — SHIPPED and now REACHABLE
+  (2026-08-25): a nil `header_align` flows through
+  PageSequenceStart/Output::Page as "no flavor opinion"; the builder
+  no longer defaults to :right, and the OIML flavor dropped its
+  explicit `header_align: right` pins. Explicit values still win.
 - Page templates: single `body` template, no odd/even variants.
 
 ## Approach

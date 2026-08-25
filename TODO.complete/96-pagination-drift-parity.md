@@ -207,6 +207,32 @@ SCRIPT_LINE_FACTOR 1.4 on sub/sup-bearing lines (+2 pages overshoot
       splits or starts cleanly
 - [ ] Overall parity ≥ 70%
 
+## Shipped (2026-08-25): header parity + centered back-matter headings
+
+- The TODO 87 `header_align_for` parity logic was unreachable: the
+  builder defaulted `header_align: right` and the OIML flavor YAML
+  pinned it. `nil` now means "no flavor opinion" through
+  PageSequenceStart/Output::Page, and the flavor drops the pin —
+  even pages get left headers (ref p4/p28 x=72.3 confirmed).
+- header_offset 10.34 -> 11.68mm: header yMin 39.3 -> 35.55 (ref
+  35.54). The offset ADDS to the baseline height (page_h - top +
+  offset), so the earlier 10.34 was 3.8pt low.
+- Preface level-1 + Bibliography headings are CENTERED (XSL
+  refine_title-style: preface ancestor + level 1 -> text-align
+  center) via the new flavor `title_styles: {preface_1: ...,
+  bibliography_1: ...}` map — context-driven, zero core flavor
+  knowledge. Foreword gap 33.4pt vs ref 33.6 ✓.
+- The TODO 60 document-end marker bridge removed: markers now emit
+  ONLY at paragraph reference sites (FOP semantics; unreferenced
+  footnote bodies don't render). The bridge double-registered the
+  footnote on the last page.
+- Continuous flow re-measured: 25pp vs ref 28. Fresh drift deltas:
+  3.1 -189, 3.7 -204 (tail entries), 5.3.2 -150, 5.5.1 -95,
+  5.6.1.3 -134, 5.7.2.4 -134, 6.2 -119, 6.2.3 -173; 3.2/5.1.2
+  run +100/+157 (we're longer there — table/figure regions to
+  re-check). Note: the parity harness is TEXT-based (position
+  insensitive) — geometry fixes only move it via page boundaries.
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).

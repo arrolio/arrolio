@@ -38,6 +38,7 @@ RSpec.describe 'Inline <fn> extraction through full pipeline' do
     document = adapter.convert(xml)
     layout_spec = Arrolio::LayoutSpec::Loader.load(File.join(flavor_dir, 'layout_spec.yml'))
     rules = YAML.safe_load_file(File.join(flavor_dir, 'flow_rules.yml'))
+    rules['page_bottom_footnotes'] = true
     builder = Arrolio::GenericFlowBuilder.new(layout_spec: layout_spec, rules: rules)
 
     flowables = builder.build(document)
@@ -50,6 +51,7 @@ RSpec.describe 'Inline <fn> extraction through full pipeline' do
     document = adapter.convert(xml)
     layout_spec = Arrolio::LayoutSpec::Loader.load(File.join(flavor_dir, 'layout_spec.yml'))
     rules = YAML.safe_load_file(File.join(flavor_dir, 'flow_rules.yml'))
+    rules['page_bottom_footnotes'] = true
     builder = Arrolio::GenericFlowBuilder.new(layout_spec: layout_spec, rules: rules)
 
     flowables = builder.build(document)

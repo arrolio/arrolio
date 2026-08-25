@@ -3,12 +3,12 @@
 require 'spec_helper'
 require 'yaml'
 
-RSpec.describe 'Page-bottom footnotes opt-in (Phase 4 bridge from flow builder)' do
+RSpec.describe 'Page-bottom footnotes from reference-site markers' do
   let(:flavor_dir) { File.expand_path('../fixtures/flavors/sample', __dir__) }
   let(:layout_spec) { Arrolio::LayoutSpec::Loader.load(File.join(flavor_dir, 'layout_spec.yml')) }
 
-  let(:document) do
-    footnote = Arrolio::Content::Footnote.new(
+  let(:footnote) do
+    Arrolio::Content::Footnote.new(
       marker: '1',
       body: [Arrolio::Content::Paragraph.new(
         [Arrolio::Content::InlineRun.new('Footnote body.')],
@@ -16,8 +16,18 @@ RSpec.describe 'Page-bottom footnotes opt-in (Phase 4 bridge from flow builder)'
       )],
       id: 'fn1'
     )
+  end
+
+  # FOP semantics: a footnote renders only at its reference site —
+  # a paragraph carrying footnote_refs.
+  let(:document) do
+    paragraph = Arrolio::Content::Paragraph.new(
+      [Arrolio::Content::InlineRun.new('Body text.')],
+      style_id: :body,
+      footnote_refs: ['fn1']
+    )
     section = Arrolio::Content::Section.new(
-      title: 'S', level: 1, children: [],
+      title: 'S', level: 1, children: [paragraph],
       style_id: :section_body_1, title_style_id: :heading_1
     )
     Arrolio::Content::Document.new(
@@ -27,7 +37,7 @@ RSpec.describe 'Page-bottom footnotes opt-in (Phase 4 bridge from flow builder)'
     )
   end
 
-  it 'emits FootnoteMarkerFlowable per footnote when page_bottom_footnotes is truthy' do
+  it 'emits FootnoteMarkerFlowable after each referencing paragraph when page_bottom_footnotes is truthy' do
     rules = YAML.safe_load_file(File.join(flavor_dir, 'flow_rules.yml'))
     rules['page_bottom_footnotes'] = true
     builder = Arrolio::GenericFlowBuilder.new(layout_spec: layout_spec, rules: rules)
@@ -48,16 +58,17 @@ RSpec.describe 'Page-bottom footnotes opt-in (Phase 4 bridge from flow builder)'
     expect(markers.length).to eq(0)
   end
 
-  it 'does not emit markers when document has no footnotes' do
+  it 'does not emit markers for unreferenced footnotes' do
     rules = YAML.safe_load_file(File.join(flavor_dir, 'flow_rules.yml'))
     rules['page_bottom_footnotes'] = true
     builder = Arrolio::GenericFlowBuilder.new(layout_spec: layout_spec, rules: rules)
 
-    empty_doc = Arrolio::Content::Document.new(
+    unreferenced = Arrolio::Content::Document.new(
       metadata: { docidentifier: 'X' },
-      sections: [Arrolio::Content::Section.new(title: 'S', level: 1)]
+      sections: [Arrolio::Content::Section.new(title: 'S', level: 1)],
+      footnotes: [footnote]
     )
-    flowables = builder.build(empty_doc)
+    flowables = builder.build(unreferenced)
     markers = flowables.grep(Arrolio::Flowables::FootnoteMarkerFlowable)
     expect(markers.length).to eq(0)
   end
