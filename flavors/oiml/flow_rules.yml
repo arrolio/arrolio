@@ -220,15 +220,12 @@ page_sequences:
 - role: preface
   header: "{{docidentifier}}: {{edition_label}}"
   footer: "%d"
-  header_align: right
 - role: body
   header: "{{docidentifier}}: {{edition_label}}"
   footer: "%d"
-  header_align: right
 - role: bibliography
   header: "{{docidentifier}}: {{edition_label}}"
   footer: "%d"
-  header_align: right
 cover_content:
 - type: spacer
   size: 30

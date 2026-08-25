@@ -138,6 +138,9 @@ tab_replacements:
   biblio-tag: " "
 heading:
   source: fmt-title
+title_styles:
+  preface_1: preface_heading
+  bibliography_1: bibliography_heading
 selectors:
   heading: fmt-title
   heading_depth_attribute: depth

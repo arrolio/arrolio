@@ -219,9 +219,20 @@ module Arrolio
         next if child == preface_elem
         next unless Array(selector('preface_children')).include?(child.name)
 
-        result << convert_clause(child)
+        result << convert_clause(child, context: :preface)
       end
       result
+    end
+
+    # Context-specific title styles (e.g. the XSL rule "level-1
+    # titles inside the preface are centered") live in the flavor's
+    # `title_styles:` map keyed "{context}_{level}" — no core
+    # knowledge of any flavor's heading look.
+    def title_style_for(context, level)
+      configured = @rules.dig('title_styles', "#{context}_#{level}")
+      return :"heading_#{level}" unless configured
+
+      configured.to_sym
     end
 
     def extract_bibliography(root)
@@ -242,7 +253,7 @@ module Arrolio
           level: 1,
           children: items,
           style_id: :section_body_1,
-          title_style_id: :heading_1
+          title_style_id: title_style_for('bibliography', 1)
         )
       end
       result
@@ -250,7 +261,7 @@ module Arrolio
 
     # ---- Element converters (driven by rules) ----
 
-    def convert_clause(elem)
+    def convert_clause(elem, context: 'body')
       title, number = extract_heading(elem)
       children = convert_children(elem)
       level = clause_level(elem, number: number)
@@ -258,7 +269,7 @@ module Arrolio
         title: title, level: level, number: number,
         id: elem.attribute(selector('id_attribute'))&.value, children: children,
         style_id: :"section_body_#{level}",
-        title_style_id: :"heading_#{level}"
+        title_style_id: title_style_for(context, level)
       )
     end
 

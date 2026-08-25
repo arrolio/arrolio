@@ -91,6 +91,14 @@ styles:
     parent: body
     font_name: Times New Roman Bold
     keep_together: true
+  preface_heading:
+    parent: heading_1
+    align: center
+    margin_bottom: 16pt
+  bibliography_heading:
+    parent: heading_1
+    align: center
+    margin_bottom: 30pt
   heading_2:
     margin_bottom: 20pt
     font_size: 11.0
@@ -277,5 +285,5 @@ flows:
 # PDF: header text top at 36pt from the page edge, footer text top
 # at 796pt, with the 26.5mm page margins and 9pt Arial-class font.
 header_footer:
-  header_offset: 10.34
+  header_offset: 11.68
   footer_offset: 13.6

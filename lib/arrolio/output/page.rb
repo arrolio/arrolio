@@ -10,7 +10,7 @@ module Arrolio
       def initialize(number:, template_name:, page_size:,
                      regions:, static_regions: {}, template_role: :body,
                      header_text: nil, footer_text: nil,
-                     header_align: :right, footer_align: :center,
+                     header_align: nil, footer_align: :center,
                      footnotes: [], title_text: nil)
         @number = number.to_i
         @template_name = template_name.to_sym
@@ -20,7 +20,7 @@ module Arrolio
         @static_regions = static_regions.transform_keys(&:to_sym).freeze
         @header_text = header_text
         @footer_text = footer_text
-        @header_align = header_align.to_sym
+        @header_align = header_align ? header_align.to_sym : :right
         @footer_align = footer_align.to_sym
         @footnotes = Array(footnotes).freeze
         @title_text = title_text
