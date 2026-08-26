@@ -299,7 +299,7 @@ module Arrolio
               if group.nil? || group.signature != signature
                 flush_placed_group(placed, group) if group
                 group = RunGroup.new(signature: signature, text: String.new,
-                                     x_offset: item_offset(start_item, i))
+                                     x_offset: item_offset(first_box_in(start_item, stop_item), i))
               end
               group.text << slice
             elsif item.glue? && group && i < last_box
@@ -308,6 +308,18 @@ module Arrolio
           end
           flush_placed_group(placed, group) if group
           placed
+        end
+
+        # Offsets are relative to the line's FIRST BOX, not the
+        # break-following item: the leading glue is discarded at a
+        # break, and pricing it shifted every continuation line
+        # right by one space width (a phantom indent that also
+        # shortened the measure and caused extra wraps).
+        def first_box_in(start_item, stop_item)
+          (start_item...stop_item).each do |i|
+            return i if @items[i]&.box?
+          end
+          start_item
         end
 
         def item_offset(start_item, item_idx)
