@@ -367,6 +367,30 @@ terms) and the 5.1.x table-split row pitch.
   inter-word natural width vs FOP's glue model - next calibration
   if pursued.
 
+## Shipped (2026-08-26, PR #110): FOP-faithful shrink pricing - 66.6%
+
+FOP justifies every line to the measure after breaking: inter-word
+shrink is not penalized. TeX's cubic badness made our DP prefer an
+extra loose line where the reference compresses (5.6's paragraph:
+ours 5 lines, ref 4, identical words/measure). Demerits now charge
+zero for negative ratios; free shrink alone let the DP pack whole
+paragraphs onto one line through the un-rejectable forced final
+break, so overfull forced lines carry OVERFULL_FORCED_PENALTY as a
+last resort. The 5.6 paragraph now wraps identically to the
+reference.
+
+## Residuals (post-#110 census, same-page entry spans)
+
+Mostly +/-9-14pt (heading-gap + line-box differences):
+- level-2 heading blocks: ours 33pt vs ref 25 (heading_2 line box
+  15.4 + mb 20 - collapsed term mt 12). Tested mb 20->12: OVERSHOT
+  (27pp, 51.66%) - the heading gap is NOT simply margin; likely
+  FOP's heading line-height (normal ~1.17 vs our inherited 1.24).
+  Next attempt: heading_2 line_spacing, not margin.
+- 3.1.3.1 -19, 5.1 +35, 5.1.6 -19.
+- p16's ~5-line lead accumulates across 3.5-3.8's cross-page
+  spans (page-end whitespace differences, not entry deficits).
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).
