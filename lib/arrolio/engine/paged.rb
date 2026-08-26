@@ -63,13 +63,10 @@ module Arrolio
             @prev_space_after = 0.0
           end
 
-          width = page_state.frame.width
-          if flowable.keep_together? &&
-             flowable.height(width, context) > page_state.frame.remaining_height &&
-             flowable.height(width, context) <= page_state.frame.height
-            page_state = open_page(context)
-            @prev_space_after = 0.0
-          end
+          page_state.frame.width
+          page_state = whole_move_page(flowable, page_state, context)
+
+          page_state = keep_with_next_page(flowable, pending, page_state, context)
 
           if flowable.is_a?(Flowables::HeadingFlowable)
             context.record_heading(number: flowable.number,
@@ -173,6 +170,41 @@ module Arrolio
         )
         @pages << state
         state
+      end
+
+      # keep-together: an atomic flowable taller than the page
+      # remainder (but not the whole page) moves intact.
+      def whole_move_page(flowable, page_state, context)
+        width = page_state.frame.width
+        natural = flowable.height(width, context)
+        return page_state if !flowable.keep_together? ||
+                             natural <= page_state.frame.remaining_height ||
+                             natural > page_state.frame.height
+
+        @prev_space_after = 0.0
+        open_page(context)
+      end
+
+      # XSL-FO keep-with-next: a flowable that must stay with the
+      # next one moves to a fresh page when the pair would not fit
+      # (an orphaned heading above a moved figure).
+      def keep_with_next_page(flowable, pending, page_state, context)
+        return page_state unless flowable.keep_with_next? && pending.first
+        return page_state unless pair_would_break?(flowable, pending.first, page_state, context)
+
+        @prev_space_after = 0.0
+        open_page(context)
+      end
+
+      # True when +flowable+ fits the current page but the next
+      # flowable's minimum height would not — the pair must move.
+      def pair_would_break?(flowable, next_flowable, page_state, context)
+        width = page_state.frame.width
+        flow_h = flowable.height(width, context)
+        return false if flow_h > page_state.frame.remaining_height
+
+        pair_h = flow_h + next_flowable.min_keep_height(width, context)
+        pair_h > page_state.frame.remaining_height
       end
 
       # Pick header alignment based on page parity. Even pages

@@ -58,6 +58,10 @@ module Arrolio
         true
       end
 
+      def min_keep_height(_width, _context = nil)
+        space_before + line_height
+      end
+
       def do_split(width, remaining_height, _context = nil)
         lines = laid_out(width)
         line_h = line_height
