@@ -391,6 +391,28 @@ Mostly +/-9-14pt (heading-gap + line-box differences):
 - p16's ~5-line lead accumulates across 3.5-3.8's cross-page
   spans (page-end whitespace differences, not entry deficits).
 
+## Negative results (2026-08-26 keep-rules investigation)
+
+- WIDOWS/ORPHANS are NOT enforced by the reference: it ends p16
+  with the lone word 'conversion.' (a 1-line widow) and carries
+  single SOURCE lines to page tops. An orphans/widows guard in
+  TextFlowable#do_split was implemented, measured (29pp, 57.2),
+  and REVERTED. Do not re-add without new evidence.
+- TERM ENTRIES are NOT atomic: the reference splits them
+  mid-entry on full pages (p9 ends mid-definition, p16 starts with
+  a carried SOURCE line). Blanket entry grouping measured 30pp and
+  was reverted. The narrower rule reproducing the ref's gaps at
+  p8/p11/p12/p13 (50-90pt page-end whitespace, next entry at page
+  top) is still unidentified - number+preferred+whole-first-def-
+  paragraph was the closest hypothesis (needs number/preferred
+  keep_with_next + widows=2 min_keep, which over-moved elsewhere).
+- heading_2 correction (ours 33 vs ref 25 per heading, ~25 spots):
+  full fix (mb 12, spacing 1.13) lands at 27pp - it must ship
+  together with reproducing the ref's terms-region gaps (+~260pt)
+  or the bibliography-page whitespace; partial bisection is
+  bistable 27/29pp. Coupled landing documented, do not bisect.
+- Keep-with-next is now CHAIN-aware (PR #113).
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).
