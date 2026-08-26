@@ -39,6 +39,10 @@ module Arrolio
         # Extra penalty for consecutive flagged breaks (hyphens).
         FLAGGED_PENALTY = 3000.0
 
+        # Last-resort cost for a forced break landing an overfull
+        # line (ratio beyond the available shrink).
+        OVERFULL_FORCED_PENALTY = 1_000_000.0
+
         attr_reader :items, :line_widths, :runs, :measurer, :align
 
         # +items:+ Array of KnuthPlass::Item (Box, Glue, Penalty).
@@ -156,6 +160,11 @@ module Arrolio
 
           ratio = 0.0 if ratio.infinite?
           demerits = demerits_for(ratio, break_pos)
+          # A forced break is always TAKEN (correctness) but an
+          # overfull line through it is a last resort: without this,
+          # free shrink made the DP pack whole paragraphs onto one
+          # line via the un-rejectable final penalty.
+          demerits += OVERFULL_FORCED_PENALTY if is_forced && ratio < -1.0
           total = node.total_demerits + demerits
 
           Node.new(
@@ -193,7 +202,15 @@ module Arrolio
 
         def demerits_for(ratio, break_pos)
           penalty = @items[break_pos].penalty? ? @items[break_pos].penalty : 0
-          badness = (100 * (ratio.abs ** 3)).clamp(0, 10_000).to_i
+          # FOP justifies every line to the measure after breaking:
+          # shrink (ratio < 0) is free, unlike TeX's cubic badness.
+          # Penalizing it made the DP prefer an extra loose line
+          # where the reference compresses (5.6's 4-line vs our 5).
+          badness = if ratio.negative?
+                      0
+                    else
+                      (100 * (ratio ** 3)).clamp(0, 10_000).to_i
+                    end
           # Standard Knuth-Plass demerits. Forced breaks (penalty =
           # -Infinity) use d = (1 + badness)^2 — the penalty term
           # drops out because there's no choice about breaking.
