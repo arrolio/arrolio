@@ -22,7 +22,13 @@ module Arrolio
         source = content_for(document, sequence['role'])
         next if sequence['role'].to_s != 'cover' && sequence['role'].to_s != 'back_of_cover' && source.empty?
 
-        flowables << sequence_start(document, sequence)
+        start = sequence_start(document, sequence)
+        flowables << start
+        # The part-title overlay consumes layout space in the
+        # reference (title glyph top to the first heading: 58pt on
+        # the first body page); reserve it so following content
+        # lands where the reference puts it.
+        flowables << Flowables::Spacer.new(title_block_space) if start.title_template
         build_sequence_content(document, source, sequence, flowables)
         flowables << Flowables::PageBreak.new if sequence['page_break_after']
       end
@@ -55,6 +61,10 @@ module Arrolio
 
     def page_sequences
       Array(@rules['page_sequences'])
+    end
+
+    def title_block_space
+      (@rules.dig('title', 'block_space') || 0.0).to_f
     end
 
     def sequence_start(document, sequence)
@@ -159,10 +169,12 @@ module Arrolio
       end
     end
 
-    # Tables and figures pull their preceding paragraph with them
-    # across page boundaries (XSL-FO keep-with-next on the lead-in).
+    # Tables and lists pull their preceding paragraph with them
+    # across page boundaries (XSL-FO keep-with-next on the lead-in;
+    # the reference breaks freely between text and figures — 2.3's
+    # paragraph ends p5 with Figure 1 opening p6).
     def keeps_with_previous?(child)
-      child.is_a?(Content::Table) || child.is_a?(Content::FigureGroup)
+      child.is_a?(Content::Table) || child.is_a?(Content::List)
     end
 
     def prefix_number(number, children)
@@ -467,14 +479,19 @@ module Arrolio
       end
       Flowables::ListFlowable.new(items, kind: list.kind,
                                          style: resolve(list.style_id),
-                                         **list_geometry)
+                                         **list_geometry(list.kind))
     end
 
     # List marker geometry (indent, marker column, inter-item
     # spacing) is flavor configuration extracted from the flavor's
     # XSL list styles — not engine policy.
-    def list_geometry
+    # A kind-specific map (e.g. geometry.ordered) overrides the
+    # shared defaults — flavors whose bullets indent but whose
+    # ordered markers start at the margin (which also restores
+    # nested lists' depth).
+    def list_geometry(kind)
       config = @rules.dig('list', 'geometry') || {}
+      config = config.merge(config[kind.to_s] || {})
       {
         marker_indent: config.fetch('marker_indent', 0.0).to_f,
         marker_width: config.fetch('marker_width', 18.0).to_f,
