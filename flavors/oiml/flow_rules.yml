@@ -333,6 +333,13 @@ list:
     marker_width: 19.8
     body_indent: 0.0
     item_spacing: 5.6
+    # Ordered markers start at the margin (reference 6.1/6.2 lists:
+    # 'a) text' at x=72, text hangs at 92).
+    ordered:
+      marker_indent: 0.0
+      marker_width: 20.0
+      body_indent: 0.0
+      item_spacing: 5.6
 
 # Term entry spacing (FOP space-before BETWEEN sibling blocks):
 # the definition's second+ paragraphs ("(For notes...)") and the
@@ -354,3 +361,8 @@ figure:
 # Foreword on a fresh p4.
 preface:
   page_break_between_clauses: true
+
+# Part-title block height on the first body page: the reference's
+# title glyph top (y72) to the first heading (y130) measures 58pt.
+title:
+  block_space: 55.0

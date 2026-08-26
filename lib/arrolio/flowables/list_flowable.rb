@@ -29,6 +29,16 @@ module Arrolio
         body_h + ([@items.length - 1, 0].max * @item_spacing)
       end
 
+      # What must stay with a preceding keep-with-next flowable:
+      # the first item — the lead-in paragraph keeps with the
+      # list's first line, not the whole list.
+      def min_keep_height(width, context = nil)
+        _, body_flowables = @items.first
+        return 0.0 unless body_flowables&.any?
+
+        body_flowables.sum { |f| f.height(body_width(width), context) }
+      end
+
       def emit(x, y, width, context = nil)
         boxes = []
         consumed = 0.0
