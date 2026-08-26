@@ -278,8 +278,12 @@ cover_content:
 section:
   heading_style: "{{title_style_id}}"
   body_style: "{{style_id}}"
-  insert_page_break_before: true
-  insert_page_break_after_section: true
+  insert_page_break_before: false
+  insert_page_break_after_section: false
+  # Reference landings: '3 Terminology' and '5 Metrological' start
+  # fresh pages in the mn2pdf output (Bibliography follows its own
+  # page sequence break); everything else flows continuously.
+  page_break_before_numbers: ['3', '5']
 content_to_flowable:
   Paragraph: text_paragraph
   Table: table
@@ -345,3 +349,8 @@ term:
 figure:
   caption_gap: 28.0
   block_gap: 24.0
+
+# The reference gives each preface clause its own page: ToC on p3,
+# Foreword on a fresh p4.
+preface:
+  page_break_between_clauses: true
