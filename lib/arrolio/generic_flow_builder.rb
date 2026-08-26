@@ -154,7 +154,15 @@ module Arrolio
 
       children = section.children
       children = prefix_number(section.number, children) if !section.heading? && section.number
-      children.each { |child| append_child(child, out) }
+      children.each_with_index do |child, index|
+        append_child(child, out, followed_by_keep: keeps_with_previous?(children[index + 1]))
+      end
+    end
+
+    # Tables and figures pull their preceding paragraph with them
+    # across page boundaries (XSL-FO keep-with-next on the lead-in).
+    def keeps_with_previous?(child)
+      child.is_a?(Content::Table) || child.is_a?(Content::FigureGroup)
     end
 
     def prefix_number(number, children)
@@ -186,10 +194,22 @@ module Arrolio
       end
     end
 
-    def append_child(child, out, standalone: true)
+    def append_child(child, out, standalone: true, followed_by_keep: false)
       case child
       when Content::Paragraph
-        out << paragraph_flowable(child, standalone: standalone)
+        flowable = paragraph_flowable(child, standalone: standalone)
+        # mn2pdf keeps a paragraph with the table/figure that
+        # follows it, so the caption is never orphaned at a page
+        # bottom and the reference's page-end whitespace before
+        # table sections is reproduced.
+        if followed_by_keep
+          flowable = Flowables::TextFlowable.new(
+            flowable.runs,
+            style: flowable.style.with(keep_with_next: true),
+            measurer: flowable.measurer
+          )
+        end
+        out << flowable
         emit_footnote_markers_for(child, out)
       when Content::Note
         out << note_flowable(child)

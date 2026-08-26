@@ -37,6 +37,19 @@ module Arrolio
           footnote_block_height(width, cols)
       end
 
+      # What must stay on the same page as a preceding
+      # keep-with-next flowable: the caption, the (repeated) header
+      # rows, and the first welded body group — a caption or header
+      # alone at a page bottom is an orphan.
+      def min_keep_height(width, _context = nil)
+        cols = column_widths_for(width)
+        heights = row_heights(cols)
+        header_rows = @table.header.length
+        first_body_group = grid.atomic_row_groups.find { |g| g.first >= header_rows }
+        keep_rows = first_body_group ? first_body_group.last + 1 : header_rows
+        caption_height(width) + heights[0...[keep_rows, heights.length].min].sum
+      end
+
       def emit(x, y, width, _context = nil)
         cols = column_widths_for(width)
         heights = row_heights(cols)
