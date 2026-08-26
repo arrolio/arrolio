@@ -325,6 +325,32 @@ Drift after: 3.1 -1111 (was -1345), 3.6 span +242 is page-move
 whitespace (atomic figure), 3.7 -93, 5.3.2 -117, 5.6.1.3 -69.
 Forced-break parity 42.23 -> 44.82; continuous 26pp vs ref 28.
 
+## LANDINGS REACHED (2026-08-26, PRs #102-#105): 28/28 pages, 65.79%
+
+- Landings-matched breaks shipped: '3 Terminology' and '5
+  Metrological' start fresh pages (the reference's only
+  top-of-page section landings); each preface clause gets its own
+  page (ToC p3, Foreword p4). insert_page_break_before: false.
+- Example bodies: line_spacing 1.5 + 3pt item spacing (ref pitch
+  19-20pt; was 13.6/no gap) - ~130pt recovered in 5.5.1.
+- Lead-in paragraphs keep with following TABLES and LISTS
+  (mn2pdf keep-with-next): TableFlowable#min_keep_height = caption
+  + repeated header + first welded group; ListFlowable's = first
+  item. Figures EXCLUDED - the ref breaks freely between text and
+  figures. This reproduced the ref's page-end whitespace before
+  table sections and matched the page count.
+- Per-kind list geometry: ordered markers at the margin (x=72,
+  hang 92), fixing 6.1/6.2 lists and nested depth.
+- Part-title block space reserved (title.block_space 55pt): first
+  body page matches the ref exactly (title y70, heading y130).
+- Trajectory today: 44.82 -> 57.61 -> 61.34 -> 65.22 -> 65.79.
+
+Remaining offsets (page map): section 3 (p8-16) runs ~1-3 entries
+ahead per page (terms region ~15-25pt/page denser than ref);
+5.1-5.7 and 6.x run ~0.3 page ahead. Both realign at the landings.
+Next: per-entry comparison in 3.2-3.5 (notes/lists/tables inside
+terms) and the 5.1.x table-split row pitch.
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).
