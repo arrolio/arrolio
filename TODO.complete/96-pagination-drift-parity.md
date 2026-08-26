@@ -296,6 +296,35 @@ reference's ~20pt (the bulk of the 5.1.2 +419pt deficit). Captions
 now collect inline runs (math subscripts survive: "(nLC)" one
 line). Pages 30 -> 29; parity 40.92 -> 41.82.
 
+## Shipped (2026-08-26, PRs #99-#100): inline headers, atomic figures, keep-with-next
+
+- Title-less numbered clauses are inline-header clauses (standoc
+  inline-header): the number prefixes the first paragraph
+  ('2.1 This Recommendation ...' inline) instead of consuming a
+  heading line. Content::Section#heading? is now title-based.
+- Figures are atomic: Flowables::FigureFlowable composes image +
+  caption (keep-together) so a caption can never orphan onto the
+  next page. caption_gap 28pt / block_gap 24pt from the reference.
+- XSL-FO keep-with-next implemented in the engine: a heading that
+  fits but whose next flowable's min_keep_height would not moves
+  with it (orphaned '3.6' heading above moved Figure 3 was the
+  observed defect). Heading styles set keep_with_next: true.
+- The 5.3.2 'display formula' is actually an INLINE stem
+  (block=false) that JEuclid gives stacked vertical extent - the
+  MATH_LINE_FACTOR model already covers it. The remaining 5.3.2
+  delta is footnote-zone + whole-table page-move interaction, not
+  a missing display-math feature.
+- Terminology preamble (VIM/VIML/D9/D11/B18 list) matches the
+  reference's flowing-text shape already.
+- REFERENCE NOTE: the ref breaks to a fresh page before '3
+  Terminology' (p6 ends at Figure 2's caption with ~260pt
+  whitespace) - a landings-matched break to apply via
+  page_break_before_numbers once debt closes.
+
+Drift after: 3.1 -1111 (was -1345), 3.6 span +242 is page-move
+whitespace (atomic figure), 3.7 -93, 5.3.2 -117, 5.6.1.3 -69.
+Forced-break parity 42.23 -> 44.82; continuous 26pp vs ref 28.
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).
