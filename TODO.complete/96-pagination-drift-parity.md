@@ -351,6 +351,22 @@ ahead per page (terms region ~15-25pt/page denser than ref);
 Next: per-entry comparison in 3.2-3.5 (notes/lists/tables inside
 terms) and the 5.1.x table-split row pitch.
 
+## Shipped (2026-08-26, PRs #107-#108): KP line geometry exact
+
+- Continuation lines no longer carry a phantom space indent:
+  build_placed_runs priced the first placed run from the
+  break-following item (the leading glue), shifting every wrapped
+  line +2.75pt (+5.5 after double spaces). Offsets are now relative
+  to the line's first box. Continuation x=72.28 = ref exact.
+- Line#justify_stretch clamped at zero for overfull lines, so the
+  renderer's justify-SHRINK path (PR #95) could never fire:
+  compressed lines drew at natural width, up to 10pt past the
+  measure, 2.75pt spaces vs ref 2.15. Verified: gaps 2.13-2.18 vs
+  ref 2.15, line end 522.96 vs ref 522.99, zero overflows.
+- Remaining wrap deltas (ours 5 lines where ref fits 4) trace to
+  inter-word natural width vs FOP's glue model - next calibration
+  if pursued.
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).
