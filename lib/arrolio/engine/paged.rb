@@ -185,26 +185,31 @@ module Arrolio
         open_page(context)
       end
 
-      # XSL-FO keep-with-next: a flowable that must stay with the
-      # next one moves to a fresh page when the pair would not fit
-      # (an orphaned heading above a moved figure).
+      # XSL-FO keep-with-next: the keep CHAIN — consecutive
+      # keep-with-next flowables plus the next flowable's minimum
+      # height — moves to a fresh page when it would not fit (an
+      # orphaned heading above a moved figure; a term number
+      # without its definition's first paragraph).
       def keep_with_next_page(flowable, pending, page_state, context)
         return page_state unless flowable.keep_with_next? && pending.first
-        return page_state unless pair_would_break?(flowable, pending.first, page_state, context)
 
-        @prev_space_after = 0.0
-        open_page(context)
-      end
-
-      # True when +flowable+ fits the current page but the next
-      # flowable's minimum height would not — the pair must move.
-      def pair_would_break?(flowable, next_flowable, page_state, context)
         width = page_state.frame.width
-        flow_h = flowable.height(width, context)
-        return false if flow_h > page_state.frame.remaining_height
+        chain_h = flowable.height(width, context)
+        return page_state if chain_h > page_state.frame.remaining_height
 
-        pair_h = flow_h + next_flowable.min_keep_height(width, context)
-        pair_h > page_state.frame.remaining_height
+        pending.each do |next_flowable|
+          chain_h += if next_flowable.keep_with_next?
+                       next_flowable.height(width, context)
+                     else
+                       next_flowable.min_keep_height(width, context)
+                     end
+          if chain_h > page_state.frame.remaining_height
+            @prev_space_after = 0.0
+            return open_page(context)
+          end
+          break unless next_flowable.keep_with_next?
+        end
+        page_state
       end
 
       # Pick header alignment based on page parity. Even pages
