@@ -38,9 +38,11 @@ module Arrolio
         @align == :justify
       end
 
+      # Negative when the line is overfull (TeX shrink): the
+      # renderer compresses inter-word gaps. Clamping at zero made
+      # compressed lines draw at natural width, past the measure.
       def justify_stretch
         return 0.0 unless justified?
-        return 0.0 if @width >= @max_width
 
         gaps = word_gap_count
         return 0.0 if gaps.zero?
