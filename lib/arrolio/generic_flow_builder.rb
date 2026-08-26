@@ -74,8 +74,16 @@ module Arrolio
       if sequence['build_content'] == 'cover_content'
         build_cover_content(document, out)
       elsif source.is_a?(Array)
-        build_sections(source, out)
+        build_sections(source, out,
+                       between_breaks: preface_clause_breaks?(sequence))
       end
+    end
+
+    # mn2pdf gives each preface clause its own page sequence (ToC
+    # page, then Foreword on a fresh page) when the flavor opts in.
+    def preface_clause_breaks?(sequence)
+      sequence['role'].to_s == 'preface' &&
+        @rules.dig('preface', 'page_break_between_clauses')
     end
 
     # The first body page opens with the part title ("Part 1 -
@@ -116,14 +124,14 @@ module Arrolio
       end
     end
 
-    def build_sections(sections, out)
+    def build_sections(sections, out, between_breaks: false)
       section_rules = @rules.fetch('section', {})
       break_between = section_rules.fetch('insert_page_break_before', false)
       break_numbers = section_rules.fetch('page_break_before_numbers', [])
       sections.each_with_index do |section, index|
         forced = break_numbers.include?(section.number.to_s)
-        needs_break = (break_between || forced) && index.positive? &&
-                      !bibliography_section?(section)
+        needs_break = (break_between || forced || between_breaks) &&
+                      index.positive? && !bibliography_section?(section)
         out << Flowables::PageBreak.new if needs_break
         build_section(section, out)
       end
