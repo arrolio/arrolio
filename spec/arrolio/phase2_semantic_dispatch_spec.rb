@@ -25,8 +25,10 @@ RSpec.describe 'Phase 2 semantic dispatch through GenericFlowBuilder' do
       document = build_document(Arrolio::Content::FigureGroup.new(image: image, caption: caption))
 
       flowables = builder.build(document)
-      text_flowables = flowables.grep(Arrolio::Flowables::TextFlowable)
-      expect(text_flowables.any? { |f| f.runs.any? { |r| r.text.include?('Fig. 1') } }).to be(true)
+      figure = flowables.find { |f| f.is_a?(Arrolio::Flowables::FigureFlowable) }
+      expect(figure).not_to be_nil
+      expect(figure.image).to be_a(Arrolio::Flowables::ImageFlowable)
+      expect(figure.caption.runs.any? { |r| r.text.include?('Fig. 1') }).to be(true)
     end
 
     it 'emits just the caption when no image' do

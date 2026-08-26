@@ -337,3 +337,11 @@ list:
 term:
   definition_paragraph_space_before: 7.6
   source_space_before: 7.5
+
+# Figure geometry from the reference: image bottom to caption ~28pt
+# (Figure 2: last diagram text y479 -> caption y507); consecutive
+# figure blocks separated by ~24pt (Figure 1 caption y269+13 ->
+# Figure 2 top y306).
+figure:
+  caption_gap: 28.0
+  block_gap: 24.0

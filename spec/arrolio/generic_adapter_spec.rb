@@ -119,7 +119,7 @@ RSpec.describe Arrolio::GenericAdapter do
       expect(section.title).to eq('Scope')
     end
 
-    it 'returns nil title when the heading has only autonum content' do
+    it 'treats an autonum-only heading as an inline header (not a heading line)' do
       xml = <<~XML
         <root>
           <sections>
@@ -142,7 +142,7 @@ RSpec.describe Arrolio::GenericAdapter do
       section = doc.sections.first
       expect(section.number).to eq('2.1')
       expect(section.title).to be_nil
-      expect(section.heading?).to be(true)
+      expect(section.heading?).to be(false)
     end
   end
 
