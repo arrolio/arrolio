@@ -30,6 +30,13 @@ module Arrolio
       @style.keep_with_next
     end
 
+    # Height that must stay on the same page as a preceding
+    # keep-with-next flowable: the whole flowable when atomic, the
+    # first line (plus space-before) when splittable.
+    def min_keep_height(width, context = nil)
+      height(width, context)
+    end
+
     def page_break_before?
       @style.page_break_before
     end

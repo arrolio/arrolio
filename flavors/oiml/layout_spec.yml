@@ -91,6 +91,7 @@ styles:
     parent: body
     font_name: Times New Roman Bold
     keep_together: true
+    keep_with_next: true
   preface_heading:
     parent: heading_1
     align: center
@@ -105,27 +106,32 @@ styles:
     parent: body
     font_name: Times New Roman Bold
     keep_together: true
+    keep_with_next: true
   heading_3:
     margin_bottom: 8pt
     font_size: 11.0
     parent: body
     font_name: Times New Roman Bold
     keep_together: true
+    keep_with_next: true
   heading_4:
     font_size: 11.0
     parent: body
     font_name: Times New Roman Bold
     keep_together: true
+    keep_with_next: true
   heading_5:
     font_size: 11.0
     parent: body
     font_name: Times New Roman Bold
     keep_together: true
+    keep_with_next: true
   heading_6:
     font_size: 11.0
     parent: body
     font_name: Times New Roman Bold
     keep_together: true
+    keep_with_next: true
   note:
     font_size: 11.0
     margin_bottom: 8pt
