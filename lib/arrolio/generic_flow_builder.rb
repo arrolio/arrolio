@@ -153,7 +153,7 @@ module Arrolio
       return children if children.empty? || !children.first.is_a?(Content::Paragraph)
 
       first = children.first
-      prefix = Content::InlineRun.new("#{number}  ", style_id: :caption_label)
+      prefix = Content::InlineRun.new("#{number} ", style_id: :caption_label)
       updated = Content::Paragraph.new(
         [prefix] + first.inline_runs,
         style_id: first.style_id,
@@ -251,15 +251,43 @@ module Arrolio
       )
     end
 
+    # Figures are atomic: image + caption render as ONE flowable
+    # so the caption can never be orphaned onto the next page.
+    # Caption gap is flavor geometry (ref: image bottom to caption
+    # ~28pt; figure blocks separated by ~24pt).
     def figure_group_flowable(group, out)
-      out << image_flowable(group.image) if group.image
-      return unless group.caption
+      figure_config = @rules['figure'] || {}
+      caption_gap = figure_config.fetch('caption_gap', 0.0).to_f
+      block_gap = figure_config.fetch('block_gap', 0.0).to_f
 
-      caption_style = resolve(:figure_caption)
-      runs = group.caption.inline_runs.map do |run|
-        InlineRun.new(run.text, style: caption_style)
+      image = image_flowable(group.image) if group.image
+      if group.caption
+        caption_style = resolve(:figure_caption).with(margin_top: caption_gap)
+        runs = group.caption.inline_runs.map do |run|
+          InlineRun.new(run.text, style: caption_style)
+        end
+        caption = Flowables::TextFlowable.new(runs, style: caption_style)
       end
-      out << Flowables::TextFlowable.new(runs, style: caption_style)
+      return out << caption if image.nil?
+
+      image = with_block_gap(image, block_gap)
+      out << if caption
+               Flowables::FigureFlowable.new(image, caption)
+             else
+               image
+             end
+    end
+
+    def with_block_gap(flowable, gap)
+      return flowable if gap.zero?
+
+      style = flowable.style.with(margin_top: flowable.style.margin_top + gap)
+      flowable.class.new(flowable.src,
+                         natural_width: flowable.natural_width,
+                         natural_height: flowable.natural_height,
+                         display_width: flowable.display_width,
+                         alt: flowable.alt,
+                         style: style)
     end
 
     # Re-emits the last paragraph flowable with the configured

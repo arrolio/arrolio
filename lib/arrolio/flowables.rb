@@ -10,6 +10,7 @@ module Arrolio
     autoload :PageSequenceStart, 'arrolio/flowables/page_sequence_start'
     autoload :ListFlowable, 'arrolio/flowables/list_flowable'
     autoload :NoteFlowable, 'arrolio/flowables/note_flowable'
+    autoload :FigureFlowable, 'arrolio/flowables/figure_flowable'
     autoload :ImageFlowable, 'arrolio/flowables/image_flowable'
     autoload :TocLineFlowable, 'arrolio/flowables/toc_line_flowable'
     autoload :TwoColumnBlock, 'arrolio/flowables/two_column_block'

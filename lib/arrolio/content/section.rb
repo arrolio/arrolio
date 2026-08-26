@@ -17,7 +17,10 @@ module Arrolio
         freeze
       end
 
-      def heading? = !@title.nil? || !@number.nil?
+      # A title-less numbered clause is an inline-header clause
+      # (standoc inline-header): the number prefixes the first
+      # paragraph, it never gets its own heading line.
+      def heading? = !@title.nil?
 
       def ==(other)
         other.is_a?(self.class) &&
