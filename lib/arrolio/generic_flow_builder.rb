@@ -330,6 +330,22 @@ module Arrolio
                          style: style)
     end
 
+    # An entry's head must keep number + preferred + two
+    # definition lines together (the reference moves whole entry
+    # heads when those don't fit, leaving its characteristic
+    # 50-90pt terms-region page-end gaps).
+    def widen_first_definition_widows(out)
+      widows = term_config.fetch('definition_widows', 1).to_i
+      last = out.last
+      return unless widows > 1 && last.is_a?(Flowables::TextFlowable)
+
+      out[-1] = Flowables::TextFlowable.new(
+        last.runs,
+        style: last.style.with(widows: widows),
+        measurer: last.measurer
+      )
+    end
+
     # Re-emits the last paragraph flowable with the configured
     # between-sibling space (XSL-FO space-before semantics).
     def apply_sibling_spacing(_item, out)
@@ -373,7 +389,11 @@ module Arrolio
       # "(For notes...)" line) and the SOURCE line each carry it.
       entry.definition.each_with_index do |item, index|
         append_child(item, out, standalone: false)
-        apply_sibling_spacing(item, out) if index.positive?
+        if index.zero?
+          widen_first_definition_widows(out)
+        else
+          apply_sibling_spacing(item, out)
+        end
       end
       return unless entry.source
 
