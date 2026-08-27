@@ -348,9 +348,10 @@ list:
 term:
   definition_paragraph_space_before: 7.6
   source_space_before: 7.5
-  # Term-embedded notes: +7pt before/after (reference 3.1.3.1:
-  # definition -> Note 21pt vs our 14, Note -> list 20 vs 13).
+  # Term-embedded notes: +7pt before (definition -> Note 21pt vs
+  # our 14), ~3pt after (list -> next entry 28pt in the reference).
   note_spacing: 7.0
+  note_spacing_after: 3.0
 
 # Figure geometry from the reference: image bottom to caption ~28pt
 # (Figure 2: last diagram text y479 -> caption y507); consecutive
@@ -364,6 +365,17 @@ figure:
 # Foreword on a fresh p4.
 preface:
   page_break_between_clauses: true
+
+# Note-body geometry (measured on 3.1.3.1's note): text -> list
+# 20pt (7pt extra); the note's bullet list marker sits +43.7pt
+# from the note column (x=143 from the page), items at 17pt pitch.
+note:
+  body_spacing: 7.0
+  list:
+    marker_indent: 43.7
+    marker_width: 20.0
+    item_spacing: 3.6
+    bullet_marker: "● "
 
 # Part-title block height on the first body page: the reference's
 # title glyph top (y72) to the first heading (y130) measures 58pt.
