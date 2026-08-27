@@ -475,6 +475,26 @@ Remaining to unlock the landing (all measured):
 - section 4's tail: needs ~17pt more than heading_1's +9 gave
 - 6.2.3 -56pt
 
+## Shipped (2026-08-27, PR #121): dead-zone line breaking - 66.8%
+
+CONTENT BUG (not spacing): paragraphs with math rendered as ONE
+overfull line clipped at the page edge - 6.2.3's items lost
+'vmin, Y, where Y = (Emax-Emin)/vmin (see 3.5.15)'. Root causes:
+(1) normalize_text stripped newline-boundary whitespace (glued
+'whereY='); (2) with real fontist metrics the break candidates
+sat in a DEAD ZONE (all over-shrunk or too-loose; the emergency
+pass's fixed 20pt stretch cannot bridge 70-160pt-short
+candidates) - it now accepts any stretch ratio; (3) the overfull
+single line was CHEAPER than the loose fix (cubic badness 5.5e7
+vs the 1e6 penalty) - OVERFULL_FORCED_PENALTY now 1e9.
+Regression spec added (dead-zone paragraph >1 line).
+
+DEBUGGING NOTE: standalone layout scripts that register
+layout_spec.font_paths (empty for this flavor) silently use
+ESTIMATE metrics - the pipeline resolves fonts via fontist
+(FontScanner). Always register the fontist way in debug scripts
+or the layout differs from the pipeline.
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).
