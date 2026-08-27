@@ -456,6 +456,25 @@ recipe is recorded here - flip term definition_widows: 2, add
 keep_with_next to the term number/preferred styles, and heading_2
 mb 12 / spacing 1.13 - all three together.
 
+## Recipe probe round 2 (2026-08-27): heading_1 gap found, p17 persists
+
+Applied the full recipe PLUS heading_1 margin_bottom 9pt (new
+finding: mid-flow level-1 headings run 17pt to first text vs the
+reference's 26 - section 4 'Description of load cells' measured
+directly). Result: section-3 same-page spans went CLEAN (only
+3.5.2 +12 / 3.5.11 +15 left), p8's gap reproduced - but the
+page-fill boundaries at p9-p15 still mismatch (ours fills where
+ref leaves 23-73pt), p17 still collapses (ws 670: section 4's
+last paragraph splits 1/2 lines onto a near-empty page before the
+'5' landing), and 6.2.3 runs -56. Net 61.69 vs committed 66.59.
+
+Remaining to unlock the landing (all measured):
+- the ~23-73pt/page fill mismatch through p9-p15 despite clean
+  entry spans (the gaps sit at DIFFERENT entries than the ref's -
+  cumulative position offset upstream of each page)
+- section 4's tail: needs ~17pt more than heading_1's +9 gave
+- 6.2.3 -56pt
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).
