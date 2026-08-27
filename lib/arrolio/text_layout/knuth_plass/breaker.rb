@@ -40,8 +40,10 @@ module Arrolio
         FLAGGED_PENALTY = 3000.0
 
         # Last-resort cost for a forced break landing an overfull
-        # line (ratio beyond the available shrink).
-        OVERFULL_FORCED_PENALTY = 1_000_000.0
+        # line (ratio beyond the available shrink). Must exceed the
+        # worst badness demerits ((1+10000)^2 = 1e8) so ANY
+        # breakable alternative wins.
+        OVERFULL_FORCED_PENALTY = 1_000_000_000.0
 
         attr_reader :items, :line_widths, :runs, :measurer, :align
 
@@ -83,6 +85,12 @@ module Arrolio
         # try breaking at each feasible position.
         def solve(emergency_stretch: 0.0)
           @emergency_stretch = emergency_stretch.to_f
+          # The emergency pass accepts any STRETCH ratio (TeX's
+          # \emergencystretch philosophy: a loose line beats an
+          # overfull one). A fixed stretch budget alone cannot
+          # bridge the dead zone between over-shrunk and too-loose
+          # breaks when candidates sit far short of the measure.
+          @stretch_limit = emergency_stretch.positive? ? Float::INFINITY : TOLERANCE
           active = [Node.new(position: -1, line: 0, fitness: 1,
                              total_demerits: 0, previous: nil)]
           @items.each_with_index do |item, i|
@@ -156,7 +164,7 @@ module Arrolio
           # stretch is soft up to TOLERANCE. Allowing ratio < -1
           # made the DP prefer overfull compression over loose
           # lines (clamped badness scores compression cheaper).
-          return nil if !is_forced && (ratio > TOLERANCE || ratio < -1.0)
+          return nil if !is_forced && (ratio > @stretch_limit || ratio < -1.0)
 
           ratio = 0.0 if ratio.infinite?
           demerits = demerits_for(ratio, break_pos)
