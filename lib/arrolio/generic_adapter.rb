@@ -556,28 +556,29 @@ module Arrolio
         source = Content::Paragraph.new(runs, style_id: :bibitem) unless runs.empty?
       end
 
-      return [] if number.nil? && preferred.nil? && definition.empty? && source.nil?
-
-      entry = Content::TermEntry.new(number: number, preferred: preferred,
-                                     definition: definition, source: source,
-                                     id: elem.attribute(selector('id_attribute'))&.value)
-      results = [entry]
-
+      # A termnote belongs to its entry (rendered inside it, with
+      # the entry's note styling) — not as a sibling block.
+      nested = []
       each_element(elem) do |child|
         next unless child.parent == elem
 
         case child.name
         when 'termnote'
-          results.concat(convert_note(child))
+          definition.concat(convert_note(child))
         when elem.name
           # Nested terms (e.g. 3.1.3.1-3.1.3.4 under "load cell")
           # are entries in their own right; dropping them loses whole
           # definitions.
-          results.concat(convert_term(child))
+          nested.concat(convert_term(child))
         end
       end
 
-      results
+      return [] if number.nil? && preferred.nil? && definition.empty? && source.nil?
+
+      entry = Content::TermEntry.new(number: number, preferred: preferred,
+                                     definition: definition, source: source,
+                                     id: elem.attribute(selector('id_attribute'))&.value)
+      [entry] + nested
     end
 
     # A note's body is paragraphs PLUS embedded lists (a termnote
