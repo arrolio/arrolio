@@ -226,14 +226,17 @@ module Arrolio
         emit_footnote_markers_for(child, out)
       when Content::Note
         note = note_flowable(child)
-        spacing = in_term ? term_config.fetch('note_spacing', 0.0).to_f : 0.0
-        out << if spacing.positive?
-                 Flowables::GroupFlowable.new(
-                   [Flowables::Spacer.new(spacing), note, Flowables::Spacer.new(spacing)],
-                   style: Style::Definition.new(keep_together: false)
-                 )
-               else
+        before = in_term ? term_config.fetch('note_spacing', 0.0).to_f : 0.0
+        after = in_term ? term_config.fetch('note_spacing_after', before) : 0.0
+        parts = []
+        parts << Flowables::Spacer.new(before) if before.positive?
+        parts << note
+        parts << Flowables::Spacer.new(after) if after.positive?
+        out << if parts.length == 1
                  note
+               else
+                 Flowables::GroupFlowable.new(parts,
+                                              style: Style::Definition.new(keep_together: false))
                end
       when Content::Example
         out << example_flowable(child)
@@ -264,6 +267,7 @@ module Arrolio
 
     def note_flowable(note)
       body = note.body.map { |node| note_body_flowable(node) }
+      body = with_note_body_spacing(body)
       Flowables::NoteFlowable.new(
         formatted_note_label(note.label),
         body,
@@ -272,8 +276,19 @@ module Arrolio
       )
     end
 
+    # A note's trailing list sits ~7pt below its text in the
+    # reference (3.1.3.1: text -> list 20pt vs a plain 13pt pitch).
+    def with_note_body_spacing(body)
+      spacing = (@rules.dig('note', 'body_spacing') || 0.0).to_f
+      return body if spacing.zero? || body.length < 2
+
+      body.flat_map.with_index do |flowable, index|
+        index < body.length - 1 ? [flowable, Flowables::Spacer.new(spacing)] : [flowable]
+      end
+    end
+
     def note_body_flowable(node)
-      return list_flowable(node) if node.is_a?(Content::List)
+      return list_flowable(node, container: :note) if node.is_a?(Content::List)
 
       paragraph_flowable(node)
     end
@@ -499,9 +514,9 @@ module Arrolio
       Flowables::TextFlowable.new(runs, style: style)
     end
 
-    def list_flowable(list)
+    def list_flowable(list, container: nil)
       items = list.items.each_with_index.map do |item, index|
-        marker = item.marker.nil? ? default_marker(list, index) : item.marker
+        marker = item.marker.nil? ? default_marker(list, index, container: container) : item.marker
         body = item.content.flat_map do |content|
           flowable_for_list_content(content)
         end
@@ -509,7 +524,7 @@ module Arrolio
       end
       Flowables::ListFlowable.new(items, kind: list.kind,
                                          style: resolve(list.style_id),
-                                         **list_geometry(list.kind))
+                                         **list_geometry(list.kind, container: container))
     end
 
     # List marker geometry (indent, marker column, inter-item
@@ -519,9 +534,13 @@ module Arrolio
     # shared defaults — flavors whose bullets indent but whose
     # ordered markers start at the margin (which also restores
     # nested lists' depth).
-    def list_geometry(kind)
+    def list_geometry(kind, container: nil)
       config = @rules.dig('list', 'geometry') || {}
       config = config.merge(config[kind.to_s] || {})
+      # Lists nested in note bodies sit deeper: the reference puts
+      # 3.1.3.1's note bullets at +43.7pt from the note column
+      # (marker x=143 from the page), pitch 17pt.
+      config = config.merge(@rules.dig('note', 'list') || {}) if container == :note
       {
         marker_indent: config.fetch('marker_indent', 0.0).to_f,
         marker_width: config.fetch('marker_width', 18.0).to_f,
@@ -538,12 +557,15 @@ module Arrolio
       end
     end
 
-    def default_marker(list, index)
+    def default_marker(list, index, container: nil)
       defaults = @rules.dig('list', 'defaults') || {}
       if list.ordered?
         format = defaults['ordered_marker'] || '%d.'
         format.sub('%d', (index + 1).to_s)
       else
+        nested = @rules.dig('note', 'list') || {}
+        return nested['bullet_marker'] if container == :note && nested['bullet_marker']
+
         defaults['bullet_marker'] || '■ '
       end
     end
