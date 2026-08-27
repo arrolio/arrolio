@@ -884,6 +884,11 @@ module Arrolio
     # ---- Text helpers ----
 
 
+    # Newline-bearing text nodes keep ONE space at each boundary:
+    # 'where\n<stem>' must render 'where Y' — stripping the
+    # trailing whitespace glued words to the following element and
+    # made long formula runs unbreakable (clipped at the page
+    # edge).
     def normalize_text(raw)
       return raw unless raw.is_a?(String)
       cleaned = raw.gsub(UNICODE_SPACES, ' ')
@@ -892,7 +897,9 @@ module Arrolio
       stripped = cleaned.strip
       return cleaned.match?(/\s/) ? ' ' : nil if stripped.empty?
 
-      stripped.gsub(/\s+/, ' ')
+      lead = cleaned.match?(/\A\s/) ? ' ' : ''
+      trail = cleaned.match?(/\s\z/) ? ' ' : ''
+      lead + stripped.gsub(/\s+/, ' ') + trail
     end
 
     def text_of(elem)
