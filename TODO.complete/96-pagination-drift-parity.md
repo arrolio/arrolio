@@ -434,6 +434,28 @@ Mostly +/-9-14pt (heading-gap + line-box differences):
   118/138 vs ref 143/163 (~25pt deeper in the reference); entry
   tail after a list 17 vs 28.
 
+## Shipped (2026-08-27, PR #118): note-body list geometry - term internals exact
+
+3.1.3.1's note block now matches the reference line-for-line:
+text -> list 20pt (note.body_spacing 7), bullet marker o at
++43.7pt from the note column (x=144 vs ref 143.1) with 17pt pitch
+(note.list overrides, note-nested lists only), note trailing 3pt
+after (list -> next entry 28pt exact; leading stays 7pt for
+def -> Note 21).
+
+## Entry-head keeps: near-miss retry (2026-08-27, not shipped)
+
+With the note fixes landed, retried term definition_widows 2 +
+number/preferred keep_with_next TOGETHER with the heading_2
+correction (mb 12, spacing 1.13): p8's gap REPRODUCED (ours ws 69
+vs ref 76) and pages held 28/28 - but p17 collapsed (ws 670: the
+section-4 tail interacts with the tightened headings) and p11/p12
+still filled. 62.29 vs committed 66.59. NOT shipped; the missing
+pieces are p11/p12's gaps and the section-4 tail interaction. The
+recipe is recorded here - flip term definition_widows: 2, add
+keep_with_next to the term number/preferred styles, and heading_2
+mb 12 / spacing 1.13 - all three together.
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).
