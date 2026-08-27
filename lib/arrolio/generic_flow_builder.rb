@@ -206,7 +206,8 @@ module Arrolio
       end
     end
 
-    def append_child(child, out, standalone: true, followed_by_keep: false)
+    def append_child(child, out, standalone: true, followed_by_keep: false,
+                     in_term: false)
       case child
       when Content::Paragraph
         flowable = paragraph_flowable(child, standalone: standalone)
@@ -224,7 +225,16 @@ module Arrolio
         out << flowable
         emit_footnote_markers_for(child, out)
       when Content::Note
-        out << note_flowable(child)
+        note = note_flowable(child)
+        spacing = in_term ? term_config.fetch('note_spacing', 0.0).to_f : 0.0
+        out << if spacing.positive?
+                 Flowables::GroupFlowable.new(
+                   [Flowables::Spacer.new(spacing), note, Flowables::Spacer.new(spacing)],
+                   style: Style::Definition.new(keep_together: false)
+                 )
+               else
+                 note
+               end
       when Content::Example
         out << example_flowable(child)
       when Content::FigureGroup
@@ -388,7 +398,7 @@ module Arrolio
       # the first) — term definitions' second+ paragraphs (the
       # "(For notes...)" line) and the SOURCE line each carry it.
       entry.definition.each_with_index do |item, index|
-        append_child(item, out, standalone: false)
+        append_child(item, out, standalone: false, in_term: true)
         if index.zero?
           widen_first_definition_widows(out)
         else

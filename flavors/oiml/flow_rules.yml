@@ -348,6 +348,9 @@ list:
 term:
   definition_paragraph_space_before: 7.6
   source_space_before: 7.5
+  # Term-embedded notes: +7pt before/after (reference 3.1.3.1:
+  # definition -> Note 21pt vs our 14, Note -> list 20 vs 13).
+  note_spacing: 7.0
 
 # Figure geometry from the reference: image bottom to caption ~28pt
 # (Figure 2: last diagram text y479 -> caption y507); consecutive
