@@ -413,6 +413,27 @@ Mostly +/-9-14pt (heading-gap + line-box differences):
   bistable 27/29pp. Coupled landing documented, do not bisect.
 - Keep-with-next is now CHAIN-aware (PR #113).
 
+## Shipped (2026-08-27, PRs #115-#116): widows model + termnote attachment - 66.95%
+
+- Style widows/orphans defaults 2 -> 1 (the reference does not
+  enforce them; evidence in the negative results below).
+  TextFlowable#min_keep_height honors style widows (first line at
+  the new default).
+- <termnote> now belongs to its entry's definition (was a sibling
+  block), rendered between definition and SOURCE in document
+  order; term-embedded notes carry +7pt before/after
+  (term.note_spacing; measured 3.1.3.1: def->Note 21 vs our 14,
+  Note->list 20 vs 13). Wrapper group deliberately NOT
+  keep-together (29pp when it was).
+- NOTE margin model finding: the engine's margin collapse is
+  min(prev_after, curr_before) and ListFlowable#height ignores
+  style margins entirely - note spacing only lands via explicit
+  Spacers. A margin-model cleanup is a candidate TODO.
+- Remaining term-entry internals: Note->its-list still 13 vs 20
+  (the note's internal list spacing); list-in-note indent ours
+  118/138 vs ref 143/163 (~25pt deeper in the reference); entry
+  tail after a list 17 vs 28.
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).
