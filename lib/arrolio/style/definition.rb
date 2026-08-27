@@ -21,7 +21,7 @@ module Arrolio
         character_spacing: 0.0, word_spacing: 0.0,
         line_break: :greedy,
         keep_together: false, page_break_before: false, page_break_after: false,
-        keep_with_next: false, widows: 2, orphans: 2, parent: nil,
+        keep_with_next: false, widows: 1, orphans: 1, parent: nil,
         underline: false, text_transform: nil
       }.freeze
 

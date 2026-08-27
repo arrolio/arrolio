@@ -58,8 +58,14 @@ module Arrolio
         true
       end
 
+      # Widows for keep-with-next predecessors: how many lines must
+      # follow when the paragraph starts after a kept block.
       def min_keep_height(_width, _context = nil)
-        space_before + line_height
+        space_before + ([widows_count, 1].max * line_height)
+      end
+
+      def widows_count
+        @style.widows ? @style.widows.to_i : 1
       end
 
       def do_split(width, remaining_height, _context = nil)
