@@ -495,6 +495,23 @@ ESTIMATE metrics - the pipeline resolves fonts via fontist
 (FontScanner). Always register the fontist way in debug scripts
 or the layout differs from the pipeline.
 
+## Shipped (2026-08-28, PR #123): dl geometry + heading_1 space-before - 68.92%
+
+- 3.9's abbreviation <dl>: 19pt/item vs ref 16pt (57pt on p16).
+  Definition lists carry their own kind (:definition) and geometry
+  (list.geometry.definition: marker at margin, 28pt column, 2.6pt
+  item spacing).
+- heading_1 margin_top 16pt: mid-page level-1 headings sit 33pt
+  below the preceding block in the ref (ours 14); ref landing
+  pages apply it at page tops too ('3 Terminology' y90 not y75).
+- CONTENT census clean: the remaining word-count deltas vs the ref
+  are all extraction artifacts (figure vector text = TODO 93, and
+  JEuclid's literal 'unitsml(degC)' alt text) - no dropped content
+  remains after the dead-zone fix.
+- Recipe (heading_2 + term keeps) retested on this base: entry
+  gaps reproduce (p8 69 vs 76) but nets -6pp; still blocked by the
+  p9-p15 fill mismatch.
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).
