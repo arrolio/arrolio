@@ -378,7 +378,7 @@ module Arrolio
     end
 
     def convert_list(elem, kind:)
-      return convert_definition_list(elem, kind: kind) if elem.name == 'dl'
+      return convert_definition_list(elem) if elem.name == 'dl'
 
       items = []
       item_name = selector('list_item')
@@ -414,7 +414,7 @@ module Arrolio
       Content::List.new(items, kind: kind, style_id: kind == :ordered ? :list_ordered : :list_bullet)
     end
 
-    def convert_definition_list(elem, kind:)
+    def convert_definition_list(elem)
       items = []
       para_name = selector('paragraph')
       current_marker = nil
@@ -435,7 +435,7 @@ module Arrolio
         end
       end
 
-      Content::List.new(items, kind: kind, style_id: :list_bullet)
+      Content::List.new(items, kind: :definition, style_id: :list_bullet)
     end
 
     def convert_figure(elem)

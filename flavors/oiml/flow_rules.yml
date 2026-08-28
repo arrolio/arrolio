@@ -340,6 +340,13 @@ list:
       marker_width: 20.0
       body_indent: 0.0
       item_spacing: 5.6
+    # Definition lists (3.9's abbreviations): 16pt item pitch
+    # (reference p16: rows at 235/251/267...), marker at margin.
+    definition:
+      marker_indent: 0.0
+      marker_width: 28.0
+      body_indent: 0.0
+      item_spacing: 2.6
 
 # Term entry spacing (FOP space-before BETWEEN sibling blocks):
 # the definition's second+ paragraphs ("(For notes...)") and the
