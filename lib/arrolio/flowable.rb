@@ -2,6 +2,20 @@
 
 # Arrolio::Flowable — abstract base for everything the page-flow
 # engine places into Frames.
+#
+# Margin contract: +space_before+/+space_after+ expose the style's
+# margins. The ENGINE collapses min(prev.space_after,
+# curr.space_before) into the gap and adds it above the flowable's
+# emit origin. Two conventions coexist and must not be mixed:
+#
+# - TextFlowable counts its margins INSIDE height/emit (consumed
+#   includes before+after; the engine subtracts the overlap).
+# - ListFlowable and its subclasses (lists, notes) do NOT count
+#   margins in height — spacing around them comes from explicit
+#   Spacers (see GenericFlowBuilder's term notes).
+#
+# A flowable's height() and emit() must agree on whether margins
+# are included, or fit checks and drawing diverge.
 module Arrolio
   class Flowable
     attr_reader :style

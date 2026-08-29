@@ -18,9 +18,19 @@ module Arrolio
   # hard-coded element names — every XML element/attribute the adapter
   # touches is named in the rules' `selectors` block.
   class GenericAdapter
+    autoload :InlineRunCollection, 'arrolio/generic_adapter/inline_run_collection'
+    autoload :HeadingExtraction, 'arrolio/generic_adapter/heading_extraction'
+    autoload :ListConversion, 'arrolio/generic_adapter/list_conversion'
+    autoload :MetadataExtraction, 'arrolio/generic_adapter/metadata_extraction'
+    autoload :DocumentExtraction, 'arrolio/generic_adapter/document_extraction'
     autoload :FootnoteExtraction, 'arrolio/generic_adapter/footnote_extraction'
 
     include FootnoteExtraction
+    include InlineRunCollection
+    include HeadingExtraction
+    include ListConversion
+    include MetadataExtraction
+    include DocumentExtraction
 
     autoload :TableConversion, 'arrolio/generic_adapter/table_conversion'
 
@@ -82,7 +92,6 @@ module Arrolio
 
     XREF_ELEMENTS = ['fmt-xref-label', 'fmt-xref', 'xref'].freeze
 
-    UNICODE_SPACES = Regexp.new("[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000\uFEFF]")
 
     attr_reader :rules, :layout_spec, :selectors
 
@@ -117,112 +126,14 @@ module Arrolio
 
     # ---- Metadata extraction ----
 
-    def extract_metadata(root)
-      config = @rules['metadata'] || {}
-      bibdata_path = config['root'] || 'bibdata'
-      bibdata = find_first(root, bibdata_path)
-      return {} unless bibdata
 
-      result = {}
-      (config['fields'] || {}).each do |key, xpath|
-        value = text_of(find_first(bibdata, xpath))
-        result[key.to_sym] = value if value && !value.empty?
-      end
-      derive_metadata_fields(result)
-      result
-    end
 
-    def derive_metadata_fields(result)
-      lang = result[:language].to_s
-      version_date = result[:revision_date]
-      year = version_date&.[](0, 4)
-      result[:revision_year] = year if year&.match?(/\A\d{4}\z/)
-      return if lang.empty? && version_date.nil?
-
-      lang_initial = lang[0, 1].upcase
-      year_part = year&.match?(/\A\d{4}\z/) ? "#{year} " : ''
-      result[:edition_label] = "#{year_part}(#{lang_initial})"
-    end
-
-    def extract_cover(root)
-      metadata = extract_metadata(root)
-      config = @rules['cover'] || {}
-      result = {}
-      (config['fields'] || ['docidentifier', 'edition', 'title_main', 'title_part']).each do |field|
-        result[field.to_sym] = metadata[field.to_sym] if metadata[field.to_sym]
-      end
-      result.empty? ? nil : result
-    end
 
     # ---- Section extraction ----
 
-    def extract_sections(root)
-      sections_config = @rules['sections'] || {}
-      container = sections_config['container'] || 'sections'
-      sections_elem = find_first(root, container)
-      return [] unless sections_elem
 
-      children = []
-      each_direct_child(sections_elem) do |child|
-        next unless map_element(child.name, sections_elem) == 'section'
 
-        children << convert_clause(child)
-      end
-      children
-    end
 
-    def extract_title_block(root)
-      sections_config = @rules['sections'] || {}
-      container = sections_config['container'] || 'sections'
-      sections_elem = find_first(root, container)
-      return nil unless sections_elem
-
-      para_name = selector('paragraph')
-      each_direct_child(sections_elem) do |child|
-        next unless child.name == para_name
-
-        cls = child.attribute('class')&.value
-        title_style = (@rules['paragraph_styles'] || {})[cls]
-        next unless title_style
-
-        return Content::Paragraph.new(
-          title_block_runs(root),
-          style_id: title_style.to_sym,
-          id: child.attribute(selector('id_attribute'))&.value
-        )
-      end
-      nil
-    end
-
-    def title_block_runs(root)
-      metadata = extract_metadata(root)
-      part = metadata[:part_number].to_s
-      title_part = metadata[:title_part].to_s
-      locality = @rules.dig('i18n', 'locality_part').to_s
-      locality = 'Part' if locality.empty?
-      text = if part.empty? && title_part.empty?
-               ''
-             elsif part.empty?
-               title_part
-             else
-               "#{locality} #{part} - #{title_part}".strip
-             end
-      [Content::InlineRun.new(text, style_id: :doc_title)]
-    end
-
-    def extract_preface(root)
-      preface_elem = find_first(root, selector('preface_container'))
-      return [] unless preface_elem
-
-      result = []
-      each_element(preface_elem) do |child|
-        next if child == preface_elem
-        next unless Array(selector('preface_children')).include?(child.name)
-
-        result << convert_clause(child, context: :preface)
-      end
-      result
-    end
 
     # Context-specific title styles (e.g. the XSL rule "level-1
     # titles inside the preface are centered") live in the flavor's
@@ -235,29 +146,6 @@ module Arrolio
       configured.to_sym
     end
 
-    def extract_bibliography(root)
-      biblio_elem = find_first(root, selector('bibliography_container'))
-      return [] unless biblio_elem
-
-      result = []
-      each_element(biblio_elem) do |child|
-        next if child == biblio_elem
-        next unless child.name == selector('bibliography_reference')
-
-        items = []
-        each_child(child, selector('bibliography_item')) do |bi|
-          items.concat(convert_bibitem(bi))
-        end
-        result << Content::Section.new(
-          title: 'Bibliography',
-          level: 1,
-          children: items,
-          style_id: :section_body_1,
-          title_style_id: title_style_for('bibliography', 1)
-        )
-      end
-      result
-    end
 
     # ---- Element converters (driven by rules) ----
 
@@ -273,21 +161,6 @@ module Arrolio
       )
     end
 
-    # The level derives from the autonumber's dotted depth ("5.1.1"
-    # → 3, "A.1" → 2) when present — the semantic truth — falling
-    # back to the fmt-title depth attribute. Titles without either
-    # stay level 1. Relying on the attribute alone mis-leveled most
-    # sections (3.x, 5.1.x) because their fmt-title carries no depth.
-    def clause_level(elem, number: nil)
-      dotted = number.to_s.split('.').length
-      return dotted if dotted > 1 && number.to_s.match?(/\A[\dA-Z]/)
-
-      heading_name = selector('heading')
-      depth_attr = selector('heading_depth_attribute')
-      fmt_title = elem.elements.first { |e| e.name == heading_name }
-      depth = fmt_title&.attribute(depth_attr)&.value.to_i
-      [depth, 1].max
-    end
 
     # Maps content_type (declared in rules.element_mapping) to a
     # Each builder accepts a child element and returns one or more
@@ -375,67 +248,6 @@ module Arrolio
         refs << id.to_s if id && !id.to_s.empty?
       end
       refs
-    end
-
-    def convert_list(elem, kind:)
-      return convert_definition_list(elem) if elem.name == 'dl'
-
-      items = []
-      item_name = selector('list_item')
-      label_name = selector('list_item_label')
-      para_name = selector('paragraph')
-      list_mapping = (@rules['element_mapping'] || {}).select do |_, v|
-        v['content_type'] == 'list'
-      end
-      each_child(elem, item_name) do |li|
-        # Ordered lists carry their autonum in the label element;
-        # unordered lists don't number (the label text is a
-        # placeholder) — they render the flavor's bullet instead.
-        marker = nil
-        if kind != :bullet
-          label_elem = find_first(li, label_name)
-          marker = text_of(label_elem) if label_elem
-        end
-
-        content = []
-        each_element(li) do |child|
-          next if child.parent && child.parent != li
-
-          if child.name == para_name
-            content << convert_paragraph(child)
-          elsif list_mapping.key?(child.name)
-            nested_kind = list_mapping[child.name]['kind']&.to_sym || :bullet
-            content << convert_list(child, kind: nested_kind)
-          end
-        end
-        content = [Content::Paragraph.new(collect_inline_runs(li))] if content.empty?
-        items << Content::List::Item.new(content, marker: marker)
-      end
-      Content::List.new(items, kind: kind, style_id: kind == :ordered ? :list_ordered : :list_bullet)
-    end
-
-    def convert_definition_list(elem)
-      items = []
-      para_name = selector('paragraph')
-      current_marker = nil
-
-      each_direct_child(elem) do |child|
-        case child.name
-        when 'dt'
-          current_marker = text_of(child).strip
-        when 'dd'
-          content = []
-          each_element(child) do |c|
-            next unless c.name == para_name && c.parent == child
-            content << convert_paragraph(c)
-          end
-          content = [Content::Paragraph.new(collect_inline_runs(child))] if content.empty?
-          items << Content::List::Item.new(content, marker: current_marker)
-          current_marker = nil
-        end
-      end
-
-      Content::List.new(items, kind: :definition, style_id: :list_bullet)
     end
 
     def convert_figure(elem)
@@ -676,79 +488,7 @@ module Arrolio
 
     # ---- Inline run collection (driven by rules) ----
 
-    def collect_inline_runs(elem, default_style: :inline, exclude: nil,
-                            footnote_markers: false)
-      runs = []
-      stem_name = selector('stem')
-      fn_name = footnote_markers ? selector('footnote_marker') : nil
-      stem_formatted_name = selector('stem_formatted')
-      math_name = selector('math')
-      tab_name = selector('tab_inline')
-      br_name = selector('break_inline')
-      xref_name = selector('biblio_formattedref') ? 'fmt-xref' : nil
-      skip_metadata = @rules['skip_metadata_elements'].to_a
-      block_level = @rules['block_level_elements'].to_a
-      inline_styles = @rules['inline_styles'] || {}
 
-      walker = lambda do |node, style, baseline: Content::InlineRun::BASELINE_NORMAL, scale: 1.0, in_xref: false|
-        case node
-        when REXML::Text
-          raw = normalize_text(node.value)
-          next if raw.nil? || raw.empty?
-
-          text = in_xref ? format_locality_text(raw) : raw
-          runs << Content::InlineRun.new(text, style_id: style,
-                                               baseline_shift: baseline,
-                                               font_size_scale: scale)
-        when REXML::Element
-          next if exclude && node.name == exclude
-
-          if fn_name && node.name == fn_name
-            marker = node.attribute('reference')&.value ||
-                     node.attribute('id')&.value
-            unless marker.nil? || marker.empty?
-              runs << Content::InlineRun.new(
-                marker, style_id: style,
-                        baseline_shift: Content::InlineRun::BASELINE_SUP,
-                        font_size_scale: 0.7
-              )
-            end
-            next
-          end
-
-          new_style = resolve_inline_style(node, style)
-          sub_baseline, sub_scale = baseline_for_style(inline_styles, node,
-                                                       baseline, scale)
-          child_in_xref = in_xref || (xref_name && node.name == xref_name)
-          case node.name
-          when tab_name
-            runs << Content::InlineRun.new("\t", style_id: style)
-          when br_name
-            runs << Content::InlineRun.new("\n", style_id: style)
-          when stem_name
-            unless sibling_exists?(node.parent, stem_formatted_name)
-              walk_stem(node, style, runs, stem_formatted_name, math_name)
-            end
-          when stem_formatted_name
-            walk_math(node, style, runs)
-          when *skip_metadata
-            next
-          when *block_level
-            next
-          else
-            node.children.each do |c|
- walker.call(c, new_style, baseline: sub_baseline, scale: sub_scale, in_xref: child_in_xref)
-            end
-          end
-        end
-      end
-      elem.children.each { |c| walker.call(c, default_style) }
-      runs
-    end
-
-    def format_locality_text(text)
-      text.gsub(/([a-zA-Z]+)=/, '\\1 ')
-    end
 
     def baseline_for_style(rules, element, current_baseline, current_scale)
       mapping = rules[element.name]
@@ -778,129 +518,17 @@ module Arrolio
       current
     end
 
-    def walk_stem(stem_elem, style, runs, formatted_name, math_name)
-      target = find_first(stem_elem, formatted_name) || find_first(stem_elem, math_name)
-      walk_math(target, style, runs) if target
-    end
 
-    # Walks a MathML tree emitting InlineRuns with appropriate
-    # baseline_shift + font_size_scale. Delegates the actual MathML
-    # parsing to the plurimath/mml gem via MathML::InlineRunExtractor,
-    # keeping this adapter free of its own MathML grammar.
-    def walk_math(elem, style, runs)
-      return unless elem
 
-      math_name = selector('math')
-      math_elem = if elem.name == math_name
-        elem
-      else
-        found = nil
-        elem.each_recursive { |e| found = e if e.name == math_name && found.nil? }
-        found
-      end
-      return unless math_elem
-
-      math_xml = serialize_element_to_xml(math_elem)
-      extracted = ::Arrolio::MathML::InlineRunExtractor.extract_from_xml(math_xml,
-                                                                         base_style: style)
-      runs.concat(extracted)
-    end
-
-    def serialize_element_to_xml(elem)
-      io = StringIO.new(+'')
-      REXML::Formatters::Default.new.write(elem, io)
-      io.string
-    end
 
     # ---- Heading extraction ----
 
-    def extract_heading(clause)
-      heading_config = @rules['heading'] || {}
-      source = heading_config['source'] || selector('heading')
-      heading_elem = find_first(clause, source)
-      if heading_elem
-        extract_from_heading(heading_elem)
-      else
-        title = find_first(clause, selector('fallback_title'))
-        [title ? text_of(title) : nil, nil]
-      end
-    end
 
-    def extract_from_heading(heading_elem)
-      parts = []
-      number_parts = []
-      title_parts = []
-      non_number_parts = []
-      autonum_class = selector('autonum_class')
-      autonum_delim_class = selector('autonum_delim_class') || 'fmt-autonum-delim'
-      caption_label_class = selector('caption_label_class') || 'fmt-caption-label'
 
-      walk_heading_text(heading_elem) do |text, parent|
-        parts << text
-        element_attr = parent&.attribute('element')&.value
-        parent_class = parent&.attribute('class')&.value
-        if element_attr == 'autonum' ||
-           parent_class == autonum_class ||
-           parent_class == autonum_delim_class ||
-           parent_class == caption_label_class
-          number_parts << text
-        elsif element_attr == 'title'
-          title_parts << text
-          non_number_parts << text
-        else
-          non_number_parts << text
-        end
-      end
-
-      number = number_parts.map(&:strip).reject(&:empty?).join
-      number = nil if number.empty?
-
-      title = if title_parts.any?
-                title_parts.join.strip
-              elsif parts.include?("\t")
-                parts.join.split("\t", 2).last&.strip
-              else
-                non_number_parts.join.strip
-              end
-      title = nil if title.nil? || title.empty?
-      [title, number]
-    end
-
-    def walk_heading_text(element, &block)
-      element.children.each do |child|
-        next if child.is_a?(REXML::Element) &&
-                (XREF_ELEMENTS.include?(child.name) ||
-                 child.attribute('element')&.value == 'xref')
-
-        case child
-        when REXML::Text
-          yield(child.value, child.parent)
-        when REXML::Element
-          walk_heading_text(child, &block)
-        end
-      end
-    end
 
     # ---- Text helpers ----
 
 
-    # Newline-bearing text nodes keep ONE space at each boundary:
-    # 'where\n<stem>' must render 'where Y' — stripping the
-    # trailing whitespace glued words to the following element and
-    # made long formula runs unbreakable (clipped at the page
-    # edge).
-    def normalize_text(raw)
-      return raw unless raw.is_a?(String)
-      cleaned = raw.gsub(UNICODE_SPACES, ' ')
-      return cleaned unless cleaned.include?("\n")
-
-      stripped = cleaned.strip
-      return cleaned.match?(/\s/) ? ' ' : nil if stripped.empty?
-
-      lead = cleaned.match?(/\A\s/) ? ' ' : ''
-      trail = cleaned.match?(/\s\z/) ? ' ' : ''
-      lead + stripped.gsub(/\s+/, ' ') + trail
-    end
 
     def text_of(elem)
       return '' unless elem

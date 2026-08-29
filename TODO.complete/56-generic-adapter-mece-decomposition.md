@@ -15,6 +15,26 @@ throughout (`preface`, `bibliography`, `references`, `bibitem`,
 different vocabulary (DITA, DocBook, JATS) would not work without
 modifying core — violating OCP.
 
+## Decomposition status (2026-08-29): COMPLETE
+
+The adapter class (990 -> 618 lines) keeps dispatch, document
+glue, and shared helpers; everything else lives in included
+seams, one per concern:
+
+- GenericAdapter::FootnoteExtraction
+- GenericAdapter::TableConversion
+- GenericAdapter::InlineRunCollection (run walker, stems, MathML,
+  normalize_text)
+- GenericAdapter::HeadingExtraction (clause levels, autonum/title
+  separation)
+- GenericAdapter::ListConversion (lists + definition lists)
+- GenericAdapter::MetadataExtraction (bibdata, derived fields,
+  cover)
+- GenericAdapter::DocumentExtraction (sections, preface,
+  bibliography, title block)
+
+Adding an element family = adding a module + one include.
+
 ## Approach
 
 1. **Extended `selectors` block** in `adapter_rules.yml`: added keys
