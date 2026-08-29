@@ -12,6 +12,15 @@ module Arrolio
     # subset + embed each font for the codepoints actually used
     # in the document.
     class Pdf
+
+      autoload :FontEmbedding, 'arrolio/renderer/pdf/font_embedding'
+      autoload :Assets, 'arrolio/renderer/pdf/assets'
+      autoload :Metadata, 'arrolio/renderer/pdf/metadata'
+
+      include FontEmbedding
+      include Assets
+      include Metadata
+
       MM_TO_PT = 2.83464567
 
       attr_reader :document, :fonts
@@ -41,83 +50,6 @@ module Arrolio
                         io: io.is_a?(String) ? nil : io)
       end
 
-      def apply_metadata(metadata)
-        info = @document.catalog.value[:Info]
-        info ||= @document.add({})
-        @document.catalog.value[:Info] = info
-        info.value[:Title] = metadata[:title] if metadata[:title]
-        info.value[:Author] = metadata[:author] if metadata[:author]
-        info.value[:Creator] = 'Arrolio (Ruby)'
-        info.value[:Producer] = 'Arrolio + Pdfrb'
-      end
-
-      # Emit an XMP metadata packet (RDF/XML) as a stream on the
-      # catalog's /Metadata entry. PDF readers use this for Dublin
-      # Core properties alongside the legacy /Info dict.
-      def attach_xmp_metadata(metadata)
-        xmp = XmpBuilder.new(metadata).build
-        stream = @document.add(
-          { Type: :Metadata, Subtype: :XML, Length: xmp.bytesize },
-          type: Pdfrb::Model::Cos::Stream
-        )
-        stream.stream = xmp
-        @document.catalog.value[:Metadata] =
-          Pdfrb::Model::Reference.new(stream.oid, stream.gen)
-      rescue StandardError => e
-        Arrolio::Logger.warn "XMP attach failed: #{e.class}: #{e.message[0, 80]}"
-      end
-
-      def register_logo(path)
-        return nil unless path
-
-        @document.images.add(path)
-      rescue StandardError => e
-        Arrolio::Logger.warn "logo load failed: #{e.class}: #{e.message[0, 80]}"
-        nil
-      end
-
-      def register_image(path)
-        return @images[path] if @images.key?(path)
-
-        resolved = resolve_image_for_pdfrb(path)
-        return nil unless resolved
-
-        @images[path] = @document.images.add(resolved)
-      rescue StandardError => e
-        Arrolio::Logger.warn "register_image failed for #{path}: #{e.class}: #{e.message[0, 80]}"
-        nil
-      end
-
-      # Pdfrb supports JPEG, PNG, and PDF — not SVG. If +path+ is an
-      # SVG file, rasterize it to PNG via rsvg-convert and cache the
-      # result. Returns the path to a pdfrb-compatible image file.
-      def resolve_image_for_pdfrb(path)
-        return path unless path.to_s.end_with?('.svg', '.SVG')
-        return path unless File.exist?(path)
-
-        png_path = svg_to_png_cache_path(path)
-        return png_path if File.exist?(png_path)
-
-        rasterize_svg(path, png_path)
-        File.exist?(png_path) ? png_path : path
-      end
-
-      def svg_to_png_cache_path(svg_path)
-        digest = Digest::MD5.file(svg_path).hexdigest
-        File.join(Dir.tmpdir, 'arrolio-svg-' + digest + '.png')
-      end
-
-      def rasterize_svg(svg_path, png_path)
-        require 'open3'
-        result = Open3.capture3('rsvg-convert', '-d', '96', '-p', '96',
-                                '-o', png_path, svg_path)
-        return if result[2].success?
-
-        Arrolio::Logger.warn "rsvg-convert failed: #{result[1]}"
-      rescue StandardError => e
-        Arrolio::Logger.warn "rasterize_svg failed: #{e.class}: #{e.message[0, 80]}"
-      end
-
       def header_footer_style
         return @header_footer_style if @header_footer_style
 
@@ -134,102 +66,12 @@ module Arrolio
         }.freeze
       end
 
-      def cover_logo_style
-        return @cover_logo_style if @cover_logo_style
-
-        config = @layout_spec&.cover_logo_config || {}
-        width_mm = config['width_mm'] || 35.0
-        ratio = config['aspect_ratio'] || (1459.0 / 1667.0)
-        margin_mm = config['margin_mm'] || 25.5
-        @cover_logo_style = {
-          width: width_mm * MM_TO_PT,
-          height: width_mm * ratio * MM_TO_PT,
-          margin: margin_mm * MM_TO_PT
-        }.freeze
-      end
 
       private
 
-      # Pre-scan all pages, collect codepoints per font family,
-      # then call Font::Embedder for each font_path.
-      def prepare_embedded_fonts(pages)
-        return if @font_paths.empty?
 
-        codepoints = Hash.new { |h, k| h[k] = [] }
-        pages.each { |page| collect_codepoints(page, codepoints) }
-        Arrolio::Logger.debug "collected codepoints for fonts: #{codepoints.keys.inspect}"
-        @font_paths.each do |font_name, path|
-          exists = File.exist?(path)
-          has_cp = codepoints.key?(font_name)
-          cp_count = codepoints[font_name]&.length || 0
-          Arrolio::Logger.debug "font #{font_name}: exists=#{exists} cp=#{cp_count}"
-          next unless exists
-          next unless has_cp
 
-          cps = codepoints[font_name].uniq
-          embedder = Font::Embedder.new(@document, path,
-                                        base_font_name: font_name)
-          ref = embedder.embed(cps)
-          attach_to_resources(font_name, ref)
-          @font_embedders[font_name] = embedder
-          @font_encoders[font_name] = Font::TextEncoder.new(embedder)
-          @font_refs[font_name] = ref
-        rescue StandardError => e
-          Arrolio::Logger.warn "embed failed for #{font_name}: #{e.class}: #{e.message[0,100]}"
-          Arrolio::Logger.debug e.backtrace.first(5).join("\n")
-        end
-      end
 
-      def attach_to_resources(font_name, ref)
-        catalog = @document.catalog
-        res = catalog.value[:Resources]
-        Arrolio::Logger.debug "attach_to_resources: Resources=#{res.class}"
-        unless res.is_a?(Hash) && res[:Font].is_a?(Hash)
-          catalog.value[:Resources] = { Font: {} }
-        end
-        font_hash = catalog.value[:Resources][:Font]
-        key = (format('EF%d', (font_hash.length + 1))).to_sym
-        font_hash[key] = ref
-        @embedded_resource_keys ||= {}
-        @embedded_resource_keys[font_name] = key
-      end
-
-      def collect_codepoints(page, by_font)
-        (page.static_regions.values + page.regions.values).each do |region|
-          region.placed_boxes.each do |box|
-            next unless box.kind == :text
-            next unless box.data.is_a?(Hash) && box.data[:lines]
-
-            box.data[:lines].each do |line|
-              next unless line.is_a?(TextLayout::Line)
-              line.placed_runs.each do |pr|
-                next unless pr.run.is_a?(InlineRun)
-                # Collect under the RUN'S font name, not the
-                # paragraph's. Italic/bold runs have different
-                # font_names and need their own subsets.
-                run_font = pr.run.style.font_name
-                next unless @font_paths.key?(run_font)
-                pr.run.text.each_codepoint { |cp| by_font[run_font] << cp }
-              end
-            end
-          end
-        end
-      end
-
-      def build_outline(context, _pages)
-        entries = context.heading_entries
-        return unless entries&.any?
-
-        pdfrb_pages = @document.pages.to_a
-        ob = OutlineBuilder.new(document: @document,
-                                entries: entries,
-                                pdfrb_pages: pdfrb_pages)
-        result = ob.build
-        Arrolio::Logger.debug "outline build returned: #{result.class}"
-      rescue StandardError => e
-        Arrolio::Logger.warn "outline build failed: #{e.class}: #{e.message[0,150]}"
-        Arrolio::Logger.debug e.backtrace.first(5).join("\n")
-      end
 
       def render_page(output_page)
         pdfrb_page = @document.pages.add(media_box: [0, 0,
@@ -278,24 +120,6 @@ module Arrolio
       def footnote_style
         style = @layout_spec&.resolve_style(:footnote)
         style.nil? || style.font_size.nil? ? Style::Definition.new(font_size: 9.0) : style
-      end
-
-      def render_cover_logo(canvas, page)
-        logo_style = cover_logo_style
-        w = logo_style[:width]
-        h = logo_style[:height]
-        margin = logo_style[:margin]
-        x = page.width - margin - w
-        y = page.height - margin - h
-        invoke = invoke_xobject_op
-        return unless invoke
-
-        canvas.save_graphics_state do
-          canvas.concat(w, 0, 0, h, x, y)
-          canvas.emit_op(invoke, @logo_ref)
-        end
-      rescue StandardError => e
-        Arrolio::Logger.warn "logo render failed: #{e.class}: #{e.message[0, 80]}"
       end
 
       def invoke_xobject_op
@@ -433,10 +257,9 @@ module Arrolio
           font_name = run.style.font_name
           ref = embedded_or_standard(font_name)
           y, size = baseline_position_for(run, baseline_y)
-          measurer = GlyphMeasurer.new(font_name: font_name)
           cursor = 0.0
           run_start = nil
-          text_chunks(run.text, justify).each do |chunk|
+          text_chunks(run.text, justify).each_with_index do |chunk, ci|
             x = run_x + extra_offset + cursor
             run_start ||= x
             payload = encoded_or_text(font_name, chunk)
@@ -449,7 +272,10 @@ module Arrolio
             end
             record_link_if_needed(run, x, y, size) if cursor.zero?
             canvas.text(payload, **opts)
-            cursor += measurer.width_of_string(chunk, font_size: size)
+            # Advance by the width the BREAKER computed — the
+            # renderer never measures, so layout and emission
+            # cannot drift (the word-overlap bug class).
+            cursor += pr.chunk_widths[ci].to_f
             # Justify must SHRINK as well as stretch: a compressed
             # line (ratio > -1) relies on negative space adjustment —
             # skipping it draws the line at natural width, past the
