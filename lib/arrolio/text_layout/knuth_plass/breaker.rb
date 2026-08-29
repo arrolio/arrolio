@@ -76,7 +76,8 @@ module Arrolio
 
         # Internal: a run of same-signature text being merged into a
         # single PlacedRun (one canvas.text call at render time).
-        RunGroup = Struct.new(:signature, :text, :x_offset, keyword_init: true)
+        RunGroup = Struct.new(:signature, :text, :x_offset, :chunk_widths,
+                              keyword_init: true)
 
         private
 
@@ -302,10 +303,16 @@ module Arrolio
         # line's last box (at the break) is dropped: it is discarded
         # by width accounting and would otherwise inflate the
         # renderer's justify word count.
+        # Chunk widths follow the emission chunking (text split
+        # AFTER whitespace): a chunk's width is its boxes plus the
+        # trailing glue(s). Hyphen parts join the same chunk (no
+        # space between them).
         def build_placed_runs(start_item, stop_item)
           last_box = last_box_index_in(start_item, stop_item)
           placed = []
           group = nil
+          open_w = 0.0
+          close_pending = false
 
           (start_item...stop_item).each do |i|
             item = @items[i]
@@ -324,14 +331,28 @@ module Arrolio
               if group.nil? || group.signature != signature
                 flush_placed_group(placed, group) if group
                 group = RunGroup.new(signature: signature, text: String.new,
-                                     x_offset: item_offset(first_box_in(start_item, stop_item), i))
+                                     x_offset: item_offset(first_box_in(start_item, stop_item), i),
+                                     chunk_widths: [])
+                open_w = 0.0
+                close_pending = false
+              end
+              if close_pending
+                group.chunk_widths << open_w
+                open_w = 0.0
+                close_pending = false
               end
               group.text << slice
+              open_w += item.width.to_f
             elsif item.glue? && group && i < last_box
               group.text << ' '
+              open_w += item.width.to_f
+              close_pending = true
             end
           end
-          flush_placed_group(placed, group) if group
+          if group
+            group.chunk_widths << open_w if close_pending || open_w.positive?
+            flush_placed_group(placed, group)
+          end
           placed
         end
 
@@ -359,7 +380,8 @@ module Arrolio
                                           baseline_shift: baseline_shift,
                                           font_size_scale: font_size_scale,
                                           href: href)
-          placed << Line::PlacedRun.new(run: run, x_offset: group.x_offset)
+          placed << Line::PlacedRun.new(run: run, x_offset: group.x_offset,
+                                        chunk_widths: group.chunk_widths)
         end
       end
     end

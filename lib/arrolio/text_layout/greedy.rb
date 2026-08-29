@@ -100,10 +100,24 @@ module Arrolio
           next if slice.nil? || slice.empty?
 
           sub_run = InlineRun.new(slice, style: run.style)
-          placed << Line::PlacedRun.new(run: sub_run, x_offset: x_offset)
+          placed << Line::PlacedRun.new(run: sub_run, x_offset: x_offset,
+                                        chunk_widths: chunk_widths(run, slice))
           x_offset += sub_run.width(@measurer)
         end
         placed
+      end
+
+      # Width of each emission chunk (text split after
+      # whitespace) — the same chunking the renderer uses. The
+      # breaker owns measurement; the renderer advances by these.
+      def chunk_widths(run, slice)
+        font = run.style.font_name
+        size = run.style.font_size * run.font_size_scale
+        slice.split(/(?<=\s)(?=\S)/).map do |chunk|
+          @measurer.width_of_run(chunk, font_size: size,
+                                        character_spacing: run.style.character_spacing,
+                                        word_spacing: 0, font_name: font)
+        end
       end
     end
   end

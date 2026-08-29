@@ -5,7 +5,13 @@ module Arrolio
     # One laid-out line: a list of PlacedRun tuples plus the
     # line's content width, target width, and alignment.
     class Line
-      PlacedRun = Struct.new(:run, :x_offset, keyword_init: true) do
+      # +chunk_widths+ carries the width of each emission chunk
+      # (text split after whitespace), computed by the BREAKER that
+      # owns glyph measurement. The renderer advances by these
+      # widths — it never measures, so layout and render cannot
+      # drift apart (the source of the word-overlap and
+      # measure-overflow bugs).
+      PlacedRun = Struct.new(:run, :x_offset, :chunk_widths, keyword_init: true) do
         def freeze
           run.freeze
           super
