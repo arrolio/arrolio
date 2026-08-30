@@ -4,6 +4,7 @@
 module Arrolio
   module Engine
     autoload :Paged, 'arrolio/engine/paged'
+    autoload :MarginCollapse, 'arrolio/engine/margin_collapse'
     autoload :CrossReferenceRegistry, 'arrolio/engine/cross_reference_registry'
   end
 end
