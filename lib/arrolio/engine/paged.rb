@@ -136,8 +136,7 @@ module Arrolio
         x = frame.x
         y_top = frame.cursor_y
 
-        curr_before = flowable.space_before.to_f
-        overlap = [@prev_space_after, curr_before].min
+        overlap = MarginCollapse.overlap(@prev_space_after, flowable.space_before)
         adjusted_y = y_top + overlap
 
         boxes, consumed = flowable.emit(x, adjusted_y, frame.width, context)
