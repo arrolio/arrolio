@@ -1,11 +1,13 @@
 # TODO.complete — Path to 100% mn2pdf parity
 
-## Current baseline (2026-08-09)
+## Current baseline (2026-09-01)
 
-`bundle exec rake parity:check` reports **62.7%** overall similarity
-on the OIML r060/1 fixture, **28 pages vs 28 reference** (all pages PARTIAL+).
+`bundle exec rake parity:check` reports **68.92%** overall similarity
+on the OIML r060/1 fixture, **28 pages vs 28 reference**.
 
-376 specs pass, 0 failures, 0 rubocop offenses across 174 files.
+452 specs pass, 0 failures, 0 rubocop offenses across 214 files.
+TODO 96 is the live ledger (region deficits, keep-rule negative
+results, the C2 margin decode).
 
 ## Status snapshot
 
