@@ -16,6 +16,20 @@
 #
 # A flowable's height() and emit() must agree on whether margins
 # are included, or fit checks and drawing diverge.
+#
+# Convention map: TextFlowable (and HeadingFlowable, its
+# subclass) count margins. ListFlowable + its subclasses (lists,
+# notes), ImageFlowable, and TableFlowable do not — spacing
+# around them travels as explicit Spacers.
+#
+# UNIFICATION DECODED (2026-08-31 attempt, reverted): the old
+# model UNDER-CHARGES every counting flowable's space_before —
+# its ink is drawn ABOVE the cursor, inside the previous
+# flowable's already-consumed space_after zone. The reference's
+# calibrated constants ride that under-charging. A correct CSS
+# model (inset = max(pa,b) - pa + b, margins inside every
+# flowable) measures 31.7% / 30pp: every b>0 charge shifts
+# geometry. Unify only with a full re-tuning session.
 module Arrolio
   class Flowable
     attr_reader :style
