@@ -512,6 +512,28 @@ or the layout differs from the pipeline.
   gaps reproduce (p8 69 vs 76) but nets -6pp; still blocked by the
   p9-p15 fill mismatch.
 
+## C2 margin unification — attempt executed and reverted (2026-08-31)
+
+Round-5 attempt with the prepared MarginCollapse seam. The
+implementation (margins inside every List/Image/Note/Table
+flowable, CSS inset = max(pa,b) - pa + b, page-top exception,
+Spacer workarounds deleted, block-style neutralization for the
+dead note/list margins) measured 31.7% / 30pp vs the committed
+68.92% / 28-28 - outside the correction budget, reverted clean.
+
+ROOT CAUSE DECODED (the load-bearing finding): the OLD model
+under-charges every counting flowable's space_before - ink is
+drawn ABOVE the cursor, inside the previous flowable's consumed
+space_after zone. The reference's calibrated constants ride that
+under-charging; a geometrically correct model shifts every b>0
+charge. Page-top behavior also differs from paper analysis
+(heading ink at landings implies the old fresh-page path consumes
+mt INSIDE the page - re-derive from HeadingFlowable's emit before
+the next attempt, and note TableFlowable still needs the
+convention added). Unification = dedicated re-tuning session, not
+a release-day change. Full convention map now on Flowable's
+contract doc.
+
 ## Measurement
 
 `bundle exec rake parity:check` — 64.07% (2026-08-17).
