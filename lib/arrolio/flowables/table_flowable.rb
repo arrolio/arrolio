@@ -99,20 +99,15 @@ module Arrolio
         header, body = partition_rows
         header_count = header.length
 
-        head_groups = []
-        tail_groups = []
         # The head part also carries the caption and the repeated
         # header rows — they consume the same budget as body rows.
-        used = caption_height(width) + heights[0, header_count].sum
-        body_row_groups.each do |group|
-          group_h = heights[group.first, group.length].sum
-          if used + group_h <= remaining_height
-            head_groups << group
-            used += group_h
-          else
-            tail_groups << group
-          end
-        end
+        budget = remaining_height - caption_height(width) -
+                 heights[0, header_count].sum
+        result = Table::SplitPolicy.new(groups: body_row_groups,
+                                        group_heights: heights,
+                                        budget: budget).call
+        head_groups = result.head_groups
+        tail_groups = result.tail_groups
 
         head_rows = head_groups.flat_map { |g| body[g.first - header_count, g.length] }
         tail_rows = tail_groups.flat_map { |g| body[g.first - header_count, g.length] }

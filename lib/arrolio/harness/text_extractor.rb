@@ -51,7 +51,11 @@ module Arrolio
       def split_by_page(text)
         return [text] unless text.include?("\f")
 
-        text.split("\f", -1)
+        pages = text.split("\f", -1)
+        # pdftotext ends output with a trailing form-feed for some
+        # writers; the empty string after it is not a page.
+        pages.pop if pages.last.to_s.strip.empty? && pages.length > 1
+        pages
       end
     end
   end
